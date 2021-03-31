@@ -9,3 +9,15 @@ sudo apt install setserial
 setserial /dev/ttyUSB0 low_latency
 ```
 This will boost communication frequency to about 400Hz. The final frequency is dependent on host system configuration and load.
+
+## Building
+```
+mkdir build
+cd build
+cmake ..
+make
+```
+
+## Running
+```
+./build/md80
