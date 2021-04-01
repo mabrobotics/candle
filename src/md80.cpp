@@ -11,13 +11,6 @@ Md80::Md80(Canalizator *can, int driveId)
     velocity = 0.0f;
     torque = 0.0f;
     errorVector = 0.0f;
-
-    posTarget = 0.0f;
-    velTarget= 0.0f;
-    kp= 0.0f;
-    kd= 0.0f;
-    tqFf= 0.0f;
-    maxOutput= 0.0f;
 }
 void Md80::parseResponse(char rxBuffer[])
 {
@@ -60,6 +53,40 @@ bool Md80::setMode(int mode)
     }
     return false;
 }
+bool Md80::setZeroPosition()
+{
+    pCan->setTargetId(id);
+    pCan->setMsgLen(2);
+    char txBuffer[3] = {0x03, 0x00};
+    char rxBuffer[64];
+    pCan->setCanTx(txBuffer, 2);
+    pCan->transmitAndReceive();
+    int rxLen = pCan->getCanRx(rxBuffer);
+    if(rxLen == 20)
+    {
+        parseResponse(rxBuffer);
+        return true;
+    }
+    return false;
+}
+bool Md80::setCurrentLimit(float newLimit)
+{
+    pCan->setTargetId(id);
+    pCan->setMsgLen(6);
+    char txBuffer[6] = {0x04, 0x00};
+    char rxBuffer[64];
+    *(float*)&txBuffer[2] = newLimit;
+    pCan->setCanTx(txBuffer, 6);
+    pCan->transmitAndReceive();
+    int rxLen = pCan->getCanRx(rxBuffer);
+    if(rxLen == 20)
+    {
+        currentLimit = newLimit;
+        parseResponse(rxBuffer);
+        return true;
+    }
+    return false;
+}
 bool Md80::setImpedance()
 {
     return setImpedance(impedanceReg.kp, impedanceReg.kd, impedanceReg.posTarget, impedanceReg.velTarget, torque, impedanceReg.maxOutput);
@@ -87,7 +114,7 @@ bool Md80::setImpedance(float _kp, float _kd, float _posTarget, float _velTarget
         impedanceReg.kd = _kd;
         impedanceReg.posTarget = _posTarget;
         impedanceReg.velTarget = _velTarget;
-        impedanceReg.torque = _torque;
+        impedanceReg.torqueCmd = _torque;
         impedanceReg.maxOutput = _maxOutput;
         return true;
     }
