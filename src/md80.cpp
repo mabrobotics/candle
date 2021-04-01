@@ -62,7 +62,7 @@ bool Md80::setMode(int mode)
 }
 bool Md80::setImpedance()
 {
-    return setImpedance(kp,kd, posTarget, velTarget, torque, maxOutput);
+    return setImpedance(impedanceReg.kp, impedanceReg.kd, impedanceReg.posTarget, impedanceReg.velTarget, torque, impedanceReg.maxOutput);
 }
 bool Md80::setImpedance(float _kp, float _kd, float _posTarget, float _velTarget, float _torque, float _maxOutput)
 {
@@ -83,16 +83,83 @@ bool Md80::setImpedance(float _kp, float _kd, float _posTarget, float _velTarget
     if(rxLen == 20)
     {
         parseResponse(rxBuffer);
-        kp = _kp;
-        kd = _kd;
-        posTarget = _posTarget;
-        velTarget = _velTarget;
-        tqFf = _torque;
-        maxOutput = _maxOutput;
+        impedanceReg.kp = _kp;
+        impedanceReg.kd = _kd;
+        impedanceReg.posTarget = _posTarget;
+        impedanceReg.velTarget = _velTarget;
+        impedanceReg.torque = _torque;
+        impedanceReg.maxOutput = _maxOutput;
         return true;
     }
     return false;
 }
+bool Md80::setPosition()
+{
+    setPosition(positionReg.kp, positionReg.ki, positionReg.kd, positionReg.iWindup, positionReg.maxOutput, positionReg.posTarget);
+}
+bool Md80::setPosition(float kp, float ki, float kd, float ki_windup, float maxOutput, float posTarget)
+{
+        pCan->setTargetId(id);
+    pCan->setMsgLen(32);
+    char txBuffer[32];
+    char rxBuffer[64];
+    txBuffer[0] = 0x10;
+    *(float*)&txBuffer[2] = kp;
+    *(float*)&txBuffer[2+4] = ki;
+    *(float*)&txBuffer[2+8] = kd;
+    *(float*)&txBuffer[2+12] = ki_windup;
+    *(float*)&txBuffer[2+16] = maxOutput;
+    *(float*)&txBuffer[2+20] = posTarget;
+    pCan->setCanTx(txBuffer, 32);
+    pCan->transmitAndReceive();
+    int rxLen = pCan->getCanRx(rxBuffer);
+    if(rxLen == 20)
+    {
+        parseResponse(rxBuffer);
+        positionReg.kp = kp;
+        positionReg.ki = ki;
+        positionReg.kd = kd;
+        positionReg.iWindup = ki_windup;
+        positionReg.maxOutput = maxOutput;
+        positionReg.posTarget = posTarget;
+        return true;
+    }
+    return false;
+}
+bool Md80::setVelocity()
+{
+    setVelocity(velocityReg.kp, velocityReg.ki, velocityReg.kd, velocityReg.iWindup, velocityReg.maxOutput, velocityReg.velTarget);
+}
+bool Md80::setVelocity(float kp, float ki, float kd, float ki_windup, float maxOutput, float velTarget)
+{
+    pCan->setTargetId(id);
+    pCan->setMsgLen(32);
+    char txBuffer[32];
+    char rxBuffer[64];
+    txBuffer[0] = 0x11;
+    *(float*)&txBuffer[2] = kp;
+    *(float*)&txBuffer[2+4] = ki;
+    *(float*)&txBuffer[2+8] = kd;
+    *(float*)&txBuffer[2+12] = ki_windup;
+    *(float*)&txBuffer[2+16] = maxOutput;
+    *(float*)&txBuffer[2+20] = velTarget;
+    pCan->setCanTx(txBuffer, 32);
+    pCan->transmitAndReceive();
+    int rxLen = pCan->getCanRx(rxBuffer);
+    if(rxLen == 20)
+    {
+        parseResponse(rxBuffer);
+        velocityReg.kp = kp;
+        velocityReg.ki = ki;
+        velocityReg.kd = kd;
+        velocityReg.iWindup = ki_windup;
+        velocityReg.maxOutput = maxOutput;
+        velocityReg.posTarget = velTarget;
+        return true;
+    }
+    return false;
+}
+
 
 std::vector<int> Md80::sendPing(Canalizator*pCan, int idStart, int idEnd)
 {
