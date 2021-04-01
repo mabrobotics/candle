@@ -20,7 +20,7 @@ Canalizator::Canalizator(std::string canalizatorDev, int baudrate = 115200, int 
         std:: cout << "Failed to open port " << canalizatorDev << std::endl;
         return;
     }
-    setRxTimeout(3);
+    setRxTimeout(5);
     setCanSpeed(canBaudrate);
     setMsgLen(0);
     memset(canRxBuffer, 0, sizeof(canRxBuffer));

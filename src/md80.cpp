@@ -19,6 +19,38 @@ void Md80::parseResponse(char rxBuffer[])
     velocity = *(float*)&rxBuffer[4+4];
     torque = *(float*)&rxBuffer[4+12];
 }
+bool Md80::_changeOffsetPlus()
+{
+    pCan->setTargetId(id);
+    pCan->setMsgLen(2);
+    char txBuffer[3] = {0x72, 0x00};
+    char rxBuffer[64];
+    pCan->setCanTx(txBuffer, 2);
+    pCan->transmitAndReceive();
+    int rxLen = pCan->getCanRx(rxBuffer);
+    if(rxLen == 20)
+    {
+        parseResponse(rxBuffer);
+        return true;
+    }
+    return false;
+}
+bool Md80::_changeOffsetMinus()
+{
+    pCan->setTargetId(id);
+    pCan->setMsgLen(2);
+    char txBuffer[3] = {0x73, 0x00};
+    char rxBuffer[64];
+    pCan->setCanTx(txBuffer, 2);
+    pCan->transmitAndReceive();
+    int rxLen = pCan->getCanRx(rxBuffer);
+    if(rxLen == 20)
+    {
+        parseResponse(rxBuffer);
+        return true;
+    }
+    return false;
+}
 bool Md80::enableMotor(bool enable)
 {
     pCan->setTargetId(id);
@@ -87,9 +119,25 @@ bool Md80::setCurrentLimit(float newLimit)
     }
     return false;
 }
+bool Md80::setNewConfig()
+{
+    pCan->setTargetId(id);
+    pCan->setMsgLen(2);
+    char txBuffer[3] = {0x69, 0x00};
+    char rxBuffer[64];
+    pCan->setCanTx(txBuffer, 2);
+    pCan->transmitAndReceive();
+    int rxLen = pCan->getCanRx(rxBuffer);
+    if(rxLen == 20)
+    {
+        parseResponse(rxBuffer);
+        return true;
+    }
+    return false;
+}
 bool Md80::setImpedance()
 {
-    return setImpedance(impedanceReg.kp, impedanceReg.kd, impedanceReg.posTarget, impedanceReg.velTarget, torque, impedanceReg.maxOutput);
+    return setImpedance(impedanceReg.kp, impedanceReg.kd, impedanceReg.posTarget, impedanceReg.velTarget, impedanceReg.torqueCmd, impedanceReg.maxOutput);
 }
 bool Md80::setImpedance(float _kp, float _kd, float _posTarget, float _velTarget, float _torque, float _maxOutput)
 {

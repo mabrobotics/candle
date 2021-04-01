@@ -6,7 +6,7 @@
   "configurations": [
 
   {
-    "name": "(gdb) Launch",
+    "name": "Md80",
     "type": "cppdbg",
     "request": "launch",
     "program": "${workspaceFolder}/build/md80",

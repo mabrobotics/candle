@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <vector>
 
-enum class md80_mode
+enum md80_mode
 {
     POSITION_PID = 0x01,
     VELOCITY_PID = 0x02,
@@ -49,6 +49,7 @@ public:
     bool setMode(int mode);
     bool setZeroPosition();
     bool setCurrentLimit(float newLimit);
+    bool setNewConfig();
     bool setImpedance();
     bool setImpedance(float _kp, float _kd, float _posTarget, float _velTarget, float _torque, float _maxOutput);
     bool setPosition();
@@ -57,6 +58,14 @@ public:
     bool setVelocity(float kp, float ki, float kd, float ki_windup, float maxOutput, float velTarget);
     static std::vector<int> sendPing(Canalizator*pCan, int idStart, int idEnd);
     void printInfo();
+    float getPosition(){return position;};
+    float getVelocity(){return velocity;};
+    float getTorque(){return torque;};
+    int getId(){return id;};
+
+    //DEBUG
+    bool _changeOffsetPlus();
+    bool _changeOffsetMinus();
 };
 
 #endif
