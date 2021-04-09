@@ -72,7 +72,9 @@
         "cinttypes": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "any": "cpp",
+        "regex": "cpp"
     },
     // Autocomplete from ros python packages
     "python.autoComplete.extraPaths": [

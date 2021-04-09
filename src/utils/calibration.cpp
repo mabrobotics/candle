@@ -8,11 +8,12 @@ float velocityTest(Md80*tested, float torqueCmd)
 {
     tested->setImpedance(0.0, 0.0, 0.0, 0.0, torqueCmd, 10.0);
     float averageVel = 0.0f;
-    int samples = 50;
+    int samples = 75;
     for(int i = 0 ; i < samples; i++)
     {
         tested->setImpedance();
         averageVel += tested->getVelocity();
+        usleep(1);
     }
     return averageVel / samples;
 }
@@ -20,20 +21,17 @@ void checkCw(Md80*tested, int points, float vel[], float torque)
 {
     //Change offset to lowest value
     for(int i = 0; i<points; i++)
-        for(int j = 0; j < 10; j++)
-            tested->_changeOffsetMinus();
+        tested->_changeOffsetMinus();
 
     //Check from lowest to highest
     for(int i = 0; i<points*2; i++)
     {
         vel[i] = velocityTest(tested, torque);
-        for(int j = 0; j < 10; j++)
-            tested->_changeOffsetPlus();
+        tested->_changeOffsetPlus();
     }
     //Return to base offset
     for(int i = 0; i<points; i++)
-        for(int j = 0; j < 10; j++)
-            tested->_changeOffsetMinus();
+        tested->_changeOffsetMinus();
 }
 
 void perform(Md80*tested, Md80*brake)
@@ -52,12 +50,18 @@ void perform(Md80*tested, Md80*brake)
     tested->setCurrentLimit(40.0f);
     brake->setCurrentLimit(20.0f);
 
-    constexpr int points = 25;
+    constexpr int points = 10;
     float offset_offset_cw[points*2] = {0.0f};
     float offset_offset_ccw[points*2] = {0.0f};
 
-    checkCw(tested, points, offset_offset_cw, 0.7);
-    checkCw(tested, points, offset_offset_ccw, -0.7);
+    std::cout << "Starting Rotation..." << std::endl;
+    tested->setImpedance(0.0, 0.0, 0.0, 0.0, 0.0, 1.2);
+    sleep(1);
+    std::cout << "Starting Measurements..." << std::endl;
+    checkCw(tested, points, offset_offset_cw, 1.2);
+    tested->setImpedance(0.0, 0.0, 0.0, 0.0, 0.0, 1.2);
+    sleep(1);
+    checkCw(tested, points, offset_offset_ccw, -1.2);
 
     float sum[points*2] = {0.0f};
     for(int i = 0; i < points*2; i++)
@@ -91,4 +95,9 @@ void perform(Md80*tested, Md80*brake)
     sleep(1);
 
     tested->setNewConfig();
+}
+
+void aplituteTest(Md80*tested)
+{
+
 }
