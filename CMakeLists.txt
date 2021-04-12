@@ -17,6 +17,7 @@ endif()
 
 include_directories("./")
 include_directories("./include/")
+include_directories("./include/utils")
 
 file(GLOB sources "src/*.cpp" "src/*.c" "src/utils/*.cpp")
 

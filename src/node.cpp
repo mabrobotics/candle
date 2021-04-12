@@ -1,12 +1,9 @@
-#include "md80.hpp"
 #include "canalizator.hpp"
-#include "utils/calibration.hpp"
+#include "md80.hpp"
 
 #include <iostream>
 #include "unistd.h"
 #include <cmath>
-
-void findMd80(Canalizator *can, int min, int max);
 
 int main(int argc, char **argv)
 {
@@ -14,14 +11,13 @@ int main(int argc, char **argv)
     if (!can.isOk())
         return -1;
 
-    findMd80(&can, 0x70, 0x90);
-}
+    Md80::initalize(&can);
+    Md80 x(0x110);
+    // x._calibrate();
 
-void findMd80(Canalizator *can, int min, int max)
-{
-    
-    std::vector<int> foundDrives = Md80::sendPing(can, 0x70, 0x90);
-    std::cout << "foundDrives: " << foundDrives.size() << std::endl;
-    for(int i = 0; i < (int)foundDrives.size(); i++)
-        std::cout << "[" << i << "]\tID: " << foundDrives[i] << " (0x"<< std::hex << foundDrives[i] << std::dec << ")" << std::endl; 
+    x.enableMotor(true);
+    x.setMode(md80_mode::IMPEDANCE_CTL);
+    x.setImpedance(0.1, 0.05, 0.0, 0.0, 0.0, 0.1f);
+    sleep(10);
+    x.enableMotor(false);
 }

@@ -95,7 +95,7 @@ int uart_receive(int fd, char* rxBuffer, int timeoutMs)
 {    
     bool shouldStop = false;
     char tmpBuffer[128] = {0};
-    usleep(5000);
+    usleep(100000);
     int bytesRead = read(fd, tmpBuffer, 128);
 
 #ifdef UART_VERBOSE

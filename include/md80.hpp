@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <vector>
 
-enum md80_mode
+enum class md80_mode
 {
     POSITION_PID = 0x01,
     VELOCITY_PID = 0x02,
@@ -32,21 +32,23 @@ public:
 class Md80
 {
 private:
+    static Canalizator *pCan;
     int id;
     float position;
     float velocity;
     float torque;
     float currentLimit;
     uint16_t errorVector;
-    Canalizator *pCan;
     md80_regulator positionReg;
     md80_regulator velocityReg;
     md80_regulator impedanceReg;
 public:
-    Md80(Canalizator *can, int id);
+    Md80(int id);
+    static void initalize(Canalizator *can);
+    static std::vector<int> sendPing(Canalizator*pCan, int idStart, int idEnd);
     void parseResponse(char rxBuffer[]);
     bool enableMotor(bool enable);
-    bool setMode(int mode);
+    bool setMode(md80_mode mode);
     bool setZeroPosition();
     bool setCurrentLimit(float newLimit);
     bool setNewConfig();
@@ -56,7 +58,6 @@ public:
     bool setPosition(float kp, float ki, float kd, float ki_windup, float maxOutput, float posTarget);
     bool setVelocity();
     bool setVelocity(float kp, float ki, float kd, float ki_windup, float maxOutput, float velTarget);
-    static std::vector<int> sendPing(Canalizator*pCan, int idStart, int idEnd);
     void printInfo();
     float getPosition(){return position;};
     float getVelocity(){return velocity;};
@@ -64,8 +65,8 @@ public:
     int getId(){return id;};
 
     //DEBUG
-    bool _changeOffsetPlus();
-    bool _changeOffsetMinus();
+    bool _changeId(uint16_t canId);
+    bool _calibrate();
 };
 
 #endif

@@ -3,14 +3,25 @@
 
 #include <iostream>
 #include "unistd.h"
-Md80::Md80(Canalizator *can, int driveId)
+
+Canalizator *Md80::pCan = nullptr;
+
+Md80::Md80(int driveId)
 {
-    pCan = can;
+    if(Md80::pCan == nullptr)
+    {
+        std::cout << "Md80 not initialized! Use Md80::initialize before creating Md80 objects!" << std::endl;
+        return;
+    }
     id = driveId;
     position = 0.0f;
     velocity = 0.0f;
     torque = 0.0f;
     errorVector = 0.0f;
+}
+void Md80::initalize(Canalizator *can)
+{
+    pCan = can;
 }
 void Md80::parseResponse(char rxBuffer[])
 {
@@ -19,13 +30,14 @@ void Md80::parseResponse(char rxBuffer[])
     velocity = *(float*)&rxBuffer[4+4];
     torque = *(float*)&rxBuffer[4+12];
 }
-bool Md80::_changeOffsetPlus()
+bool Md80::_changeId(uint16_t canId)
 {
     pCan->setTargetId(id);
-    pCan->setMsgLen(2);
-    char txBuffer[3] = {0x72, 0x00};
+    pCan->setMsgLen(4);
+    char txBuffer[6] = {0x73, 0x73};
     char rxBuffer[64];
-    pCan->setCanTx(txBuffer, 2);
+    *(uint16_t*)&txBuffer[2] = canId;
+    pCan->setCanTx(txBuffer, 4);
     pCan->transmitAndReceive();
     int rxLen = pCan->getCanRx(rxBuffer);
     if(rxLen == 20)
@@ -35,11 +47,11 @@ bool Md80::_changeOffsetPlus()
     }
     return false;
 }
-bool Md80::_changeOffsetMinus()
+bool Md80::_calibrate()
 {
     pCan->setTargetId(id);
     pCan->setMsgLen(2);
-    char txBuffer[3] = {0x73, 0x00};
+    char txBuffer[2] = {0x72, 0x72};
     char rxBuffer[64];
     pCan->setCanTx(txBuffer, 2);
     pCan->transmitAndReceive();
@@ -69,11 +81,11 @@ bool Md80::enableMotor(bool enable)
     }
     return false;
 }
-bool Md80::setMode(int mode)
+bool Md80::setMode(md80_mode mode)
 {
     pCan->setTargetId(id);
     pCan->setMsgLen(3);
-    char txBuffer[3] = {0x02, 0x00, (unsigned char)mode};
+    char txBuffer[3] = {0x02, 0x00, (char)mode};
     char rxBuffer[64];
     pCan->setCanTx(txBuffer, 3);
     pCan->transmitAndReceive();
@@ -170,7 +182,7 @@ bool Md80::setImpedance(float _kp, float _kd, float _posTarget, float _velTarget
 }
 bool Md80::setPosition()
 {
-    setPosition(positionReg.kp, positionReg.ki, positionReg.kd, positionReg.iWindup, positionReg.maxOutput, positionReg.posTarget);
+    return setPosition(positionReg.kp, positionReg.ki, positionReg.kd, positionReg.iWindup, positionReg.maxOutput, positionReg.posTarget);
 }
 bool Md80::setPosition(float kp, float ki, float kd, float ki_windup, float maxOutput, float posTarget)
 {
@@ -203,7 +215,7 @@ bool Md80::setPosition(float kp, float ki, float kd, float ki_windup, float maxO
 }
 bool Md80::setVelocity()
 {
-    setVelocity(velocityReg.kp, velocityReg.ki, velocityReg.kd, velocityReg.iWindup, velocityReg.maxOutput, velocityReg.velTarget);
+    return setVelocity(velocityReg.kp, velocityReg.ki, velocityReg.kd, velocityReg.iWindup, velocityReg.maxOutput, velocityReg.velTarget);
 }
 bool Md80::setVelocity(float kp, float ki, float kd, float ki_windup, float maxOutput, float velTarget)
 {
@@ -255,6 +267,9 @@ std::vector<int> Md80::sendPing(Canalizator*pCan, int idStart, int idEnd)
         if (len > 10)
             drivesPinged.push_back(i);
     }
+    std::cout << "foundDrives: " << drivesPinged.size() << std::endl;
+    for(int i = 0; i < (int)drivesPinged.size(); i++)
+        std::cout << "[" << i << "]\tID: " << drivesPinged[i] << " (0x"<< std::hex << drivesPinged[i] << std::dec << ")" << std::endl; 
     return drivesPinged;
 }
 

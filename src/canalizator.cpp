@@ -141,7 +141,7 @@ bool Canalizator::setMsgLen(int newMsgLen)
 
 bool Canalizator::setTargetId(int newTargetId)
 {
-    if(newTargetId < 0 || newTargetId > 255)
+    if(newTargetId < 0 || newTargetId > 0x7ff)
     {
         std::cout << "Target Id out of range. Must be < 0 - 255 >." << std::endl;
         return false;
