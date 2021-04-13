@@ -1,7 +1,5 @@
-#ifndef _CANALIZATOR_H_
-#define _CANALIZATOR_H_
-
-#include "uart.h"
+#ifndef _CANDLE_H_
+#define _CANDLE_H_
 
 #include <string>
 

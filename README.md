@@ -10,7 +10,17 @@ setserial /dev/ttyUSB0 low_latency
 ```
 This will boost communication frequency to about 400Hz. The final frequency is dependent on host system configuration and load.
 
-## Building
+## Building Shared libs
+Make sure you are in md80_usbcan main directory. 
+```
+mkdir build
+cd build 
+cmake ..
+make
+../update_template.sh		//This will update the Template with newly build files
+```
+The libraries will be build. 
+## Building Template
 Drivers is organized as two shared libraries. To use it right away, copy Template directory anywhere and use it
 as a template for new project.
 + Note: 'Template' should be later split into separate repository for public use.
