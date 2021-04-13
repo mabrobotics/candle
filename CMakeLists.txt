@@ -1,29 +1,21 @@
 cmake_minimum_required(VERSION 3.5)
 project(md80)
 
-# Default to C99
-if(NOT CMAKE_C_STANDARD)
-  set(CMAKE_C_STANDARD 99)
-endif()
 
-# Default to C++14
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
-endif()
+add_compile_options(-Wall -Wextra -Wpedantic)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
+add_subdirectory(Candle)
+add_subdirectory(Md80)
+add_subdirectory(Example)
+# include_directories("./")
+# include_directories("./include/")
+# include_directories("./include/utils")
 
-include_directories("./")
-include_directories("./include/")
-include_directories("./include/utils")
+# file(GLOB sources "src/*.cpp" "src/*.c" "src/utils/*.cpp")
 
-file(GLOB sources "src/*.cpp" "src/*.c" "src/utils/*.cpp")
+# add_executable(${PROJECT_NAME}
+#                 ${sources})
 
-add_executable(${PROJECT_NAME}
-                ${sources})
-
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)
+# set(CPACK_PROJECT_NAME ${PROJECT_NAME})
+# set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+# include(CPack)
