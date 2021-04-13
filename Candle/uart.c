@@ -7,12 +7,14 @@
 #include <time.h>
 
 #include <stdbool.h>
-
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>    //for mutex
+
 
 struct termios tty;
 struct termios ti_prev;
+pthread_mutex_t devLock;
 
 // #define UART_VERBOSE
 
@@ -37,6 +39,7 @@ int _map_baudrate(int baudrate)
 
 int uart_init(char * dev, int baudrate)
 {
+    pthread_mutex_lock(&devLock);
 #ifdef UART_VERBOSE
     printf("UART starting at %s with %d baud.\n\r", dev, baudrate);
 #endif
@@ -76,11 +79,13 @@ int uart_init(char * dev, int baudrate)
 #ifdef UART_VERBOSE
     printf("UART open.\n\r");
 #endif  
+    pthread_mutex_unlock(&devLock);
     return fd;
 }
 
 int uart_transmit(int fd, char* txBuffer, int txLen)
 {
+    pthread_mutex_lock(&devLock);
 #ifdef UART_VERBOSE
     printf("UART Transmitting %d bytes: ", txLen);
     for(int i = 0; i < txLen; i++)
@@ -88,15 +93,24 @@ int uart_transmit(int fd, char* txBuffer, int txLen)
     printf("\n\r");
 #endif
     int bytes = write(fd, txBuffer, txLen);
+    pthread_mutex_unlock(&devLock);
     return bytes;
 }
 
 int uart_receive(int fd, char* rxBuffer, int timeoutMs)
 {    
-    bool shouldStop = false;
+    pthread_mutex_lock(&devLock);
     char tmpBuffer[128] = {0};
-    usleep(100000);
+    usleep(3000);
     int bytesRead = read(fd, tmpBuffer, 128);
+    timeoutMs -= 3; 
+    while(timeoutMs > 0)
+    {
+        usleep(1000);
+        bytesRead += read(fd, &tmpBuffer[bytesRead], 128 - bytesRead);
+        timeoutMs--;
+    }
+    pthread_mutex_unlock(&devLock);
 
 #ifdef UART_VERBOSE
     printf("UART Received %d bytes: ", bytesRead);
@@ -111,8 +125,10 @@ int uart_receive(int fd, char* rxBuffer, int timeoutMs)
 
 int uart_restore(int fd)
 {
+    pthread_mutex_lock(&devLock);
     ti_prev.c_cflag &= ~HUPCL;        // This to release the RTS after close
     tcsetattr(fd, TCSANOW, &ti_prev); // Restore the previous serial config
     close(fd);
+    pthread_mutex_unlock(&devLock);
     return 1;
 }
