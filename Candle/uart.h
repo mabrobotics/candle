@@ -1,5 +1,5 @@
-#ifndef RS485_H_
-#define RS485_H_
+#ifndef UART_H_
+#define UART_H_
 
 #ifdef __cplusplus
 extern "C" {

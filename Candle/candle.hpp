@@ -2,6 +2,7 @@
 #define _CANDLE_H_
 
 #include <string>
+#include <Python.h>
 namespace mab
 {
     class Candle
@@ -32,6 +33,9 @@ namespace mab
         void setCanTx(const char* data, int len);
         int getCanRx(char * rxData);
         bool isOk();
+
+        //int giveRand(int value);
+        static PyObject* giveRandom(PyObject* self, PyObject* args);
     };
 }
 #endif

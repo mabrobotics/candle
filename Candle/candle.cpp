@@ -173,4 +173,40 @@ namespace mab
             return true;
         return false;
     }
+
+    int giveRand(int value)
+    {
+        return rand() % 100 + value; 
+    }
+
+    PyObject* Candle::giveRandom(PyObject* self, PyObject* args)
+    {
+        int n;
+ 
+        if (!PyArg_ParseTuple(args, "i", &n))
+            return NULL;
+    
+        return Py_BuildValue("i", giveRand(n));
+    }
+
+    
 }
+
+
+    static PyMethodDef candleMethods[] = {
+        {"giveRandom", mab::Candle::giveRandom, METH_VARARGS, "Return random value."},
+        {NULL, NULL, 0, NULL}
+    };
+ 
+    static struct PyModuleDef Candle = {
+	    PyModuleDef_HEAD_INIT,
+	    "Candle", //name of module.
+	    "Can Communication Module",
+	    -1,
+	    candleMethods
+    };
+
+    PyMODINIT_FUNC PyInit_Candle(void)
+    {
+        return PyModule_Create(&Candle);
+    }
