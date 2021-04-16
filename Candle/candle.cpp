@@ -10,6 +10,8 @@
 
 namespace mab
 {
+    Candle obj;
+
     Candle::Candle()
     {
 
@@ -30,6 +32,8 @@ namespace mab
         memset(canTxBuffer, 0, sizeof(canTxBuffer));
         memset(serialRxBuffer, 0, sizeof(serialRxBuffer));
         memset(serialTxBuffer, 0, sizeof(serialTxBuffer));
+
+        registerValue();
     }
 
     Candle::~Candle()
@@ -167,10 +171,67 @@ namespace mab
         return receivedBytes;
     }
 
-    bool Candle::isOk()
+    int Candle::isOk2()
     {
         if (fd > 0)
-            return true;
-        return false;
+            return 1;
+        return 0;
     }
+
+    PyObject* Candle::isOk(PyObject* self, PyObject* args)
+    {
+        int n = 0;
+
+        //n = fd2;
+        
+        n = obj.fd;
+
+        //if (fd)
+        //    n = fd;
+            //return NULL;
+
+        if (n > 0)
+            n = 1;
+        n = 0;
+
+        return Py_BuildValue("i", n);
+    }
+
+    int giveRand(int value)
+    {
+        return rand() % 100 + value; 
+    }
+
+    PyObject* Candle::giveRandom(PyObject* self, PyObject* args)
+    {
+        int n;
+
+
+        if (!PyArg_ParseTuple(args, "i", &n))
+            return NULL;
+    
+        return Py_BuildValue("i", giveRand(n));
+    }
+
+    
 }
+
+
+    static PyMethodDef candleMethods[] = {
+        {"isOk", mab::Candle::isOk, METH_VARARGS, "Return bool isOk value."},
+        {"giveRandom", mab::Candle::giveRandom, METH_VARARGS, "Return random value."},
+        {NULL, NULL, 0, NULL}
+    };
+ 
+    static struct PyModuleDef Candle = {
+	    PyModuleDef_HEAD_INIT,
+	    "Candle", //name of module.
+	    "Can Communication Module",
+	    -1,
+	    candleMethods
+    };
+
+    PyMODINIT_FUNC PyInit_Candle(void)
+    {
+        return PyModule_Create(&Candle);
+    }
