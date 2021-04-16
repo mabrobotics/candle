@@ -46,29 +46,47 @@ namespace mab
             RegulatorConfig positionReg;
             RegulatorConfig velocityReg;
             RegulatorConfig impedanceReg;
+            void _parseResponse(char rxBuffer[]);
         public:
+            //Creates an instance of Md80 with selected can id
             Md80(int id);
+            // Passes a pointer to CANdle class to be used for communication with Md80s
             static void initalize(mab::Candle *can);
+            // Sends CAN ping command to all drives with IDs from idStart to idEnd, prints list of drives that responded
             static std::vector<int> sendPing(mab::Candle*pCan, int idStart, int idEnd);
-            void parseResponse(char rxBuffer[]);
+            // Sends CAN command to enable/disable the motor
             bool enableMotor(bool enable);
+            // Sends CAN command to select control mode 
             bool setMode(mab::md80::Mode mode);
+            // Sends CAN command to set absolute position to zero at the current position
             bool setZeroPosition();
+            // Sends CAN command to set up a current limiter
             bool setCurrentLimit(float newLimit);
-            bool setNewConfig();
+            // Sends CAN command with current Impedance Controller config
             bool setImpedance();
+            // Sends CAN command to update Impedance Controller config
             bool setImpedance(float _kp, float _kd, float _posTarget, float _velTarget, float _torque, float _maxOutput);
+            // Sends CAN command with current Position Controller config
             bool setPosition();
-            bool setPosition(float kp, float ki, float kd, float ki_windup, float maxOutput, float posTarget);
+            // Sends CAN command to update Position Controller Config
+            bool setPosition(float kp, float ki, float kd, float ki_windup, float posTarget, float maxOutput);
+            // Sends CAN command with curret Velocity Controller onfig
             bool setVelocity();
-            bool setVelocity(float kp, float ki, float kd, float ki_windup, float maxOutput, float velTarget);
+            // Sends CAN command update Velocity Controller config
+            bool setVelocity(float kp, float ki, float kd, float ki_windup, float velTarget, float maxOutput);
+            // Prints last received Position, Velocity, Torque and Error Vector
             void printInfo();
+            // Returns last received Position
             float getPosition(){return position;};
+            // Returns last received Velocity
             float getVelocity(){return velocity;};
+            // Returns last received Torque
             float getTorque(){return torque;};
+            // Returns drives Id
             int getId(){return id;};
 
-            //CONFIGURATION FRAMES
+            //CONFIGURATION FRAMES - for may brake the drive is used incorrectly
+            bool _setNewConfig();
             bool _changeId(uint16_t canId);
             bool _calibrate();
         };

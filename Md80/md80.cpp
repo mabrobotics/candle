@@ -26,7 +26,7 @@ namespace mab
         {
             pCan = can;
         }
-        void Md80::parseResponse(char rxBuffer[])
+        void Md80::_parseResponse(char rxBuffer[])
         {
             errorVector = *(uint16_t*)&rxBuffer[1];
             position = *(float*)&rxBuffer[4];
@@ -45,7 +45,7 @@ namespace mab
             int rxLen = pCan->getCanRx(rxBuffer);
             if(rxLen == 20)
             {
-                parseResponse(rxBuffer);
+               _parseResponse(rxBuffer);
                 return true;
             }
             return false;
@@ -61,7 +61,7 @@ namespace mab
             int rxLen = pCan->getCanRx(rxBuffer);
             if(rxLen == 20)
             {
-                parseResponse(rxBuffer);
+                _parseResponse(rxBuffer);
                 return true;
             }
             return false;
@@ -79,7 +79,7 @@ namespace mab
             int rxLen = pCan->getCanRx(rxBuffer);
             if(rxLen == 20)
             {
-                parseResponse(rxBuffer);
+                _parseResponse(rxBuffer);
                 return true;
             }
             return false;
@@ -95,7 +95,7 @@ namespace mab
             int rxLen = pCan->getCanRx(rxBuffer);
             if(rxLen == 20)
             {
-                parseResponse(rxBuffer);
+                _parseResponse(rxBuffer);
                 return true;
             }
             return false;
@@ -111,7 +111,7 @@ namespace mab
             int rxLen = pCan->getCanRx(rxBuffer);
             if(rxLen == 20)
             {
-                parseResponse(rxBuffer);
+                _parseResponse(rxBuffer);
                 return true;
             }
             return false;
@@ -129,12 +129,12 @@ namespace mab
             if(rxLen == 20)
             {
                 currentLimit = newLimit;
-                parseResponse(rxBuffer);
+                _parseResponse(rxBuffer);
                 return true;
             }
             return false;
         }
-        bool Md80::setNewConfig()
+        bool Md80::_setNewConfig()
         {
             pCan->setTargetId(id);
             pCan->setMsgLen(2);
@@ -145,7 +145,7 @@ namespace mab
             int rxLen = pCan->getCanRx(rxBuffer);
             if(rxLen == 20)
             {
-                parseResponse(rxBuffer);
+                _parseResponse(rxBuffer);
                 return true;
             }
             return false;
@@ -172,7 +172,7 @@ namespace mab
             int rxLen = pCan->getCanRx(rxBuffer);
             if(rxLen == 20)
             {
-                parseResponse(rxBuffer);
+               _parseResponse(rxBuffer);
                 impedanceReg.kp = _kp;
                 impedanceReg.kd = _kd;
                 impedanceReg.posTarget = _posTarget;
@@ -185,9 +185,9 @@ namespace mab
         }
         bool Md80::setPosition()
         {
-            return setPosition(positionReg.kp, positionReg.ki, positionReg.kd, positionReg.iWindup, positionReg.maxOutput, positionReg.posTarget);
+            return setPosition(positionReg.kp, positionReg.ki, positionReg.kd, positionReg.iWindup, positionReg.posTarget, positionReg.maxOutput);
         }
-        bool Md80::setPosition(float kp, float ki, float kd, float ki_windup, float maxOutput, float posTarget)
+        bool Md80::setPosition(float kp, float ki, float kd, float ki_windup, float posTarget, float maxOutput)
         {
                 pCan->setTargetId(id);
             pCan->setMsgLen(32);
@@ -205,7 +205,7 @@ namespace mab
             int rxLen = pCan->getCanRx(rxBuffer);
             if(rxLen == 20)
             {
-                parseResponse(rxBuffer);
+               _parseResponse(rxBuffer);
                 positionReg.kp = kp;
                 positionReg.ki = ki;
                 positionReg.kd = kd;
@@ -218,9 +218,9 @@ namespace mab
         }
         bool Md80::setVelocity()
         {
-            return setVelocity(velocityReg.kp, velocityReg.ki, velocityReg.kd, velocityReg.iWindup, velocityReg.maxOutput, velocityReg.velTarget);
+            return setVelocity(velocityReg.kp, velocityReg.ki, velocityReg.kd, velocityReg.iWindup, velocityReg.velTarget, velocityReg.maxOutput);
         }
-        bool Md80::setVelocity(float kp, float ki, float kd, float ki_windup, float maxOutput, float velTarget)
+        bool Md80::setVelocity(float kp, float ki, float kd, float ki_windup, float velTarget, float maxOutput)
         {
             pCan->setTargetId(id);
             pCan->setMsgLen(32);
@@ -238,7 +238,7 @@ namespace mab
             int rxLen = pCan->getCanRx(rxBuffer);
             if(rxLen == 20)
             {
-                parseResponse(rxBuffer);
+                _parseResponse(rxBuffer);
                 velocityReg.kp = kp;
                 velocityReg.ki = ki;
                 velocityReg.kd = kd;
@@ -279,7 +279,7 @@ namespace mab
         void Md80::printInfo()
         {
             std::cout << "Drive 0x" << std::hex << id << std::dec << " - Pos: " << position << ", Vel: " << velocity <<
-                ", Torque: " << torque << std::endl;
+                ", Torque: " << torque << ", Errors: "<< errorVector <<  std::endl;
         }
     }
 }
