@@ -17,6 +17,7 @@ namespace mab
         unsigned char serialRxBuffer[128];
         unsigned char serialTxBuffer[128];
         int receivedBytes = 0;
+
     public:
         Candle(std::string canalizatorDev, int baudrate, int canSpeed);
         Candle();

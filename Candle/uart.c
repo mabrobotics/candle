@@ -56,7 +56,6 @@ int uart_init(char * dev, int baudrate)
     tty.c_cflag &= ~CSTOPB; // One stop bit
     tty.c_cflag &= ~CSIZE;  // Clear bit size setting
     tty.c_cflag |= CS8;     // 8 Bits mode
-    tty.c_cflag &= ~CRTSCTS; // Disable RTS/CTS flow control
     tty.c_cflag |= CREAD | CLOCAL; // Turn on READ & ignore ctrl lines (CLOCAL = 1)
     tty.c_lflag &= ~ICANON;     // Disable canonical mode
     tty.c_lflag &= ~ECHO; // Disable echo

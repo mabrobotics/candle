@@ -1,285 +1,544 @@
 #include "md80.hpp"
 
 #include <iostream>
-#include "unistd.h"
+#include <unistd.h>
 
 namespace mab
 {
-    namespace md80
+    //Md80 static variable definitions
+    int Md80::numOfDrives = 0;
+    Candle *Md80::pCan = nullptr;
+    int Md80::commsFrequency;
+    std::mutex Md80::commsMutex;
+    std::thread Md80::commsThread;
+    bool Md80::shouldStop = true;
+    std::queue<Md80::Msg> Md80::msgQueue;
+    std::list<Md80*> Md80::mdList;
+
+    const int stdResponseLen = 16;
+
+    Md80::Md80(int driveId)
     {
-        Candle *Md80::pCan = nullptr;
-
-        Md80::Md80(int driveId)
+        if(Md80::pCan == nullptr)
         {
-            if(Md80::pCan == nullptr)
-            {
-                std::cout << "Md80 not initialized! Use Md80::initialize before creating Md80 objects!" << std::endl;
+            std::cout << "Md80 not initialized! Use Md80::initialize before creating Md80 objects!" << std::endl;
+            return;
+        }
+        Md80::mdList.push_back(this);
+        Md80::numOfDrives++;
+        id = driveId;
+        position = 0.0f;
+        velocity = 0.0f;
+        torque = 0.0f;
+        errorVector = 0.0f;
+    }
+    Md80::~Md80()
+    {
+        mdList.remove(this);
+        Md80::numOfDrives--;
+    }
+    void Md80::_commsThreadCallback()
+    {
+        int count = 0;
+        while(true)
+        {
+            if(shouldStop)
                 return;
-            }
-            id = driveId;
-            position = 0.0f;
-            velocity = 0.0f;
-            torque = 0.0f;
-            errorVector = 0.0f;
+            commsMutex.lock();
+            _commsPerform();
+            commsMutex.unlock();
+            std::this_thread::sleep_for(std::chrono::milliseconds(8));
         }
-        void Md80::initalize(Candle *can)
+    }
+    void Md80::_commsPerform()
+    {
+        if(numOfDrives == 0)
+            return;     //No drives initialized so far - nothing to do
+        
+        //there are drives present 
+        if(msgQueue.size() == 0)
         {
-            pCan = can;
-        }
-        void Md80::_parseResponse(char rxBuffer[])
-        {
-            errorVector = *(uint16_t*)&rxBuffer[1];
-            position = *(float*)&rxBuffer[4];
-            velocity = *(float*)&rxBuffer[4+4];
-            torque = *(float*)&rxBuffer[4+12];
-        }
-        bool Md80::_changeId(uint16_t canId)
-        {
-            pCan->setTargetId(id);
-            pCan->setMsgLen(4);
-            char txBuffer[6] = {0x73, 0x73};
-            char rxBuffer[64];
-            *(uint16_t*)&txBuffer[2] = canId;
-            pCan->setCanTx(txBuffer, 4);
-            pCan->transmitAndReceive();
-            int rxLen = pCan->getCanRx(rxBuffer);
-            if(rxLen == 20)
+            // User haven't commanded anything - should send GetInfo for the next drive
+            static int driveIterator = 0;
+            if(driveIterator < (int)mdList.size())
             {
-               _parseResponse(rxBuffer);
-                return true;
+                auto item = mdList.begin();
+                std::advance(item, driveIterator);
+                msgQueue.push(Md80::Msg((*item)->id, MsgType::GET_INFO));
+                if(++driveIterator >= (int)mdList.size())
+                    driveIterator = 0;
             }
-            return false;
         }
-        bool Md80::_calibrate()
+        //There is users msg in queue
+        Md80*drive; //Pointer to currently served drive
+        for(auto md80 : mdList)
+            if(md80->id == msgQueue.front().id)
+                drive = md80;
+        bool msgSuccess = false;
+        switch (msgQueue.front().msgType)
         {
-            pCan->setTargetId(id);
-            pCan->setMsgLen(2);
-            char txBuffer[2] = {0x72, 0x72};
-            char rxBuffer[64];
-            pCan->setCanTx(txBuffer, 2);
-            pCan->transmitAndReceive();
-            int rxLen = pCan->getCanRx(rxBuffer);
-            if(rxLen == 20)
-            {
-                _parseResponse(rxBuffer);
-                return true;
-            }
-            return false;
-        }
-        bool Md80::enableMotor(bool enable)
+        case MsgType::FLASH_LED:
         {
-            pCan->setTargetId(id);
-            pCan->setMsgLen(3);
-            char txBuffer[3] = {0x01, 0x00, 0x00};
-            char rxBuffer[64];
-            if(enable)
-                txBuffer[2] = 0x01;
-            pCan->setCanTx(txBuffer, 3);
-            pCan->transmitAndReceive();
-            int rxLen = pCan->getCanRx(rxBuffer);
-            if(rxLen == 20)
-            {
-                _parseResponse(rxBuffer);
-                return true;
-            }
-            return false;
+            msgSuccess = drive->sendFlashLed();
+            break;
         }
-        bool Md80::setMode(Mode mode)
+        case MsgType::ENABLE:
         {
-            pCan->setTargetId(id);
-            pCan->setMsgLen(3);
-            char txBuffer[3] = {0x02, 0x00, (char)mode};
-            char rxBuffer[64];
-            pCan->setCanTx(txBuffer, 3);
-            pCan->transmitAndReceive();
-            int rxLen = pCan->getCanRx(rxBuffer);
-            if(rxLen == 20)
-            {
-                _parseResponse(rxBuffer);
-                return true;
-            }
-            return false;
+            msgSuccess = drive->sendEnableMotor((uint8_t)msgQueue.front().data[0]);
+            break;
         }
-        bool Md80::setZeroPosition()
+        case MsgType::CONTROL_SELECT:
         {
-            pCan->setTargetId(id);
-            pCan->setMsgLen(2);
-            char txBuffer[3] = {0x03, 0x00};
-            char rxBuffer[64];
-            pCan->setCanTx(txBuffer, 2);
-            pCan->transmitAndReceive();
-            int rxLen = pCan->getCanRx(rxBuffer);
-            if(rxLen == 20)
-            {
-                _parseResponse(rxBuffer);
-                return true;
-            }
-            return false;
+            msgSuccess = drive->sendMode((mab::Mode)msgQueue.front().data[0]);
+            break;
         }
-        bool Md80::setCurrentLimit(float newLimit)
+        case MsgType::SET_ZERO_POSITION:
         {
-            pCan->setTargetId(id);
-            pCan->setMsgLen(6);
-            char txBuffer[6] = {0x04, 0x00};
-            char rxBuffer[64];
-            *(float*)&txBuffer[2] = newLimit;
-            pCan->setCanTx(txBuffer, 6);
-            pCan->transmitAndReceive();
-            int rxLen = pCan->getCanRx(rxBuffer);
-            if(rxLen == 20)
-            {
-                currentLimit = newLimit;
-                _parseResponse(rxBuffer);
-                return true;
-            }
-            return false;
+            msgSuccess = drive->sendZeroPosition();
+            break;
         }
-        bool Md80::_setNewConfig()
+        case MsgType::SET_MAX_CURRENT:
         {
-            pCan->setTargetId(id);
-            pCan->setMsgLen(2);
-            char txBuffer[3] = {0x69, 0x00};
-            char rxBuffer[64];
-            pCan->setCanTx(txBuffer, 2);
-            pCan->transmitAndReceive();
-            int rxLen = pCan->getCanRx(rxBuffer);
-            if(rxLen == 20)
-            {
-                _parseResponse(rxBuffer);
-                return true;
-            }
-            return false;
+            msgSuccess = drive->sendCurrentLimit(*(float*)&msgQueue.front().data[0]);
+            break;
         }
-        bool Md80::setImpedance()
+        case MsgType::SET_POSITION_REG:
         {
-            return setImpedance(impedanceReg.kp, impedanceReg.kd, impedanceReg.posTarget, impedanceReg.velTarget, impedanceReg.torqueCmd, impedanceReg.maxOutput);
+            msgSuccess = drive->sendPosition(*(float*)&msgQueue.front().data[0],
+                                            *(float*)&msgQueue.front().data[4],
+                                            *(float*)&msgQueue.front().data[8],
+                                            *(float*)&msgQueue.front().data[12],
+                                            *(float*)&msgQueue.front().data[16],
+                                            *(float*)&msgQueue.front().data[20]);
+            break;
         }
-        bool Md80::setImpedance(float _kp, float _kd, float _posTarget, float _velTarget, float _torque, float _maxOutput)
+        case MsgType::SET_VELOCITY_REG:
         {
-            pCan->setTargetId(id);
-            pCan->setMsgLen(32);
-            char txBuffer[32];
-            char rxBuffer[64];
-            txBuffer[0] = 0x12;
-            *(float*)&txBuffer[2] = _kp;
-            *(float*)&txBuffer[2+4] = _kd;
-            *(float*)&txBuffer[2+8] = _posTarget;
-            *(float*)&txBuffer[2+12] = _velTarget;
-            *(float*)&txBuffer[2+16] = _torque;
-            *(float*)&txBuffer[2+20] = _maxOutput;
-            pCan->setCanTx(txBuffer, 32);
-            pCan->transmitAndReceive();
-            int rxLen = pCan->getCanRx(rxBuffer);
-            if(rxLen == 20)
-            {
-               _parseResponse(rxBuffer);
-                impedanceReg.kp = _kp;
-                impedanceReg.kd = _kd;
-                impedanceReg.posTarget = _posTarget;
-                impedanceReg.velTarget = _velTarget;
-                impedanceReg.torqueCmd = _torque;
-                impedanceReg.maxOutput = _maxOutput;
-                return true;
-            }
-            return false;
+            msgSuccess = drive->sendVelocity(*(float*)&msgQueue.front().data[0],
+                                            *(float*)&msgQueue.front().data[4],
+                                            *(float*)&msgQueue.front().data[8],
+                                            *(float*)&msgQueue.front().data[12],
+                                            *(float*)&msgQueue.front().data[16],
+                                            *(float*)&msgQueue.front().data[20]);
+            break;
         }
-        bool Md80::setPosition()
+        case MsgType::SET_IMPEDANCE_REG:
         {
-            return setPosition(positionReg.kp, positionReg.ki, positionReg.kd, positionReg.iWindup, positionReg.posTarget, positionReg.maxOutput);
+            msgSuccess = drive->sendImpedance(*(float*)&msgQueue.front().data[0],
+                                            *(float*)&msgQueue.front().data[4],
+                                            *(float*)&msgQueue.front().data[8],
+                                            *(float*)&msgQueue.front().data[12],
+                                            *(float*)&msgQueue.front().data[16],
+                                            *(float*)&msgQueue.front().data[20]);
+            break;
         }
-        bool Md80::setPosition(float kp, float ki, float kd, float ki_windup, float posTarget, float maxOutput)
+        case MsgType::GET_INFO:
         {
-                pCan->setTargetId(id);
-            pCan->setMsgLen(32);
-            char txBuffer[32];
-            char rxBuffer[64];
-            txBuffer[0] = 0x10;
-            *(float*)&txBuffer[2] = kp;
-            *(float*)&txBuffer[2+4] = ki;
-            *(float*)&txBuffer[2+8] = kd;
-            *(float*)&txBuffer[2+12] = ki_windup;
-            *(float*)&txBuffer[2+16] = maxOutput;
-            *(float*)&txBuffer[2+20] = posTarget;
-            pCan->setCanTx(txBuffer, 32);
-            pCan->transmitAndReceive();
-            int rxLen = pCan->getCanRx(rxBuffer);
-            if(rxLen == 20)
-            {
-               _parseResponse(rxBuffer);
-                positionReg.kp = kp;
-                positionReg.ki = ki;
-                positionReg.kd = kd;
-                positionReg.iWindup = ki_windup;
-                positionReg.maxOutput = maxOutput;
-                positionReg.posTarget = posTarget;
-                return true;
-            }
-            return false;
+            msgSuccess = drive->sendGetInfo();
+            break;
         }
-        bool Md80::setVelocity()
+        case MsgType::RESET_DRIVE:
         {
-            return setVelocity(velocityReg.kp, velocityReg.ki, velocityReg.kd, velocityReg.iWindup, velocityReg.velTarget, velocityReg.maxOutput);
+            msgSuccess = drive->sendReset();
+            break;
         }
-        bool Md80::setVelocity(float kp, float ki, float kd, float ki_windup, float velTarget, float maxOutput)
-        {
-            pCan->setTargetId(id);
-            pCan->setMsgLen(32);
-            char txBuffer[32];
-            char rxBuffer[64];
-            txBuffer[0] = 0x11;
-            *(float*)&txBuffer[2] = kp;
-            *(float*)&txBuffer[2+4] = ki;
-            *(float*)&txBuffer[2+8] = kd;
-            *(float*)&txBuffer[2+12] = ki_windup;
-            *(float*)&txBuffer[2+16] = maxOutput;
-            *(float*)&txBuffer[2+20] = velTarget;
-            pCan->setCanTx(txBuffer, 32);
-            pCan->transmitAndReceive();
-            int rxLen = pCan->getCanRx(rxBuffer);
-            if(rxLen == 20)
-            {
-                _parseResponse(rxBuffer);
-                velocityReg.kp = kp;
-                velocityReg.ki = ki;
-                velocityReg.kd = kd;
-                velocityReg.iWindup = ki_windup;
-                velocityReg.maxOutput = maxOutput;
-                velocityReg.posTarget = velTarget;
-                return true;
-            }
-            return false;
+        default:
+            break;
         }
+        msgQueue.pop();
+        if(msgSuccess); //TODO: set some variable in the drive or something - dont know yet
 
+    }
+    void Md80::initalize(Candle *can)
+    {
+        pCan = can;
+        pCan->setRxTimeout(2);
+        Md80::numOfDrives = 0;
+        Md80::commsFrequency = 50;
+        shouldStop = false;
+        Md80::commsThread = std::thread(_commsThreadCallback);
+    }
+    void Md80::deinitalize()
+    {
+        shouldStop = true;
+        Md80::commsThread.join();
+    }
+    void Md80::_parseResponse(char rxBuffer[])
+    {
+        errorVector = *(uint16_t*)&rxBuffer[1];
+        position = *(float*)&rxBuffer[4];
+        velocity = *(float*)&rxBuffer[4+4];
+        torque = *(float*)&rxBuffer[4+8];
+    }
 
-        std::vector<int> Md80::sendPing(Candle*pCan, int idStart, int idEnd)
+    void Md80::flashLed()
+    {
+        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::FLASH_LED));
+    }
+    void Md80::enable()
+    {
+        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::ENABLE));
+        Md80::msgQueue.back().data[0] = 1;
+    }
+    void Md80::disable()
+    {
+        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::ENABLE));
+        Md80::msgQueue.back().data[0] = 0;
+    }
+    void Md80::setControlMode(mab::Mode mode)
+    {
+        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::CONTROL_SELECT));
+        Md80::msgQueue.back().data[0] = (uint8_t)mode;
+    }
+    void Md80::setZeroPosition()
+    {
+        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::SET_ZERO_POSITION));
+    }
+    void Md80::setCurrentLimit(float currentLimit)
+    {
+        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::SET_MAX_CURRENT));
+        *(float*)&Md80::msgQueue.back().data[0] = currentLimit;
+    }
+    void Md80::setImpedanceController(float kp, float kd, float positionTarget, float velocityTarget, float torque, float maxOutput)
+    {
+        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::SET_IMPEDANCE_REG));
+        *(float*)&Md80::msgQueue.back().data[0] = kp;
+        *(float*)&Md80::msgQueue.back().data[4] = kd;
+        *(float*)&Md80::msgQueue.back().data[8] = positionTarget;
+        *(float*)&Md80::msgQueue.back().data[12] = velocityTarget;
+        *(float*)&Md80::msgQueue.back().data[16] = torque;
+        *(float*)&Md80::msgQueue.back().data[20] = maxOutput;
+    }
+    void Md80::setPositionController(float kp, float ki, float kd, float iWindup, float maxOutput, float positionTarget)
+    {
+        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::SET_POSITION_REG));
+        *(float*)&Md80::msgQueue.back().data[0] = kp;
+        *(float*)&Md80::msgQueue.back().data[4] = ki;
+        *(float*)&Md80::msgQueue.back().data[8] = kd;
+        *(float*)&Md80::msgQueue.back().data[12] = iWindup;
+        *(float*)&Md80::msgQueue.back().data[16] = maxOutput;
+        *(float*)&Md80::msgQueue.back().data[20] = positionTarget;
+    }
+    void Md80::setVelocityController(float kp, float ki, float kd, float iWindup, float maxOutput, float velocityTarget)
+    {
+        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::SET_VELOCITY_REG));
+        *(float*)&Md80::msgQueue.back().data[0] = kp;
+        *(float*)&Md80::msgQueue.back().data[4] = ki;
+        *(float*)&Md80::msgQueue.back().data[8] = kd;
+        *(float*)&Md80::msgQueue.back().data[12] = iWindup;
+        *(float*)&Md80::msgQueue.back().data[16] = maxOutput;
+        *(float*)&Md80::msgQueue.back().data[20] = velocityTarget;
+    }
+
+    bool Md80::_setNewCanId(uint16_t canId)
+    {
+        Md80::commsMutex.lock();
+        pCan->setTargetId(id);
+        pCan->setMsgLen(8);
+        char txBuffer[6];
+        char rxBuffer[64];
+        txBuffer[0] = 0x20;
+        *(uint16_t*)&txBuffer[2] = canId;
+        *(uint32_t*)&txBuffer[4] = 1000000;
+        pCan->setCanTx(txBuffer, 8);
+        pCan->transmitAndReceive();
+        pCan->getCanRx(rxBuffer);
+        usleep(50000);
+        int oldId = this->id;
+        this->id = canId;
+        if(this->sendGetInfo())
+            return true;
+        this->id = oldId;
+        Md80::commsMutex.unlock();
+        return false;
+    }
+    bool Md80::_setCalibration()
+    {
+        Md80::commsMutex.lock();
+        pCan->setTargetId(id);
+        pCan->setMsgLen(1);
+        char txBuffer = {0x70};
+        char rxBuffer[64];
+        pCan->setCanTx(&txBuffer, 1);
+        pCan->transmitAndReceive();
+        int rxLen = pCan->getCanRx(rxBuffer);
+        Md80::commsMutex.unlock();
+        if(rxLen== stdResponseLen)
         {
-            std::vector<int> drivesPinged;
-            pCan->setMsgLen(5);
-            uint8_t buffer[5]; buffer[0] = 0x00; buffer[1] = 0x00; buffer[2] = 0x00;
-            char rxBuffer[64];
-            pCan->setCanTx((char*)buffer, 2);
-
-            for(int i = idStart; i < idEnd; i++)
-            {
-                if (i == 0x69)
-                    continue;
-                pCan->setTargetId(i);
-                pCan->transmitAndReceive();
-            
-                int len = pCan->getCanRx(rxBuffer);
-                if (len > 10)
-                    drivesPinged.push_back(i);
-            }
-            std::cout << "foundDrives: " << drivesPinged.size() << std::endl;
-            for(int i = 0; i < (int)drivesPinged.size(); i++)
-                std::cout << "[" << i << "]\tID: " << drivesPinged[i] << " (0x"<< std::hex << drivesPinged[i] << std::dec << ")" << std::endl; 
-            return drivesPinged;
+            _parseResponse(rxBuffer);
+            return true;
         }
-
-        void Md80::printInfo()
+        return false;
+    }
+    bool Md80::sendFlashLed()
+    {
+        pCan->setTargetId(id);
+        pCan->setMsgLen(2);
+        char txBuffer[3] = {0x00, 0x00, 0x00};
+        char rxBuffer[64];
+        pCan->setCanTx(txBuffer, 3);
+        pCan->transmitAndReceive();
+        int rxLen = pCan->getCanRx(rxBuffer);
+        if(rxLen== stdResponseLen)
         {
-            std::cout << "Drive 0x" << std::hex << id << std::dec << " - Pos: " << position << ", Vel: " << velocity <<
-                ", Torque: " << torque << ", Errors: "<< errorVector <<  std::endl;
+            _parseResponse(rxBuffer);
+            return true;
         }
+        return false;
+    }
+    bool Md80::sendEnableMotor(bool enable)
+    {
+        pCan->setTargetId(id);
+        pCan->setMsgLen(3);
+        char txBuffer[3] = {0x01, 0x00, 0x00};
+        char rxBuffer[64];
+        if(enable)
+            txBuffer[2] = 0x01;
+        pCan->setCanTx(txBuffer, 3);
+        pCan->transmitAndReceive();
+        int rxLen = pCan->getCanRx(rxBuffer);
+        if(rxLen== stdResponseLen)
+        {
+            _parseResponse(rxBuffer);
+            return true;
+        }
+        return false;
+    }
+    bool Md80::sendMode(Mode mode)
+    {
+        pCan->setTargetId(id);
+        pCan->setMsgLen(3);
+        char txBuffer[3] = {0x02, 0x00, (char)mode};
+        char rxBuffer[64];
+        pCan->setCanTx(txBuffer, 3);
+        pCan->transmitAndReceive();
+        int rxLen = pCan->getCanRx(rxBuffer);
+        if(rxLen== stdResponseLen)
+        {
+            _parseResponse(rxBuffer);
+            return true;
+        }
+        return false;
+    }
+    bool Md80::sendZeroPosition()
+    {
+        pCan->setTargetId(id);
+        pCan->setMsgLen(2);
+        char txBuffer[3] = {0x03, 0x00};
+        char rxBuffer[64];
+        pCan->setCanTx(txBuffer, 2);
+        pCan->transmitAndReceive();
+        int rxLen = pCan->getCanRx(rxBuffer);
+        if(rxLen== stdResponseLen)
+        {
+            _parseResponse(rxBuffer);
+            return true;
+        }
+        return false;
+    }
+    bool Md80::sendCurrentLimit(float newLimit)
+    {
+        pCan->setTargetId(id);
+        pCan->setMsgLen(6);
+        char txBuffer[6] = {0x04, 0x00};
+        char rxBuffer[64];
+        *(float*)&txBuffer[2] = newLimit;
+        pCan->setCanTx(txBuffer, 6);
+        pCan->transmitAndReceive();
+        int rxLen = pCan->getCanRx(rxBuffer);
+        if(rxLen== stdResponseLen)
+        {
+            currentLimit = newLimit;
+            _parseResponse(rxBuffer);
+            return true;
+        }
+        return false;
+    }
+    bool Md80::sendGetInfo()
+    {
+        pCan->setTargetId(id);
+        pCan->setMsgLen(2);
+        char txBuffer[2] = {0x14, 0x00};
+        char rxBuffer[64];
+        pCan->setCanTx(txBuffer, 2);
+        pCan->transmitAndReceive();
+        int rxLen = pCan->getCanRx(rxBuffer);
+        if(rxLen== stdResponseLen)
+        {
+            _parseResponse(rxBuffer);
+            return true;
+        }
+        return false;
+    }
+    bool Md80::_setWatchdogStop()
+    {
+        Md80::commsMutex.lock();
+        pCan->setTargetId(id);
+        pCan->setMsgLen(2);
+        char txBuffer[6] = {0x19, 0x00};
+        char rxBuffer[64];
+        pCan->setCanTx(txBuffer, 2);
+        pCan->transmitAndReceive();
+        int rxLen = pCan->getCanRx(rxBuffer);
+        Md80::commsMutex.unlock();
+        if(rxLen== stdResponseLen)
+        {
+            _parseResponse(rxBuffer);
+            return true;
+        }
+        return false;
+    }
+    bool Md80::_setNewConfig()
+    {
+        Md80::commsMutex.lock();
+        pCan->setTargetId(id);
+        pCan->setMsgLen(2);
+        char txBuffer[2] = {0x21, 0x00};
+        char rxBuffer[64];
+        pCan->setCanTx(txBuffer, 2);
+        pCan->transmitAndReceive();
+        int rxLen = pCan->getCanRx(rxBuffer);
+        Md80::commsMutex.unlock();
+        if(rxLen== stdResponseLen)
+        {
+            _parseResponse(rxBuffer);
+            return true;
+        }
+        return false;
+    }
+
+    bool Md80::sendImpedance(float _kp, float _kd, float _posTarget, float _velTarget, float _torque, float _maxOutput)
+    {
+        pCan->setTargetId(id);
+        pCan->setMsgLen(32);
+        char txBuffer[32];
+        char rxBuffer[64];
+        txBuffer[0] = 0x12;
+        *(float*)&txBuffer[2] = _kp;
+        *(float*)&txBuffer[2+4] = _kd;
+        *(float*)&txBuffer[2+8] = _posTarget;
+        *(float*)&txBuffer[2+12] = _velTarget;
+        *(float*)&txBuffer[2+16] = _torque;
+        *(float*)&txBuffer[2+20] = _maxOutput;
+        pCan->setCanTx(txBuffer, 32);
+        pCan->transmitAndReceive();
+        int rxLen = pCan->getCanRx(rxBuffer);
+        if(rxLen== stdResponseLen)
+        {
+            _parseResponse(rxBuffer);
+            impedanceReg.kp = _kp;
+            impedanceReg.kd = _kd;
+            impedanceReg.posTarget = _posTarget;
+            impedanceReg.velTarget = _velTarget;
+            impedanceReg.torqueCmd = _torque;
+            impedanceReg.maxOutput = _maxOutput;
+            return true;
+        }
+        return false;
+    }
+    bool Md80::sendPosition(float kp, float ki, float kd, float ki_windup, float posTarget, float maxOutput)
+    {
+        pCan->setTargetId(id);
+        pCan->setMsgLen(32);
+        char txBuffer[32];
+        char rxBuffer[64];
+        txBuffer[0] = 0x10;
+        *(float*)&txBuffer[2] = kp;
+        *(float*)&txBuffer[2+4] = ki;
+        *(float*)&txBuffer[2+8] = kd;
+        *(float*)&txBuffer[2+12] = ki_windup;
+        *(float*)&txBuffer[2+16] = maxOutput;
+        *(float*)&txBuffer[2+20] = posTarget;
+        pCan->setCanTx(txBuffer, 32);
+        pCan->transmitAndReceive();
+        int rxLen = pCan->getCanRx(rxBuffer);
+        if(rxLen== stdResponseLen)
+        {
+            _parseResponse(rxBuffer);
+            positionReg.kp = kp;
+            positionReg.ki = ki;
+            positionReg.kd = kd;
+            positionReg.iWindup = ki_windup;
+            positionReg.maxOutput = maxOutput;
+            positionReg.posTarget = posTarget;
+            return true;
+        }
+        return false;
+    }
+    bool Md80::sendVelocity(float kp, float ki, float kd, float ki_windup, float velTarget, float maxOutput)
+    {
+        pCan->setTargetId(id);
+        pCan->setMsgLen(32);
+        char txBuffer[32];
+        char rxBuffer[64];
+        txBuffer[0] = 0x11;
+        *(float*)&txBuffer[2] = kp;
+        *(float*)&txBuffer[2+4] = ki;
+        *(float*)&txBuffer[2+8] = kd;
+        *(float*)&txBuffer[2+12] = ki_windup;
+        *(float*)&txBuffer[2+16] = maxOutput;
+        *(float*)&txBuffer[2+20] = velTarget;
+        pCan->setCanTx(txBuffer, 32);
+        pCan->transmitAndReceive();
+        int rxLen = pCan->getCanRx(rxBuffer);
+        if(rxLen== stdResponseLen)
+        {
+            _parseResponse(rxBuffer);
+            velocityReg.kp = kp;
+            velocityReg.ki = ki;
+            velocityReg.kd = kd;
+            velocityReg.iWindup = ki_windup;
+            velocityReg.maxOutput = maxOutput;
+            velocityReg.posTarget = velTarget;
+            return true;
+        }
+        return false;
+    }
+    bool Md80::sendReset()
+    {
+        pCan->setTargetId(id);
+        pCan->setMsgLen(2);
+        char txBuffer[2] = {0x13, 0x00};
+        char rxBuffer[64];
+        pCan->setCanTx(txBuffer, 2);
+        pCan->transmitAndReceive();
+        int rxLen = pCan->getCanRx(rxBuffer);
+        if(rxLen== stdResponseLen)
+        {
+            _parseResponse(rxBuffer);
+            return true;
+        }
+        return false;
+    }
+
+    std::vector<int> Md80::sendPing(Candle*pCan, int idStart, int idEnd)
+    {
+        std::vector<int> drivesPinged;
+        pCan->setMsgLen(5);
+        uint8_t buffer[5]; buffer[0] = 0x00; buffer[1] = 0x00; buffer[2] = 0x00;
+        char rxBuffer[64];
+        pCan->setCanTx((char*)buffer, 2);
+
+        for(int i = idStart; i < idEnd; i++)
+        {
+            if (i == 0x69)
+                continue;
+            pCan->setTargetId(i);
+            pCan->transmitAndReceive();
+        
+            int len = pCan->getCanRx(rxBuffer);
+            if (len > 10)
+                drivesPinged.push_back(i);
+        }
+        std::cout << "foundDrives: " << drivesPinged.size() << std::endl;
+        for(int i = 0; i < (int)drivesPinged.size(); i++)
+            std::cout << "[" << i << "]\tID: " << drivesPinged[i] << " (0x"<< std::hex << drivesPinged[i] << std::dec << ")" << std::endl; 
+        return drivesPinged;
+    }
+
+    void Md80::printInfo()
+    {
+        std::cout << "Drive 0x" << std::hex << id << std::dec << " - Pos: " << position << ", Vel: " << velocity <<
+            ", Torque: " << torque << ", Errors: "<< errorVector <<  std::endl;
     }
 }
