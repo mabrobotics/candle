@@ -31,6 +31,7 @@ namespace mab
         bool setCanSpeed(int newBaudrate);
         bool setRxTimeout(int timeout);
         void setCanTx(const char* data, int len);
+        int getCanSpeed() {return this->canSpeed;};
         int getCanRx(char * rxData);
         bool isOk();
     };

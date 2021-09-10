@@ -33,8 +33,6 @@ namespace mab
         float maxOutput;
         float torqueCmd;
     };
-
-
     class Md80
     {
     enum class MsgType : uint8_t
@@ -44,10 +42,10 @@ namespace mab
         CONTROL_SELECT = 0x02,
         SET_ZERO_POSITION = 0x03,
         SET_MAX_CURRENT = 0x04,
-        SET_POSITION_REG = 0x10,    //TODO
-        SET_VELOCITY_REG = 0x11,    //TODO
+        SET_POSITION_REG = 0x10,    
+        SET_VELOCITY_REG = 0x11,
         SET_IMPEDANCE_REG = 0x12,
-        RESET_DRIVE = 0x13, //TODO
+        RESET_DRIVE = 0x13,
         GET_INFO = 0x14
 
         /* These are handled differenty than other msgs
@@ -73,6 +71,7 @@ namespace mab
     static bool shouldStop;
     static std::queue<Msg> msgQueue;
     static std::list<Md80*> mdList;
+    const int stdResponseLen = 16;
     private:
         int id;
         float position;
@@ -80,6 +79,7 @@ namespace mab
         float torque;
         float currentLimit;
         uint16_t errorVector;
+        bool driveOk;
         RegulatorConfig positionReg;
         RegulatorConfig velocityReg;
         RegulatorConfig impedanceReg;
@@ -106,9 +106,6 @@ namespace mab
         // Sends CAN ping command to all drives with IDs from idStart to idEnd, prints list of drives that responded
         static std::vector<int> sendPing(mab::Candle*pCan, int idStart, int idEnd);
         
-        // Prints last received Position, Velocity, Torque and Error Vector
-        void printInfo();
-        
         void flashLed();
         void enable();
         void disable();
@@ -118,7 +115,10 @@ namespace mab
         void setImpedanceController(float kp, float kd, float positionTarget, float velocityTarget, float torque, float maxOutput);
         void setPositionController(float kp, float ki, float kd, float iWindup, float maxOutput, float positionTarget);
         void setVelocityController(float kp, float ki, float kd, float iWindup, float maxOutput, float velocityTarget);
+        void restart();
         
+        // Prints last received Position, Velocity, Torque and Error Vector
+        void printInfo();
         // Returns last received Position
         float getPosition(){return position;};
         // Returns last received Velocity
@@ -129,10 +129,10 @@ namespace mab
         int getId(){return id;};
 
         //CONFIGURATION FRAMES - for may brake the drive is used incorrectly
-        bool _setWatchdogStop();
-        bool _setNewConfig();
-        bool _setNewCanId(uint16_t canId);
-        bool _setCalibration();
+        bool configStopWatchdog();
+        bool configSetNewCanConfig(uint16_t newId, uint32_t newBaudrate);
+        bool configSaveNewConfig();
+        bool configCalibration();
     };
 }
 #endif
