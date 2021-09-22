@@ -12,6 +12,7 @@ namespace mab
     std::mutex Md80::commsMutex;
     std::thread Md80::commsThread;
     bool Md80::shouldStop = true;
+    bool Md80::shouldPause = true;
     std::queue<Md80::Msg> Md80::msgQueue;
     std::list<Md80*> Md80::mdList;
 
@@ -38,16 +39,26 @@ namespace mab
         mdList.remove(this);
         Md80::numOfDrives--;
     }
+    void Md80::enableAutoLoop()
+    {   
+        shouldPause = false;    
+    }
+    void Md80::disableAutoLoop()
+    {
+           shouldPause = true; 
+    }
     void Md80::_commsThreadCallback()
     {
         while(true)
         {
             if(shouldStop)
                 return;
-            commsMutex.lock();
+
             _commsPerform();
-            commsMutex.unlock();
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+            float period = 1.0f / (float)commsFrequency;
+            int millis = period * 1000.0f;
+            std::this_thread::sleep_for(std::chrono::milliseconds(millis));
         }
     }
     void Md80::_commsPerform()
@@ -56,6 +67,10 @@ namespace mab
             return;     //No drives initialized so far - nothing to do
         
         //there are drives present 
+        
+        if(msgQueue.size() == 0 && shouldPause)
+            return; //empty queue, and should not auto loop
+            
         if(msgQueue.size() == 0)
         {
             // User haven't commanded anything - should send GetInfo for the next drive
@@ -75,7 +90,6 @@ namespace mab
             if(md80->id == msgQueue.front().id)
                 drive = md80;
         bool msgSuccess = false;
-         std::cout << "Sending " << (int)msgQueue.front().msgType << " to " << drive->id << std::endl;
         switch (msgQueue.front().msgType)
         {
         case MsgType::FLASH_LED:
@@ -152,9 +166,9 @@ namespace mab
     void Md80::initalize(Candle *can)
     {
         pCan = can;
-        pCan->setRxTimeout(2);
+        pCan->setRxTimeout(3000);
         Md80::numOfDrives = 0;
-        Md80::commsFrequency = 50;
+        Md80::commsFrequency = 100;
         shouldStop = false;
         Md80::commsThread = std::thread(_commsThreadCallback);
     }
@@ -312,8 +326,8 @@ namespace mab
     {
         commsMutex.lock();
         std::vector<int> drivesPinged;
-        pCan->setMsgLen(5);
-        uint8_t buffer[5]; buffer[0] = 0x00; buffer[1] = 0x00; buffer[2] = 0x00;
+        pCan->setMsgLen(2);
+        uint8_t buffer[2]; buffer[0] = 0x00; buffer[1] = 0x00;
         char rxBuffer[64];
         pCan->setCanTx((char*)buffer, 2);
 

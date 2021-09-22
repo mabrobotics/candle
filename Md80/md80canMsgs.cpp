@@ -1,5 +1,4 @@
 #include "md80.hpp"
-
 namespace mab
 {
     const int stdResponseLen = 16;
@@ -12,6 +11,7 @@ namespace mab
         pCan->setCanTx(txBuffer, 3);
         pCan->transmitAndReceive();
         int rxLen = pCan->getCanRx(rxBuffer);
+
         if(rxLen== stdResponseLen)
         {
             _parseResponse(rxBuffer);
@@ -91,7 +91,7 @@ namespace mab
     {
         pCan->setTargetId(id);
         pCan->setMsgLen(2);
-        char txBuffer[2] = {0x14, 0x00};
+        char txBuffer[2] = {0x05, 0x00};
         char rxBuffer[64];
         pCan->setCanTx(txBuffer, 2);
         pCan->transmitAndReceive();

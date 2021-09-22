@@ -6,7 +6,11 @@
 #include <cstdio>
 #include <iostream>
 #include "unistd.h"
+
 #define CAN_DEFAULT_SPEED 1000000
+#define CANDLE_TRANSMIT 't'
+#define CANDLE_RECEIVE 'r'
+#define CANDLE_TRANSMIT_AND_RECEIVE 'x'
 
 namespace mab
 {
@@ -15,15 +19,21 @@ namespace mab
 
     }
 
-    Candle::Candle(std::string canalizatorDev, int baudrate = 115200, int canBaudrate = 1000000)
+    Candle::Candle(std::string canalizatorDev, int canBaudrate = 1000000)
     {
-        fd = uart_init(&canalizatorDev[0], baudrate);
+        fd = uart_init(&canalizatorDev[0], 100);
         if (fd < 0)
         {
             std:: cout << "Failed to open port " << canalizatorDev << std::endl;
             return;
         }
-        setRxTimeout(5);
+        std::string setSerialCommand = "setserial " + canalizatorDev + " low_latency";
+        if (system(setSerialCommand.c_str()) != 0)
+        {
+            std:: cout << "Could not execute command '" << setSerialCommand <<"'. Communication in low-speed mode." << std::endl;
+            return;
+        }
+        setRxTimeout(1000);
         setCanSpeed(canBaudrate);
         setMsgLen(0);
         memset(canRxBuffer, 0, sizeof(canRxBuffer));
@@ -32,97 +42,85 @@ namespace mab
         memset(serialTxBuffer, 0, sizeof(serialTxBuffer));
 
     }
-
     Candle::~Candle()
     {
         uart_restore(fd);
     }
-    /**
-     * Transmits and receives data from CAN communication.
-     *
-     * Transmits contents of canTxBuffer and puts any received values to canRxBuffer.
-     * Requires targetCanId and msgLen fields to be set before use.
-     *
-     * @return number of bytes received via CAN. If < 0, canalizator failed to respond.
-     */
-    int Candle::transmitAndReceive()
-    {
-        sprintf((char*)serialTxBuffer, "tr%.3d%.2d", targetCanId, msgLen);
-        memcpy(&serialTxBuffer[7], canTxBuffer, msgLen);
-        int serialTxLen = msgLen + 7;
-        uart_transmit(fd, (char*)serialTxBuffer, serialTxLen);
-        int serialRxLen = uart_receive(fd, (char*)serialRxBuffer, timeout);
-        if( serialRxLen > 7)
-            memcpy(canRxBuffer, &serialRxBuffer[7], serialRxLen - 7);
-        receivedBytes = serialRxLen - 7;
-        return receivedBytes;
-    }
-    /**
-     * Receives data from CAN communication.
-     *
-     * Puts any received values to canRxBuffer.
-     * Requires targetCanId and msgLen fields to be set before use.
-     *
-     * @return number of bytes received via CAN. If < 0, canalizator failed to respond.
-     */
     int Candle::receive()
     {
-        sprintf((char*)serialTxBuffer, "rx%.3d%.2d", targetCanId, msgLen);
-        int serialTxLen = 7;
-        uart_transmit(fd,(char*)serialTxBuffer, serialTxLen);
-        int serialRxLen = uart_receive(fd, (char*)serialRxBuffer, timeout);
-        if( serialRxLen > 7)
-            memcpy(canRxBuffer, &serialRxBuffer[7], serialRxLen - 7);
-        receivedBytes = serialRxLen - 7;
-        return receivedBytes;
+        return transfer(false, true);
     }
-    /**
-     * Transmits and receives data from CAN communication.
-     *
-     * Transmits contents of canTxBuffer.
-     * Requires targetCanId and msgLen fields to be set before use.
-     *
-     * @return true if data was send, false when not.
-     */
     bool Candle::transmit()
     {
-        sprintf((char*)serialTxBuffer, "tx%.3d%.2d", targetCanId, msgLen);
-        memcpy(&serialTxBuffer[7], canTxBuffer, msgLen);
-        int serialTxLen = msgLen + 7;
-        if (uart_transmit(fd, (char*)serialTxBuffer, serialTxLen) > 0)
+        if(transfer(true, false) >= 0)
             return true;
-        else  
-            return false;
+        return false;
+    }
+    int Candle::transmitAndReceive()
+    {
+        return transfer(true, true);
     }
 
-    bool Candle::setRxTimeout(int timeoutMs)
+    int Candle::transfer(bool tx, bool rx)
     {
-        if(timeoutMs < 0 || timeoutMs > 10000)
+        if(tx)
+            serialTxBuffer[0] = CANDLE_TRANSMIT;
+        if(rx)
+            serialTxBuffer[0] = CANDLE_RECEIVE;
+        if(tx && rx)
+            serialTxBuffer[0] = CANDLE_TRANSMIT_AND_RECEIVE;
+        int serialTxLen = 1;
+        if(tx)
         {
-            std::cout << "Timeout out of range. Must be 1ms - 10000ms. Setting 100 ms." << std::endl;
-            timeoutMs = 100;
+            *(uint16_t*)&serialTxBuffer[1] = targetCanId;
+            serialTxBuffer[3] = msgLen;
+            memcpy(&serialTxBuffer[4], canTxBuffer, msgLen);
+            serialTxLen = msgLen + 4;
+            if(!rx)
+                receivedBytes = 0;
         }
-        sprintf((char*)serialTxBuffer, "cft%.4d", timeoutMs);
-        uart_transmit(fd, (char*)serialTxBuffer, 7);
-        if(uart_receive(fd,(char*)serialRxBuffer, timeoutMs) != 0)
+        uart_transmit(fd, (char*)serialTxBuffer, serialTxLen);
+        int serialRxLen = uart_receive(fd, (char*)serialRxBuffer, timeout);
+        if(rx)
         {
-            timeout = timeoutMs;
+            if( serialRxLen > 4)
+                memcpy(canRxBuffer, &serialRxBuffer[4], serialRxLen - 4);
+            receivedBytes = serialRxLen - 4;
+        }
+        return receivedBytes;
+    }
+
+    bool Candle::setRxTimeout(int timeoutUs)
+    {
+        if(timeoutUs < 10 || timeoutUs > 100000)
+        {
+            std::cout << "Timeout out of range. Must be 10us - 100000us. Setting 1000 us." << std::endl;
+            timeoutUs = 1000;
+        }
+        serialTxBuffer[0] = 'c';
+        serialTxBuffer[1] = 't';
+        *(uint32_t*)&serialTxBuffer[2] = timeoutUs;
+        uart_transmit(fd, (char*)serialTxBuffer, 2+4);
+        if(uart_receive(fd,(char*)serialRxBuffer, timeout) != 0)
+        {
+            timeout = timeoutUs/1000;
             return true;
         }
         else
             return false;
-        usleep(1000);
     }
 
     bool Candle::setCanSpeed(int canBaud)
     {
-        if(canBaud < 100000 || canBaud > 5000000)
+        if(canBaud != 1000000 && canBaud != 2500000 && canBaud != 5000000)
         {
-            std::cout << "CAN speed out of range. Must be 100kbps - 5Mbps. Setting 1Mbps." << std::endl;
+            std::cout << "CAN speed out of range. Must be 1M, 2.5M or 5M. Setting 1Mbps." << std::endl;
             canBaud = CAN_DEFAULT_SPEED;
         }
-        sprintf((char*)serialTxBuffer, "cfb%.7d", canBaud);
-        uart_transmit(fd, (char*)serialTxBuffer, 10);
+        serialTxBuffer[0] = 'c';
+        serialTxBuffer[1] = 'b';
+        *(uint32_t*)&serialTxBuffer[2] = canBaud;
+        uart_transmit(fd, (char*)serialTxBuffer, 2+4);
         if(uart_receive(fd,(char*)serialRxBuffer, timeout) != 0)
         {
             canSpeed = canBaud;

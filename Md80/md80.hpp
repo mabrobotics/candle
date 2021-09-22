@@ -46,7 +46,7 @@ namespace mab
         SET_VELOCITY_REG = 0x11,
         SET_IMPEDANCE_REG = 0x12,
         RESET_DRIVE = 0x13,
-        GET_INFO = 0x14
+        GET_INFO = 0x05
 
         /* These are handled differenty than other msgs
         SET_CAN_CONFIG = 0x20,  
@@ -69,6 +69,7 @@ namespace mab
     static void _commsThreadCallback();
     static void _commsPerform();
     static bool shouldStop;
+    static bool shouldPause;
     static std::queue<Msg> msgQueue;
     static std::list<Md80*> mdList;
     const int stdResponseLen = 16;
@@ -105,6 +106,9 @@ namespace mab
 
         // Sends CAN ping command to all drives with IDs from idStart to idEnd, prints list of drives that responded
         static std::vector<int> sendPing(mab::Candle*pCan, int idStart, int idEnd);
+
+        static void enableAutoLoop();
+        static void disableAutoLoop();
         
         void flashLed();
         void enable();
