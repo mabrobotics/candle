@@ -6,10 +6,24 @@
 
 int main (int argc, char ** argv)
 {
-	mab::Candle can("/dev/ttyACM1", 1000000);
+	mab::Candle can("/dev/ttyACM1", 4000000);
 	mab::Md80::initalize(&can);
-	can.setCanSpeed(2500000);
-	mab::Md80::sendPing(&can, 0,70);
+	auto ids = mab::Md80::sendPing(&can, 29, 80);
+	return 1;
+	if(ids.size() == 1)
+	{
+		mab::Md80 xd(69);
+		xd.setZeroPosition();
+		mab::Md80 x(ids[0]);
+		x.configSetNewCanConfig(ids[0], 4000000);
+		sleep(1);
+		can.setCanSpeed(4000000);
+		if (mab::Md80::sendPing(&can, 29, 80).size() == 1)
+		{
+			if (x.configSaveNewConfig())
+				std::cout << "SUCCESS!" << std::endl;
+		}
+	}
 
 	mab::Md80::deinitalize();
 	return 0;

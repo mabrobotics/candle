@@ -251,7 +251,7 @@ namespace mab
 
     bool Md80::configSetNewCanConfig(uint16_t newId, uint32_t newBaudrate)
     {
-        if(newBaudrate != 1000000 && newBaudrate != 2500000 && newBaudrate != 5000000)
+        if(newBaudrate != 1000000 && newBaudrate != 2500000 && newBaudrate != 4000000 && newBaudrate != 5000000)
         {
             std::cout << "Selected baudrate [" << newBaudrate << "] is not supported!" << std::endl;
             return false;
@@ -273,17 +273,8 @@ namespace mab
         pCan->setCanTx(txBuffer, 8);
         pCan->transmitAndReceive();
         pCan->getCanRx(rxBuffer);
-        usleep(50000);
-        pCan->setCanSpeed(newBaudrate);
-        pCan->transmitAndReceive();
-        pCan->getCanRx(rxBuffer);
-        int oldId = this->id;
-        this->id = newId;
-        if(this->sendGetInfo())
-            return true;
-        this->id = oldId;
         Md80::commsMutex.unlock();
-        return false;
+        return true;
     }
     bool Md80::configSaveNewConfig()
     {
