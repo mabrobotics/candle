@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <unistd.h>
+#include <chrono>
 
 namespace mab
 {
@@ -12,11 +13,16 @@ namespace mab
     std::mutex Md80::commsMutex;
     std::thread Md80::commsThread;
     bool Md80::shouldStop = true;
-    bool Md80::shouldPause = true;
+    bool Md80::autoLoopEnabled = false;
     std::queue<Md80::Msg> Md80::msgQueue;
     std::list<Md80*> Md80::mdList;
 
     const int stdResponseLen = 16;
+
+    int _getCurrentTimestamp()
+    {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    }
 
     Md80::Md80(int driveId)
     {
@@ -39,13 +45,18 @@ namespace mab
         mdList.remove(this);
         Md80::numOfDrives--;
     }
+    float Md80::getPosition() {return position;}
+    float Md80::getVelocity() {return velocity;}
+    float Md80::getTorque() {return torque;}
+    int Md80::getId() {return id;}
+
     void Md80::enableAutoLoop()
     {   
-        shouldPause = false;    
+        autoLoopEnabled = true;    
     }
     void Md80::disableAutoLoop()
     {
-           shouldPause = true; 
+        autoLoopEnabled = false; 
     }
     void Md80::_commsThreadCallback()
     {
@@ -63,105 +74,23 @@ namespace mab
     }
     void Md80::_commsPerform()
     {
-        if(numOfDrives == 0)
-            return;     //No drives initialized so far - nothing to do
-        
-        //there are drives present 
-        
-        if(msgQueue.size() == 0 && shouldPause)
-            return; //empty queue, and should not auto loop
-            
-        if(msgQueue.size() == 0)
+        if(numOfDrives == 0 || autoLoopEnabled == false)
+            return;
+        int oldestTimestamp = INT32_MAX;
+        mab::Md80 * oldestDrive;
+        auto drive = mdList.front();
+        for (int i = 0 ; i < numOfDrives; i++)
         {
-            // User haven't commanded anything - should send GetInfo for the next drive
-            static int driveIterator = 0;
-            if(driveIterator < (int)mdList.size())
+            if (drive->lastTimestamp < oldestTimestamp)
             {
-                auto item = mdList.begin();
-                std::advance(item, driveIterator);
-                msgQueue.push(Md80::Msg((*item)->id, MsgType::GET_INFO));
-                if(++driveIterator >= (int)mdList.size())
-                    driveIterator = 0;
+                oldestTimestamp = drive->lastTimestamp;
+                oldestDrive = drive;
             }
+            std::advance(drive, 1);
         }
-        //There is users msg in queue
-        Md80*drive; //Pointer to currently served drive
-        for(auto md80 : mdList)
-            if(md80->id == msgQueue.front().id)
-                drive = md80;
-        bool msgSuccess = false;
-        switch (msgQueue.front().msgType)
-        {
-        case MsgType::FLASH_LED:
-        {
-            msgSuccess = drive->sendFlashLed();
-            break;
-        }
-        case MsgType::ENABLE:
-        {
-            msgSuccess = drive->sendEnableMotor((uint8_t)msgQueue.front().data[0]);
-            break;
-        }
-        case MsgType::CONTROL_SELECT:
-        {
-            msgSuccess = drive->sendMode((mab::Mode)msgQueue.front().data[0]);
-            break;
-        }
-        case MsgType::SET_ZERO_POSITION:
-        {
-            msgSuccess = drive->sendZeroPosition();
-            break;
-        }
-        case MsgType::SET_MAX_CURRENT:
-        {
-            msgSuccess = drive->sendCurrentLimit(*(float*)&msgQueue.front().data[0]);
-            break;
-        }
-        case MsgType::SET_POSITION_REG:
-        {
-            msgSuccess = drive->sendPosition(*(float*)&msgQueue.front().data[0],
-                                            *(float*)&msgQueue.front().data[4],
-                                            *(float*)&msgQueue.front().data[8],
-                                            *(float*)&msgQueue.front().data[12],
-                                            *(float*)&msgQueue.front().data[16],
-                                            *(float*)&msgQueue.front().data[20]);
-            break;
-        }
-        case MsgType::SET_VELOCITY_REG:
-        {
-            msgSuccess = drive->sendVelocity(*(float*)&msgQueue.front().data[0],
-                                            *(float*)&msgQueue.front().data[4],
-                                            *(float*)&msgQueue.front().data[8],
-                                            *(float*)&msgQueue.front().data[12],
-                                            *(float*)&msgQueue.front().data[16],
-                                            *(float*)&msgQueue.front().data[20]);
-            break;
-        }
-        case MsgType::SET_IMPEDANCE_REG:
-        {
-            msgSuccess = drive->sendImpedance(*(float*)&msgQueue.front().data[0],
-                                            *(float*)&msgQueue.front().data[4],
-                                            *(float*)&msgQueue.front().data[8],
-                                            *(float*)&msgQueue.front().data[12],
-                                            *(float*)&msgQueue.front().data[16],
-                                            *(float*)&msgQueue.front().data[20]);
-            break;
-        }
-        case MsgType::GET_INFO:
-        {
-            msgSuccess = drive->sendGetInfo();
-            break;
-        }
-        case MsgType::RESET_DRIVE:
-        {
-            msgSuccess = drive->sendReset();
-            break;
-        }
-        default:
-            break;
-        }
-        msgQueue.pop();
-        drive->driveOk = msgSuccess;
+        commsMutex.lock();
+        oldestDrive->sendGetInfo();
+        commsMutex.unlock();
     }
     void Md80::initalize(Candle *can)
     {
@@ -185,73 +114,51 @@ namespace mab
         torque = *(float*)&rxBuffer[4+8];
     }
 
-    void Md80::flashLed()
+    bool Md80::flashLed()
     {
-        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::FLASH_LED));
+        return sendFlashLed();
     }
-    void Md80::enable()
+    bool Md80::enable()
     {
-        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::ENABLE));
-        Md80::msgQueue.back().data[0] = 1;
+        return sendEnableMotor(true);
     }
-    void Md80::disable()
+    bool Md80::disable()
     {
-        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::ENABLE));
-        Md80::msgQueue.back().data[0] = 0;
+        return sendEnableMotor(false);
     }
-    void Md80::setControlMode(mab::Mode mode)
+    bool Md80::setControlMode(mab::Mode mode)
     {
-        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::CONTROL_SELECT));
-        Md80::msgQueue.back().data[0] = (uint8_t)mode;
+        return sendMode(mode);
     }
-    void Md80::setZeroPosition()
+    bool Md80::setZeroPosition()
     {
-        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::SET_ZERO_POSITION));
+        return sendZeroPosition();
     }
-    void Md80::setCurrentLimit(float currentLimit)
+    bool Md80::setCurrentLimit(float currentLimit)
     {
-        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::SET_MAX_CURRENT));
-        *(float*)&Md80::msgQueue.back().data[0] = currentLimit;
+        return sendCurrentLimit(currentLimit);
     }
-    void Md80::setImpedanceController(float kp, float kd, float positionTarget, float velocityTarget, float torque, float maxOutput)
+    bool Md80::setImpedanceController(float kp, float kd, float positionTarget, float velocityTarget, float torque, float maxOutput)
     {
-        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::SET_IMPEDANCE_REG));
-        *(float*)&Md80::msgQueue.back().data[0] = kp;
-        *(float*)&Md80::msgQueue.back().data[4] = kd;
-        *(float*)&Md80::msgQueue.back().data[8] = positionTarget;
-        *(float*)&Md80::msgQueue.back().data[12] = velocityTarget;
-        *(float*)&Md80::msgQueue.back().data[16] = torque;
-        *(float*)&Md80::msgQueue.back().data[20] = maxOutput;
+        return sendImpedance(kp, kd, positionTarget, velocityTarget, torque, maxOutput);
     }
-    void Md80::setPositionController(float kp, float ki, float kd, float iWindup, float maxOutput, float positionTarget)
+    bool Md80::setPositionController(float kp, float ki, float kd, float iWindup, float maxOutput, float positionTarget)
     {
-        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::SET_POSITION_REG));
-        *(float*)&Md80::msgQueue.back().data[0] = kp;
-        *(float*)&Md80::msgQueue.back().data[4] = ki;
-        *(float*)&Md80::msgQueue.back().data[8] = kd;
-        *(float*)&Md80::msgQueue.back().data[12] = iWindup;
-        *(float*)&Md80::msgQueue.back().data[16] = maxOutput;
-        *(float*)&Md80::msgQueue.back().data[20] = positionTarget;
+        return sendPosition(kp, ki, kd, iWindup, positionTarget, maxOutput);
     }
-    void Md80::setVelocityController(float kp, float ki, float kd, float iWindup, float maxOutput, float velocityTarget)
+    bool Md80::setVelocityController(float kp, float ki, float kd, float iWindup, float maxOutput, float velocityTarget)
     {
-        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::SET_VELOCITY_REG));
-        *(float*)&Md80::msgQueue.back().data[0] = kp;
-        *(float*)&Md80::msgQueue.back().data[4] = ki;
-        *(float*)&Md80::msgQueue.back().data[8] = kd;
-        *(float*)&Md80::msgQueue.back().data[12] = iWindup;
-        *(float*)&Md80::msgQueue.back().data[16] = maxOutput;
-        *(float*)&Md80::msgQueue.back().data[20] = velocityTarget;
+        return sendVelocity(kp, ki, kd, iWindup, velocityTarget, maxOutput);
     }
 
-    void Md80::restart()
+    bool Md80::restart()
     {
-        Md80::msgQueue.push(Msg(this->id, Md80::MsgType::RESET_DRIVE));
+        return sendReset();
     }
 
     bool Md80::configSetNewCanConfig(uint16_t newId, uint32_t newBaudrate)
     {
-        if(newBaudrate != 1000000 && newBaudrate != 2500000 && newBaudrate != 4000000 && newBaudrate != 5000000)
+        if(newBaudrate != 1000000 && newBaudrate != 2500000 && newBaudrate != 4000000 && newBaudrate != 5000000 && newBaudrate != 2000000)
         {
             std::cout << "Selected baudrate [" << newBaudrate << "] is not supported!" << std::endl;
             return false;
@@ -324,8 +231,6 @@ namespace mab
 
         for(int i = idStart; i < idEnd; i++)
         {
-            if (i == 0x69)
-                continue;
             pCan->setTargetId(i);
             pCan->transmitAndReceive();
         

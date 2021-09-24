@@ -112,7 +112,7 @@ namespace mab
 
     bool Candle::setCanSpeed(int canBaud)
     {
-        if(canBaud != 1000000 && canBaud != 2500000 && canBaud != 4000000 && canBaud != 5000000)
+        if(canBaud != 1000000 && canBaud != 2500000 && canBaud != 4000000 && canBaud != 5000000 && canBaud != 2000000)
         {
             std::cout << "CAN speed out of range. Must be 1M, 2.5M or 5M. Setting 1Mbps." << std::endl;
             canBaud = CAN_DEFAULT_SPEED;
@@ -145,7 +145,7 @@ namespace mab
     {
         if(newTargetId < 0 || newTargetId > 0x7ff)
         {
-            std::cout << "Target Id out of range. Must be < 0 - 255 >." << std::endl;
+            std::cout << "Target Id = "<< newTargetId << ", is of range. Must be < 0 - 2047 >." << std::endl;
             return false;
         }
         targetCanId = newTargetId;

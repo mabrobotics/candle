@@ -69,7 +69,7 @@ namespace mab
     static void _commsThreadCallback();
     static void _commsPerform();
     static bool shouldStop;
-    static bool shouldPause;
+    static bool autoLoopEnabled;
     static std::queue<Msg> msgQueue;
     static std::list<Md80*> mdList;
     const int stdResponseLen = 16;
@@ -81,6 +81,7 @@ namespace mab
         float currentLimit;
         uint16_t errorVector;
         bool driveOk;
+        int lastTimestamp;
         RegulatorConfig positionReg;
         RegulatorConfig velocityReg;
         RegulatorConfig impedanceReg;
@@ -110,27 +111,27 @@ namespace mab
         static void enableAutoLoop();
         static void disableAutoLoop();
         
-        void flashLed();
-        void enable();
-        void disable();
-        void setControlMode(mab::Mode mode);
-        void setZeroPosition();
-        void setCurrentLimit(float currentLimit);
-        void setImpedanceController(float kp, float kd, float positionTarget, float velocityTarget, float torque, float maxOutput);
-        void setPositionController(float kp, float ki, float kd, float iWindup, float maxOutput, float positionTarget);
-        void setVelocityController(float kp, float ki, float kd, float iWindup, float maxOutput, float velocityTarget);
-        void restart();
+        bool flashLed();
+        bool enable();
+        bool disable();
+        bool setControlMode(mab::Mode mode);
+        bool setZeroPosition();
+        bool setCurrentLimit(float currentLimit);
+        bool setImpedanceController(float kp, float kd, float positionTarget, float velocityTarget, float torque, float maxOutput);
+        bool setPositionController(float kp, float ki, float kd, float iWindup, float maxOutput, float positionTarget);
+        bool setVelocityController(float kp, float ki, float kd, float iWindup, float maxOutput, float velocityTarget);
+        bool restart();
         
         // Prints last received Position, Velocity, Torque and Error Vector
         void printInfo();
         // Returns last received Position
-        float getPosition(){return position;};
+        float getPosition();
         // Returns last received Velocity
-        float getVelocity(){return velocity;};
+        float getVelocity();
         // Returns last received Torque
-        float getTorque(){return torque;};
+        float getTorque();
         // Returns drives Id
-        int getId(){return id;};
+        int getId();
 
         //CONFIGURATION FRAMES - for may brake the drive is used incorrectly
         bool configStopWatchdog();

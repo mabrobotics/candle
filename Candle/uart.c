@@ -100,7 +100,7 @@ int uart_receive(int fd, char* rxBuffer, int timeoutMs)
 {    
     pthread_mutex_lock(&devLock);
     char tmpBuffer[128] = {0};
-    usleep(timeoutMs*1000);
+    usleep(5000);
     int bytesRead = read(fd, tmpBuffer, 128);
     pthread_mutex_unlock(&devLock);
 
