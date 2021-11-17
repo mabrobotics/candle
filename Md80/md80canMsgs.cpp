@@ -89,6 +89,7 @@ namespace mab
     }
     bool Md80::sendGetInfo()
     {
+        Md80::commsMutex.lock();
         pCan->setTargetId(id);
         pCan->setMsgLen(2);
         char txBuffer[2] = {0x05, 0x00};
@@ -96,6 +97,7 @@ namespace mab
         pCan->setCanTx(txBuffer, 2);
         pCan->transmitAndReceive();
         int rxLen = pCan->getCanRx(rxBuffer);
+        Md80::commsMutex.unlock();
         if(rxLen== stdResponseLen)
         {
             _parseResponse(rxBuffer);

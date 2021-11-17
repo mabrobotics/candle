@@ -92,9 +92,9 @@ namespace mab
 
     bool Candle::setRxTimeout(int timeoutUs)
     {
-        if(timeoutUs < 10 || timeoutUs > 100000)
+        if(timeoutUs < 10 || timeoutUs > 1000000)
         {
-            std::cout << "Timeout out of range. Must be 10us - 100000us. Setting 1000 us." << std::endl;
+            std::cout << "Timeout out of range. Must be 10us - 1000000us (1s). Setting 1000 us." << std::endl;
             timeoutUs = 1000;
         }
         serialTxBuffer[0] = 'c';
@@ -103,7 +103,7 @@ namespace mab
         uart_transmit(fd, (char*)serialTxBuffer, 2+4);
         if(uart_receive(fd,(char*)serialRxBuffer, timeout) != 0)
         {
-            timeout = timeoutUs/1000;
+            timeout = timeoutUs;
             return true;
         }
         else
@@ -112,7 +112,7 @@ namespace mab
 
     bool Candle::setCanSpeed(int canBaud)
     {
-        if(canBaud != 1000000 && canBaud != 2500000 && canBaud != 4000000 && canBaud != 5000000 && canBaud != 2000000)
+        if(canBaud != 1000000 && canBaud != 8000000 && canBaud != 2500000 && canBaud != 4000000 && canBaud != 5000000 && canBaud != 2000000)
         {
             std::cout << "CAN speed out of range. Must be 1M, 2.5M or 5M. Setting 1Mbps." << std::endl;
             canBaud = CAN_DEFAULT_SPEED;
