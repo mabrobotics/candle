@@ -21,7 +21,7 @@ namespace mab
 
     Candle::Candle(std::string canalizatorDev, int canBaudrate = 1000000)
     {
-        fd = uart_init(&canalizatorDev[0], 100);
+        fd = usb_init(&canalizatorDev[0], 100);
         if (fd < 0)
         {
             std:: cout << "Failed to open port " << canalizatorDev << std::endl;
