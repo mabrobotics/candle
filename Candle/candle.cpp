@@ -37,46 +37,6 @@ struct ConfigMd80Frame_t
     mab::MD80_mode control_mode;
     float maxCurrent;
 };
-struct impedance_t
-{
-    float kp;
-    float kd;
-    float torque_ff;
-};
-struct pidx_t
-{
-    float kp, ki, kd, i_windup, output;
-};
-struct md80_t
-{
-    int adress;
-    uint8_t controlMode;
-    pidx_t velocityController;
-    pidx_t positionController;
-    impedance_t impedanceController;
-};
-
-
-struct CanFrame_t
-{
-    uint8_t length;
-    uint8_t data[64];
-};
-
-struct StdMd80Frame_t
-{
-    uint16_t canId;
-    uint8_t boolEnable;
-    uint8_t mode;
-    CanFrame_t toMd80;
-};
-
-struct stdUsbFrame_t
-{
-    uint8_t id;
-    std::vector<md80_t> md80s;
-};
-
 #pragma pack(pop)
 
 namespace mab
@@ -119,6 +79,8 @@ namespace mab
     }
     bool Candle::transmitConfig(int canBaud, int canUpdate, int usbUpdate)
     {
+		if(inUpdateMode())
+			return false;
         ConfigFrame_t cfg = {CONFIG_CANDLE, canBaud, canUpdate, usbUpdate};
         if(usb->transmit((char*)&cfg, sizeof(cfg), true))
             if(usb->rxBuffer[0] == CONFIG_CANDLE)
@@ -127,8 +89,22 @@ namespace mab
     }
     bool Candle::addMd80(int adress)
     {
+		if(inUpdateMode())
+			return false;
         AddMd80Frame_t add = {ADD_MD80, adress};
-        usb->transmit((char*)&add, sizeof(AddMd80Frame_t));
+        if(usb->transmit((char*)&add, sizeof(AddMd80Frame_t), true))
+            if(usb->rxBuffer[0] == ADD_MD80)
+                if(usb->rxBuffer[1] == true)
+                {
+                    StdMd80Frame_t newFrame = {.canId = adress, .toMd80 = {0}};
+                    stdFrame.md80Frames.push_back(newFrame);
+                    md80_t newMd80 = {.adress = adress, .controlMode = 0,
+						.velocityController = {0},
+                    	.positionController = {0}, 
+                    	.impedanceController = {0}};	//TODO: Should be filled with defaults? 
+					md80s.push_back(newMd80);
+                }
+        return false;
     }
     bool Candle::configMd80(int adress, float max_current, mab::MD80_mode mode)
     {
@@ -143,6 +119,26 @@ namespace mab
     {
         mode = CANdle_mode::CONFIG;
     }
+	bool Candle::inUpdateMode()
+	{
+		if(mode == CANdle_mode::UPDATE)
+		{
+			std::cout << "Invalid Action. CANDLE is currently in UPDATE mode, and requested action requires CONFIG mode!" << std::endl;
+			std::cout << "Change mode by using `Candle.end()`" << std::endl;
+			return true;
+		}
+		return false;
+	}
+	bool Candle::inConfigMode()
+	{
+		if(mode == CANdle_mode::CONFIG)
+		{
+			std::cout << "Invalid Action. CANDLE is currently in CONFIG mode, and requested action requires UPDATE mode!" << std::endl;
+			std::cout << "Change mode by using `Candle.begin()`" << std::endl;
+			return true;
+		}
+		return false;
+	}
     void Candle::transmitNewStdFrame()
     {
 
