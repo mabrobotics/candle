@@ -63,7 +63,7 @@ UsbDevice::UsbDevice(const char * dev)
 bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse)
 {
     write(fd, buffer, len);
-    const int timeoutUs = 10000;
+    const int timeoutUs = 100000;
     const int delayUs = 100;
     int timeoutTimer = 0;
 
@@ -78,7 +78,7 @@ bool UsbDevice::receive()
     rxLock.lock();
     const int delayUs = 10;
     const int timeoutUs = 100;
-    int timeoutBusOutUs = 100000;
+    int timeoutBusOutUs = 50000;
     int usTimestamp = 0;
     bytesReceived = 0;
     bool firstByteReceived = false;
