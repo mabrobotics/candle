@@ -1,0 +1,114 @@
+#include "usbDevice.hpp"
+
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <termios.h>  
+#include <time.h>
+
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <pthread.h>    //for mutex
+
+#include <string>
+#include <iostream>
+
+
+struct termios tty;
+struct termios ti_prev;
+pthread_mutex_t devLock;
+
+// #define UART_VERBOSE
+
+
+UsbDevice::UsbDevice(const char * dev)
+{
+    int device_descriptor;
+
+    device_descriptor = open(dev, O_RDWR | O_NOCTTY | O_NONBLOCK);
+    if (device_descriptor < 0) 
+    {
+        std::cout << "Failed to open device " + std::string(dev) << std::endl;
+        exit(-1);
+    }
+    
+    tcgetattr(device_descriptor, &ti_prev);    // Save the previous serial config
+    tcgetattr(device_descriptor, &tty);         // Read the previous serial config
+    tty.c_cflag &= ~PARENB; // No parity
+    tty.c_cflag &= ~CSTOPB; // One stop bit
+    tty.c_cflag &= ~CSIZE;  // Clear bit size setting
+    tty.c_cflag |= CS8;     // 8 Bits mode
+    tty.c_cflag |= CREAD | CLOCAL; // Turn on READ & ignore ctrl lines (CLOCAL = 1)
+    tty.c_lflag &= ~ICANON;     // Disable canonical mode
+    tty.c_lflag &= ~ECHO; // Disable echo
+    tty.c_lflag &= ~ECHOE; // Disable erasure
+    tty.c_lflag &= ~ECHONL; // Disable new-line echo
+    tty.c_lflag &= ~ISIG; // Disable interpretation of INTR, QUIT and SUSP
+    tty.c_iflag &= ~(IXON | IXOFF | IXANY); // Disable software flow control
+    tty.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL); // Disable special chars on RX
+    tty.c_oflag &= ~OPOST; // Prevent special interpretation of output bytes
+    tty.c_oflag &= ~ONLCR; // Prevent conversion of newline to carriage return/line feed
+
+    tty.c_cc[VTIME] = 0;    // Wait for up to 0.1s (1 decisecond), returning as soon as any data is received.
+    tty.c_cc[VMIN] = 0;
+
+    //cfmakeraw(&tty);
+    tcsetattr(device_descriptor, TCSANOW, &tty);  // Set the new serial config 
+    
+    this->fd = device_descriptor;
+    gotResponse = false;
+    waitingForResponse = false;
+}
+bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse)
+{
+    write(fd, buffer, len);
+    const int timeoutUs = 10000;
+    const int delayUs = 100;
+    int timeoutTimer = 0;
+
+    if(_waitForResponse)
+    {
+        return receive();
+    }
+    return true;
+}
+bool UsbDevice::receive()
+{    
+    rxLock.lock();
+    const int delayUs = 10;
+    const int timeoutUs = 100;
+    int timeoutBusOutUs = 100000;
+    int usTimestamp = 0;
+    bytesReceived = 0;
+    bool firstByteReceived = false;
+    while(usTimestamp < timeoutUs && timeoutBusOutUs > 0)
+    { 
+        char newByte;
+        int bytesRead = read(fd, &newByte, 1);
+        if(bytesRead > 0)
+        {
+            firstByteReceived = true;
+            rxBuffer[bytesReceived++] = newByte;
+            continue;
+        }
+        if(firstByteReceived && bytesRead == 0)
+            usTimestamp += delayUs; //If receiving wait for 100us idle state on the bus
+        else 
+            timeoutBusOutUs -= delayUs; //If not receiving wait for 100ms and return false
+        usleep(delayUs);        
+    }
+    rxLock.unlock();
+    if(bytesReceived > 0)
+    {
+        gotResponse = true;
+        return true;
+    }
+    return false;
+}
+UsbDevice::~UsbDevice()
+{
+    ti_prev.c_cflag &= ~HUPCL;        // This to release the RTS after close
+    tcsetattr(fd, TCSANOW, &ti_prev); // Restore the previous serial config
+    close(fd);
+}

@@ -92,20 +92,7 @@ namespace mab
         oldestDrive->sendGetInfo();
         commsMutex.unlock();
     }
-    void Md80::initalize(Candle *can)
-    {
-        pCan = can;
-        pCan->setRxTimeout(3000);
-        Md80::numOfDrives = 0;
-        Md80::commsFrequency = 100;
-        shouldStop = false;
-        Md80::commsThread = std::thread(_commsThreadCallback);
-    }
-    void Md80::deinitalize()
-    {
-        shouldStop = true;
-        Md80::commsThread.join();
-    }
+
     void Md80::_parseResponse(char rxBuffer[])
     {
         errorVector = *(uint16_t*)&rxBuffer[1];
@@ -169,32 +156,12 @@ namespace mab
             return false;
         }
 
-        Md80::commsMutex.lock();
-        pCan->setTargetId(id);
-        pCan->setMsgLen(8);
-        char txBuffer[6];
-        char rxBuffer[64];
-        txBuffer[0] = 0x20;
-        *(uint16_t*)&txBuffer[2] = newId;
-        *(uint32_t*)&txBuffer[4] = newBaudrate;
-        pCan->setCanTx(txBuffer, 8);
-        pCan->transmitAndReceive();
-        pCan->getCanRx(rxBuffer);
-        Md80::commsMutex.unlock();
+
         return true;
     }
     bool Md80::configSaveNewConfig()
     {
-        Md80::commsMutex.lock();
-        pCan->setTargetId(id);
-        pCan->setMsgLen(2);
-        char txBuffer[2];
-        char rxBuffer[64];
-        txBuffer[0] = 0x21;
-        pCan->setCanTx(txBuffer, 2);
-        pCan->transmitAndReceive();
-        pCan->getCanRx(rxBuffer);
-        Md80::commsMutex.unlock();
+
         sleep(5);
         if(this->sendGetInfo())
             return true;
@@ -203,20 +170,6 @@ namespace mab
 
     bool Md80::configCalibration()
     {
-        Md80::commsMutex.lock();
-        pCan->setTargetId(id);
-        pCan->setMsgLen(1);
-        char txBuffer = {0x70};
-        char rxBuffer[64];
-        pCan->setCanTx(&txBuffer, 1);
-        pCan->transmitAndReceive();
-        int rxLen = pCan->getCanRx(rxBuffer);
-        Md80::commsMutex.unlock();
-        if(rxLen== stdResponseLen)
-        {
-            _parseResponse(rxBuffer);
-            return true;
-        }
         return false;
     }
 
@@ -224,19 +177,10 @@ namespace mab
     {
         commsMutex.lock();
         std::vector<int> drivesPinged;
-        pCan->setMsgLen(2);
-        uint8_t buffer[2]; buffer[0] = 0x00; buffer[1] = 0x00;
-        char rxBuffer[64];
-        pCan->setCanTx((char*)buffer, 2);
+      
 
         for(int i = idStart; i < idEnd; i++)
         {
-            pCan->setTargetId(i);
-            pCan->transmitAndReceive();
-        
-            int len = pCan->getCanRx(rxBuffer);
-            if (len > 10)
-                drivesPinged.push_back(i);
         }
         std::cout << "foundDrives: " << drivesPinged.size() << std::endl;
         for(int i = 0; i < (int)drivesPinged.size(); i++)

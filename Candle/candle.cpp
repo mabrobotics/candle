@@ -1,28 +1,91 @@
 #include "candle.hpp"
-#include "uart.h"
 
 #include <cstring>
+#include <vector>
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
 #include "unistd.h"
 
 #define CAN_DEFAULT_SPEED 1000000
-#define CANDLE_TRANSMIT 't'
-#define CANDLE_RECEIVE 'r'
-#define CANDLE_TRANSMIT_AND_RECEIVE 'x'
+
+enum UsbFrameId_t : uint8_t
+{
+    NONE,
+    CONFIG_CANDLE,
+    ADD_MD80,
+    CONFIG_MD80,
+};
+
+#pragma pack(push, 1)   //Ensures there in no padding (dummy) bytes in the structures below
+struct ConfigFrame_t
+{
+    uint8_t id;
+    uint32_t CanBaudrate;
+    uint32_t CanUpdateRate;
+    uint32_t UsbUpdateRate;
+};
+struct AddMd80Frame_t
+{
+    uint8_t id;
+    uint16_t driveAdress;
+};
+struct ConfigMd80Frame_t
+{
+    uint8_t id;
+    uint16_t driveAdress;
+    mab::MD80_mode control_mode;
+    float maxCurrent;
+};
+struct impedance_t
+{
+    float kp;
+    float kd;
+    float torque_ff;
+};
+struct pidx_t
+{
+    float kp, ki, kd, i_windup, output;
+};
+struct md80_t
+{
+    int adress;
+    uint8_t controlMode;
+    pidx_t velocityController;
+    pidx_t positionController;
+    impedance_t impedanceController;
+};
+
+
+struct CanFrame_t
+{
+    uint8_t length;
+    uint8_t data[64];
+};
+
+struct StdMd80Frame_t
+{
+    uint16_t canId;
+    uint8_t boolEnable;
+    uint8_t mode;
+    CanFrame_t toMd80;
+};
+
+struct stdUsbFrame_t
+{
+    uint8_t id;
+    std::vector<md80_t> md80s;
+};
+
+#pragma pack(pop)
 
 namespace mab
 {
-    Candle::Candle()
+    Candle::Candle(std::string canalizatorDev)
     {
-
-    }
-
-    Candle::Candle(std::string canalizatorDev, int canBaudrate = 1000000)
-    {
-        fd = usb_init(&canalizatorDev[0], 100);
-        if (fd < 0)
+        shouldStopReceiver = false;
+        usb = new UsbDevice(canalizatorDev.c_str());
+        if (usb == nullptr)
         {
             std:: cout << "Failed to open port " << canalizatorDev << std::endl;
             return;
@@ -33,143 +96,60 @@ namespace mab
             std:: cout << "Could not execute command '" << setSerialCommand <<"'. Communication in low-speed mode." << std::endl;
             return;
         }
-        setRxTimeout(1000);
-        setCanSpeed(canBaudrate);
-        setMsgLen(0);
-        memset(canRxBuffer, 0, sizeof(canRxBuffer));
-        memset(canTxBuffer, 0, sizeof(canTxBuffer));
-        memset(serialRxBuffer, 0, sizeof(serialRxBuffer));
-        memset(serialTxBuffer, 0, sizeof(serialTxBuffer));
-
+        receiverThread = std::thread(&Candle::receive, this);
     }
     Candle::~Candle()
     {
-        uart_restore(fd);
+        shouldStopReceiver = true;
+        receiverThread.join();
     }
-    int Candle::receive()
+    void Candle::receive()
     {
-        return transfer(false, true);
+        while(!shouldStopReceiver)
+        {
+            if(usb->receive())
+            {
+                std::cout << "Got " << std::dec << usb->bytesReceived << "bytes." <<std::endl;
+                std::cout << usb->rxBuffer << std::endl;
+                for(int i = 0; i < usb->bytesReceived; i++)
+                    std::cout << std::hex << "0x" << (int)usb->rxBuffer[i] << " ";
+                std::cout << std::endl << "#######################################################" << std::endl; 
+            }
+        }
     }
-    bool Candle::transmit()
+    bool Candle::transmitConfig(int canBaud, int canUpdate, int usbUpdate)
     {
-        if(transfer(true, false) >= 0)
-            return true;
+        ConfigFrame_t cfg = {CONFIG_CANDLE, canBaud, canUpdate, usbUpdate};
+        if(usb->transmit((char*)&cfg, sizeof(cfg), true))
+            if(usb->rxBuffer[0] == CONFIG_CANDLE)
+                return true;
         return false;
     }
-    int Candle::transmitAndReceive()
+    bool Candle::addMd80(int adress)
     {
-        return transfer(true, true);
+        AddMd80Frame_t add = {ADD_MD80, adress};
+        usb->transmit((char*)&add, sizeof(AddMd80Frame_t));
     }
+    bool Candle::configMd80(int adress, float max_current, mab::MD80_mode mode)
+    {
+        ConfigMd80Frame_t cfg = {0x03, adress, mode, max_current};
+        usb->transmit((char*)&cfg, sizeof(ConfigMd80Frame_t));
+    }
+    void Candle::begin()
+    {
+        mode = CANdle_mode::UPDATE;
+    }
+    void Candle::end()
+    {
+        mode = CANdle_mode::CONFIG;
+    }
+    void Candle::transmitNewStdFrame()
+    {
 
-    int Candle::transfer(bool tx, bool rx)
-    {
-        if(tx)
-            serialTxBuffer[0] = CANDLE_TRANSMIT;
-        if(rx)
-            serialTxBuffer[0] = CANDLE_RECEIVE;
-        if(tx && rx)
-            serialTxBuffer[0] = CANDLE_TRANSMIT_AND_RECEIVE;
-        int serialTxLen = 1;
-        if(tx)
-        {
-            *(uint16_t*)&serialTxBuffer[1] = targetCanId;
-            serialTxBuffer[3] = msgLen;
-            memcpy(&serialTxBuffer[4], canTxBuffer, msgLen);
-            serialTxLen = msgLen + 4;
-            if(!rx)
-                receivedBytes = 0;
-        }
-        uart_transmit(fd, (char*)serialTxBuffer, serialTxLen);
-        int serialRxLen = uart_receive(fd, (char*)serialRxBuffer, timeout);
-        if(rx)
-        {
-            if( serialRxLen > 4)
-                memcpy(canRxBuffer, &serialRxBuffer[4], serialRxLen - 4);
-            receivedBytes = serialRxLen - 4;
-        }
-        return receivedBytes;
     }
-
-    bool Candle::setRxTimeout(int timeoutUs)
-    {
-        if(timeoutUs < 10 || timeoutUs > 1000000)
-        {
-            std::cout << "Timeout out of range. Must be 10us - 1000000us (1s). Setting 1000 us." << std::endl;
-            timeoutUs = 1000;
-        }
-        serialTxBuffer[0] = 'c';
-        serialTxBuffer[1] = 't';
-        *(uint32_t*)&serialTxBuffer[2] = timeoutUs;
-        uart_transmit(fd, (char*)serialTxBuffer, 2+4);
-        if(uart_receive(fd,(char*)serialRxBuffer, timeout) != 0)
-        {
-            timeout = timeoutUs;
-            return true;
-        }
-        else
-            return false;
-    }
-
-    bool Candle::setCanSpeed(int canBaud)
-    {
-        if(canBaud != 1000000 && canBaud != 8000000 && canBaud != 2500000 && canBaud != 4000000 && canBaud != 5000000 && canBaud != 2000000)
-        {
-            std::cout << "CAN speed out of range. Must be 1M, 2.5M or 5M. Setting 1Mbps." << std::endl;
-            canBaud = CAN_DEFAULT_SPEED;
-        }
-        serialTxBuffer[0] = 'c';
-        serialTxBuffer[1] = 'b';
-        *(uint32_t*)&serialTxBuffer[2] = canBaud;
-        uart_transmit(fd, (char*)serialTxBuffer, 2+4);
-        if(uart_receive(fd,(char*)serialRxBuffer, timeout) != 0)
-        {
-            canSpeed = canBaud;
-            return true;
-        }
-        else
-            return false;
-    }
-
-    bool Candle::setMsgLen(int newMsgLen)
-    {
-        if (newMsgLen < 0 || newMsgLen > 64)
-        {
-            std::cout << "Msg length out of range. Must be < 0 - 64 >." << std::endl;
-            return false;
-        }
-        msgLen = newMsgLen;
-        return true;
-    }
-
-    bool Candle::setTargetId(int newTargetId)
-    {
-        if(newTargetId < 0 || newTargetId > 0x7ff)
-        {
-            std::cout << "Target Id = "<< newTargetId << ", is of range. Must be < 0 - 2047 >." << std::endl;
-            return false;
-        }
-        targetCanId = newTargetId;
-        return true;
-    }
-
-    void Candle::setCanTx(const char* data, int len)
-    {
-        if(len > 0 || len < 64)
-            memcpy(canTxBuffer, data, len);
-        else
-            std::cout << "Could not fill Can Tx Buffer. Data len out of range. Must be < 0 - 64 >." << std::endl;
-    }
-    int Candle::getCanRx(char * rxData)
-    {
-        if (receivedBytes > 0)
-            memcpy(rxData, canRxBuffer, receivedBytes); 
-        return receivedBytes;
-    }
-
     bool Candle::isOk()
     {
-        if (fd > 0)
-            return true;
+        return true;
         return false;
     }
 
