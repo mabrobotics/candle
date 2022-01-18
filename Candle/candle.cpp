@@ -41,10 +41,10 @@ struct ConfigMd80Frame_t
 
 namespace mab
 {
-    Candle::Candle(std::string canalizatorDev)
+    Candle::Candle()
     {
         shouldStopReceiver = false;
-        usb = new UsbDevice(canalizatorDev.c_str());
+        usb = new UsbDevice();
         if (usb == nullptr)
         {
             std:: cout << "Failed to open port " << canalizatorDev << std::endl;

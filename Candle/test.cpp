@@ -4,7 +4,7 @@
 #include <iostream>
 int main()
 {
-    mab::Candle candle("/dev/ttyACM0");
+    mab::Candle candle());
     if(candle.transmitConfig(100, 200, 250))
     {
         std::cout << "Got Config confirmation" << std::endl;

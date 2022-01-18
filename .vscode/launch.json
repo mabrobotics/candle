@@ -57,7 +57,7 @@
       "name": "(gdb) Launch",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/install/${input:package}/lib/${input:package}/${input:program}",
+      "program": "${workspaceFolder}/build/Candle/canTest",
       "args": [],
       "preLaunchTask": "build",
       "stopAtEntry": true,

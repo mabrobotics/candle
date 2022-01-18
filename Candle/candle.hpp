@@ -73,7 +73,7 @@ namespace mab
         stdUsbFrame_t stdFrame;
         std::vector<md80_t> md80s;
     public:
-        Candle(std::string canalizatorDev);
+        Candle();
         ~Candle();
         bool transmitConfig(int canBaudrate, int canUpdateRateHz, int usbUpdateRateHz);
         

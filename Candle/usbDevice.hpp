@@ -6,7 +6,7 @@
 class UsbDevice
 {
 public:
-    UsbDevice(const char * dev);
+    UsbDevice();
     ~UsbDevice();
     bool transmit(char* buffer, int len, bool waitForConfirmation = false);
     bool receive();

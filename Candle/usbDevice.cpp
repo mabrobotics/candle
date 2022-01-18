@@ -21,15 +21,16 @@ pthread_mutex_t devLock;
 
 // #define UART_VERBOSE
 
+int open_device();
 
-UsbDevice::UsbDevice(const char * dev)
+UsbDevice::UsbDevice()
 {
     int device_descriptor;
 
-    device_descriptor = open(dev, O_RDWR | O_NOCTTY | O_NONBLOCK);
+    device_descriptor = open_device();
     if (device_descriptor < 0) 
     {
-        std::cout << "Failed to open device " + std::string(dev) << std::endl;
+        std::cout << "CANdle device not found! Try re-plugging the dongle" << std::endl;
         exit(-1);
     }
     
@@ -111,4 +112,43 @@ UsbDevice::~UsbDevice()
     ti_prev.c_cflag &= ~HUPCL;        // This to release the RTS after close
     tcsetattr(fd, TCSANOW, &ti_prev); // Restore the previous serial config
     close(fd);
+}
+
+
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <sys/stat.h>
+
+bool fileExists(std::string&filename)
+{
+    struct stat buffer;   
+    if(!stat(filename.c_str() , &buffer) == 0)
+        return false;
+    return true;
+}
+
+int open_device()
+{       
+    std::string baseDeviceName = "/dev/ttyACM";
+    for(int i = 0; i < 10; i++)
+    {
+        //loop all ttyACMx devices
+        std::string devName = baseDeviceName + std::to_string(i);
+        if(fileExists(devName))
+        {
+            //if the ttyACMx exists check if it has CANdle descriptor in modalias file
+            std::string modaliasFilePath = "/sys/class/tty/ttyACM" + std::to_string(i) + std::string("/device/modalias");
+            std::ifstream modalias(modaliasFilePath);
+            if(modalias.is_open())
+            {
+                //if modalias exists check if its contents mach CANdle descriptor (usb:vidpid)
+                char modline[14];
+                modalias.read(modline, 14);
+                if(strcmp(modline, "usb:v0069p1000") == 0)
+                    return open(devName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+            }
+        }
+    }
+    return -1;
 }

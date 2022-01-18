@@ -74,7 +74,8 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "any": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "codecvt": "cpp"
     },
     // Autocomplete from ros python packages
     "python.autoComplete.extraPaths": [
