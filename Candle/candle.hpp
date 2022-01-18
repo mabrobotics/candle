@@ -8,41 +8,6 @@
 #include <vector>
 namespace mab
 {
-    struct impedance_t
-    {
-        float kp;
-        float kd;
-        float torque_ff;
-    };
-    struct pidx_t
-    {
-        float kp, ki, kd, i_windup, output_max;
-    };
-    struct md80_t
-    {
-        int adress;
-        uint8_t controlMode;
-        pidx_t velocityController;
-        pidx_t positionController;
-        impedance_t impedanceController;
-    };
-    struct CanFrame_t
-    {
-        uint8_t length;
-        uint8_t data[64];
-    };
-
-    struct StdMd80Frame_t
-    {
-        uint16_t canId;
-        CanFrame_t toMd80;
-    };
-
-    struct stdUsbFrame_t
-    {
-        uint8_t id;
-        std::vector<StdMd80Frame_t> md80Frames;
-    };
     enum CANdle_mode
     {
         CONFIG,
@@ -56,6 +21,70 @@ namespace mab
         TORQUE,
         IMPEDANCE
     };
+    enum MD80_frameid : uint8_t 
+    {
+        FRAME_FLASH_LED			= 0x00,
+        FRAME_MOTOR_ENABLE 		= 0x01,
+        FRAME_CONTROL_SELECT 	= 0x02,
+        FRAME_ZERO_ENCODER		= 0x03,
+        FRAME_BASE_CONFIG		= 0x04,
+        FRAME_GET_INFO			= 0x05,
+        FRAME_POS_CONTROL		= 0x10,
+        FRAME_VEL_CONTROL		= 0x11,
+        FRAME_IMP_CONTROL		= 0x12,
+        FRAME_RESTART			= 0x13,
+        FRAME_SET_MOTION_TARGETS= 0x14,
+        FRAME_STOP_WDG			= 0x19,
+        FRAME_CAN_CONFIG		= 0x20,
+        FRAME_CAN_SAVE			= 0x21,
+        FRAME_DIAGNOSTIC		= 0x69,
+        FRAME_CALIBRATION		= 0x70,
+        RESPONSE_DEFAULT		= 0xA0
+    };
+    #pragma pack(push, 1)   //Ensures there in no padding (dummy) bytes in the structures below
+    struct impedance_t
+    {
+        float kp;
+        float kd;
+        float torque_ff;
+    };
+    struct pidx_t
+    {
+        float kp, ki, kd, i_windup;
+    };
+    struct md80_t
+    {
+        uint16_t canId;
+        uint8_t controlMode = (uint8_t)MD80_mode::IDLE;
+        float positionTarget = 0.0f;
+        float velocityTarget = 0.0f;
+        float torqueSet = 0.0f;
+        float maxTorque = 1.8f;
+        float maxVelocity = 300.0f;
+        pidx_t velocityController;
+        pidx_t positionController;
+        impedance_t impedanceController;
+    };
+    struct CanFrame_t
+    {
+        uint8_t length;
+        uint8_t data[32];
+    };
+
+    struct StdMd80Frame_t
+    {
+        uint16_t canId;
+        CanFrame_t toMd80;
+    };
+
+    struct stdUsbFrame_t
+    {
+        uint8_t id;
+        std::vector<StdMd80Frame_t> md80Frames;
+    };
+    
+    #pragma pack(pop)
+
     class Candle
     {
     private:
@@ -63,24 +92,27 @@ namespace mab
         std::thread receiverThread;
         std::thread transmitterThread;
         CANdle_mode mode = CANdle_mode::CONFIG;
+        stdUsbFrame_t stdFrame;
+        std::vector<md80_t> md80s;
         bool shouldStopReceiver;
         bool shouldStopTransmitter;
+
         void transmitNewStdFrame();
+
+        void receive();
+        void transmit();
 
         bool inUpdateMode();
         bool inConfigMode();
-
-        stdUsbFrame_t stdFrame;
-        std::vector<md80_t> md80s;
     public:
         Candle();
         ~Candle();
         bool transmitConfig(int canBaudrate, int canUpdateRateHz, int usbUpdateRateHz);
         
-        bool addMd80(int canId);
-        bool configMd80(int adress, float max_current, mab::MD80_mode mode);
+        bool addMd80(uint16_t canId);
+        bool configMd80(uint16_t canId, float max_current, mab::MD80_mode mode);
 
-        void receive();
+        
         void begin();
         void end();
         bool isOk();

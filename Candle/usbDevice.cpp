@@ -8,10 +8,8 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#include <string.h>
-#include <pthread.h>    //for mutex
 
-#include <string>
+#include <cstring>
 #include <iostream>
 
 
@@ -21,13 +19,13 @@ pthread_mutex_t devLock;
 
 // #define UART_VERBOSE
 
-int open_device();
+std::string open_device(int*fd);
 
 UsbDevice::UsbDevice()
 {
     int device_descriptor;
 
-    device_descriptor = open_device();
+    serialDeviceName = open_device(&device_descriptor);
     if (device_descriptor < 0) 
     {
         std::cout << "CANdle device not found! Try re-plugging the dongle" << std::endl;
@@ -64,14 +62,9 @@ UsbDevice::UsbDevice()
 bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse)
 {
     write(fd, buffer, len);
-    const int timeoutUs = 100000;
-    const int delayUs = 100;
-    int timeoutTimer = 0;
-
     if(_waitForResponse)
-    {
         return receive();
-    }
+
     return true;
 }
 bool UsbDevice::receive()
@@ -128,7 +121,7 @@ bool fileExists(std::string&filename)
     return true;
 }
 
-int open_device()
+std::string open_device(int *fd)
 {       
     std::string baseDeviceName = "/dev/ttyACM";
     for(int i = 0; i < 10; i++)
@@ -146,9 +139,13 @@ int open_device()
                 char modline[14];
                 modalias.read(modline, 14);
                 if(strcmp(modline, "usb:v0069p1000") == 0)
-                    return open(devName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+                {
+                    *fd = open(devName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+                    return devName;
+                }
             }
         }
     }
-    return -1;
+    *fd = -1;
+    return "";
 }
