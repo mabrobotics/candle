@@ -99,12 +99,12 @@ namespace mab
             if(ids[0] == 0)
             {
 #ifdef CANDLE_VERBOSE
-                std::cout << "No drives found @" << std::to_string(baudrateMbps) << "Mbps" << std::endl;
+                std::cout << "No drives found." << std::endl;
 #endif
                 return false;   //No drives found at this baudrate
             }
 #ifdef CANDLE_VERBOSE
-            std::cout << "Found drives @" << std::to_string(baudrateMbps) << "Mbps" << std::endl;
+            std::cout << "Found drives."  << std::endl;
             for(int i = 0; i < 16; i++)
             {
                 if (ids[i] == 0)
