@@ -17,7 +17,7 @@ struct termios tty;
 struct termios ti_prev;
 pthread_mutex_t devLock;
 
-// #define UART_VERBOSE
+#define USB_VERBOSE
 
 std::string open_device(int*fd);
 
@@ -59,20 +59,25 @@ UsbDevice::UsbDevice()
     gotResponse = false;
     waitingForResponse = false;
 }
-bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse)
+bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeout)
 {
     write(fd, buffer, len);
     if(_waitForResponse)
-        return receive();
-
+        if (receive(timeout))
+            return true;
+        else
+        {
+            std::cout << "Did not receive response from CANdle." << std::endl;
+            return false;
+        }
     return true;
 }
-bool UsbDevice::receive()
+bool UsbDevice::receive(int timeoutMs)
 {    
     rxLock.lock();
     const int delayUs = 10;
     const int timeoutUs = 100;
-    int timeoutBusOutUs = 50000;
+    int timeoutBusOutUs = timeoutMs * 1000;
     int usTimestamp = 0;
     bytesReceived = 0;
     bool firstByteReceived = false;
@@ -93,6 +98,16 @@ bool UsbDevice::receive()
         usleep(delayUs);        
     }
     rxLock.unlock();
+#ifdef USB_VERBOSE
+    if(bytesReceived > 0)
+    {
+        std::cout << "Got " << std::dec << bytesReceived  << "bytes." <<std::endl;
+        std::cout << rxBuffer << std::endl;
+        for(int i = 0; i < bytesReceived; i++)
+            std::cout << std::hex << "0x" << (int)rxBuffer[i] << " ";
+        std::cout << std::dec << std::endl << "#######################################################" << std::endl; 
+    }
+#endif
     if(bytesReceived > 0)
     {
         gotResponse = true;

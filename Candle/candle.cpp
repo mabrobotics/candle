@@ -11,10 +11,13 @@
 
 enum UsbFrameId_t : uint8_t
 {
-    NONE,
-    CONFIG_CANDLE,
-    ADD_MD80,
-    CONFIG_MD80,
+    USB_FRAME_NONE,
+    USB_FRAME_PING_START,
+	USB_FRAME_MD80_ADD,
+	USB_FRAME_MD80_CONFIG_DRIVE,
+    USB_FRAME_MD80_CONFIG_CAN,
+	USB_FRAME_BEGIN,
+	USB_FRAME_END,
 };
 
 #pragma pack(push, 1)   //Ensures there in no padding (dummy) bytes in the structures below
@@ -51,14 +54,16 @@ namespace mab
             std:: cout << "Could not execute command '" << setSerialCommand <<"'. Communication in low-speed mode." << std::endl;
             return;
         }
-        receiverThread = std::thread(&Candle::receive, this);
+        //receiverThread = std::thread(&Candle::receive, this);
     }
     Candle::~Candle()
     {
         shouldStopReceiver = true;
         shouldStopTransmitter = true;
-        receiverThread.join();
-        transmitterThread.join();
+        if(receiverThread.joinable())
+            receiverThread.join();
+        if(transmitterThread.joinable())
+            transmitterThread.join();
     }
     void Candle::receive()
     {
@@ -66,11 +71,7 @@ namespace mab
         {
             if(usb->receive())
             {
-                std::cout << "Got " << std::dec << usb->bytesReceived << "bytes." <<std::endl;
-                std::cout << usb->rxBuffer << std::endl;
-                for(int i = 0; i < usb->bytesReceived; i++)
-                    std::cout << std::hex << "0x" << (int)usb->rxBuffer[i] << " ";
-                std::cout << std::endl << "#######################################################" << std::endl; 
+                //parse
             }
         }
     }
@@ -84,21 +85,21 @@ namespace mab
     }
     bool Candle::transmitConfig(int canBaud, int canUpdate, int usbUpdate)
     {
-		if(inUpdateMode())
-			return false;
-        ConfigFrame_t cfg = {CONFIG_CANDLE, (uint32_t)canBaud, (uint32_t)canUpdate, (uint32_t)usbUpdate};
-        if(usb->transmit((char*)&cfg, sizeof(cfg), true))
-            if(usb->rxBuffer[0] == CONFIG_CANDLE)
-                return true;
+		// if(inUpdateMode())
+		// 	return false;
+        // ConfigFrame_t cfg = {USB_FRAME, (uint32_t)canBaud, (uint32_t)canUpdate, (uint32_t)usbUpdate};
+        // if(usb->transmit((char*)&cfg, sizeof(cfg), true))
+        //     if(usb->rxBuffer[0] == CONFIG_CANDLE)
+        //         return true;
         return false;
     }
     bool Candle::addMd80(uint16_t canId)
     {
 		if(inUpdateMode())
 			return false;
-        AddMd80Frame_t add = {ADD_MD80, canId};
+        AddMd80Frame_t add = {USB_FRAME_MD80_ADD, canId};
         if(usb->transmit((char*)&add, sizeof(AddMd80Frame_t), true))
-            if(usb->rxBuffer[0] == ADD_MD80)
+            if(usb->rxBuffer[0] == USB_FRAME_MD80_ADD)
                 if(usb->rxBuffer[1] == true)
                 {
                     StdMd80Frame_t newFrame = {.canId = canId, .toMd80 = {0, {0}}};
@@ -115,16 +116,55 @@ namespace mab
     bool Candle::configMd80(uint16_t canId, float max_current, mab::MD80_mode mode)
     {
         ConfigMd80Frame_t cfg = {0x03, canId, mode, max_current};
-        usb->transmit((char*)&cfg, sizeof(ConfigMd80Frame_t));
+        char tx[128];
+        usb->transmit(tx, 127, true);
         return true; //TODO: Acknowleagement
+    }
+    bool Candle::ping(unsigned int baudrateMbps)
+    {
+        char tx[128];
+        tx[0] = USB_FRAME_PING_START;
+        tx[1] = (uint8_t)baudrateMbps;
+        if(usb->transmit(tx, 2, true, 2500))    //Scanning 2047 FDCAN ids, takes ~2100ms, thus wait for 2.5 sec
+        {
+            uint16_t*ids = (uint16_t*)&usb->rxBuffer[1];
+            if(ids[0] == 0)
+            {
+                std::cout << "No drives found @" << std::to_string(baudrateMbps) << "Mbps" << std::endl;
+                return false;   //No drives found at this baudrate
+            }
+
+            std::cout << "Found drives @" << std::to_string(baudrateMbps) << "Mbps" << std::endl;
+            for(int i = 0; i < 16; i++)
+            {
+                if (ids[i] == 0)
+                    break;  //No more ids in the message
+                std::cout << std::to_string(i+1) <<": ID = " << ids[i]  << 
+                    " (0x" << std::hex << ids[i] << std::dec << ")" << std::endl;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    bool Candle::configMd80Can(uint16_t canId, uint16_t newId, unsigned int newBaudrate, unsigned int newTimeout)
+    {
+        
     }
     void Candle::begin()
     {
+        if(mode == CANdle_mode::UPDATE)
+            return; //TODO: Add printing?
         mode = CANdle_mode::UPDATE;
+        transmitterThread = std::thread(&Candle::transmit, this);
     }
     void Candle::end()
     {
+        if(mode == CANdle_mode::CONFIG)
+            return;
         mode = CANdle_mode::CONFIG;
+        shouldStopTransmitter = true;
+        transmitterThread.join();
     }
 	bool Candle::inUpdateMode()
 	{

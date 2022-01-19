@@ -2,11 +2,21 @@
 
 #include <unistd.h>
 #include <iostream>
+
 int main()
 {
     mab::Candle candle;
-    if(candle.transmitConfig(100, 200, 250))
-    {
-        std::cout << "Got Config confirmation" << std::endl;
-    }
+
+    std::cout << "sedning ping 1" << std::endl;
+    candle.ping(1);
+
+    std::cout << "sedning ping 8" << std::endl;
+    candle.ping(8);
+    return 1;
+    
+    candle.begin();
+
+    sleep(10);
+
+    candle.end();
 }
