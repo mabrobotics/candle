@@ -17,7 +17,7 @@ struct termios tty;
 struct termios ti_prev;
 pthread_mutex_t devLock;
 
-#define USB_VERBOSE
+// #define USB_VERBOSE
 
 std::string open_device(int*fd);
 
@@ -74,6 +74,7 @@ bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeo
 }
 bool UsbDevice::receive(int timeoutMs)
 {    
+    memset(rxBuffer, 0, rxBufferSize);
     rxLock.lock();
     const int delayUs = 10;
     const int timeoutUs = 100;

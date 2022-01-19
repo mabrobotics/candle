@@ -7,11 +7,10 @@ int main()
 {
     mab::Candle candle;
 
-    std::cout << "sedning ping 1" << std::endl;
     candle.ping(1);
-
-    std::cout << "sedning ping 8" << std::endl;
-    candle.ping(8);
+    // candle.configMd80Can(69, 70, mab::CANdleBaudrate_E::CAN_BAUD_8M, 100);
+    // sleep(5);
+    // candle.configMd80Can(70, 75, mab::CANdleBaudrate_E::CAN_BAUD_8M, 100);
     return 1;
     
     candle.begin();

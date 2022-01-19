@@ -8,12 +8,12 @@
 #include <vector>
 namespace mab
 {
-    enum CANdle_mode
+    enum CANdleMode_E
     {
         CONFIG,
         UPDATE
     };
-    enum MD80_mode : uint8_t
+    enum Md80Mode_E : uint8_t
     {
         IDLE,
         POSITION_PID,
@@ -21,7 +21,7 @@ namespace mab
         TORQUE,
         IMPEDANCE
     };
-    enum MD80_frameid : uint8_t 
+    enum Md80FrameId_E : uint8_t 
     {
         FRAME_FLASH_LED			= 0x00,
         FRAME_MOTOR_ENABLE 		= 0x01,
@@ -41,6 +41,12 @@ namespace mab
         FRAME_CALIBRATION		= 0x70,
         RESPONSE_DEFAULT		= 0xA0
     };
+    enum CANdleBaudrate_E : uint8_t
+    {
+        CAN_BAUD_1M = 1,
+        CAN_BAUD_5M = 5,
+        CAN_BAUD_8M = 8
+    };
     #pragma pack(push, 1)   //Ensures there in no padding (dummy) bytes in the structures below
     struct impedance_t
     {
@@ -55,7 +61,7 @@ namespace mab
     struct md80_t
     {
         uint16_t canId;
-        uint8_t controlMode = (uint8_t)MD80_mode::IDLE;
+        uint8_t controlMode = (uint8_t)Md80Mode_E::IDLE;
         float positionTarget = 0.0f;
         float velocityTarget = 0.0f;
         float torqueSet = 0.0f;
@@ -91,7 +97,7 @@ namespace mab
         UsbDevice*usb;
         std::thread receiverThread;
         std::thread transmitterThread;
-        CANdle_mode mode = CANdle_mode::CONFIG;
+        CANdleMode_E mode = CANdleMode_E::CONFIG;
         stdUsbFrame_t stdFrame;
         std::vector<md80_t> md80s;
         bool shouldStopReceiver;
@@ -110,9 +116,9 @@ namespace mab
         bool transmitConfig(int canBaudrate, int canUpdateRateHz, int usbUpdateRateHz);
         
         bool addMd80(uint16_t canId);
-        bool configMd80(uint16_t canId, float max_current, mab::MD80_mode mode);
-        bool ping(unsigned int baudrateMbps);
-        bool configMd80Can(uint16_t canId, uint16_t newId, unsigned int newBaudrateMbps, unsigned int newTimeout);
+        bool configMd80(uint16_t canId, float max_current, mab::Md80Mode_E mode);
+        bool ping();
+        bool configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout);
 
         
         void begin();
