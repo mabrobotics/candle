@@ -53,15 +53,15 @@ namespace mab
             usleep(1000);
         }
     }
-    bool Candle::transmitConfig(int canBaud, int canUpdate, int usbUpdate)
+    GenericMd80Frame _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameId)
     {
-		// if(inUpdateMode())
-		// 	return false;
-        // ConfigFrame_t cfg = {USB_FRAME, (uint32_t)canBaud, (uint32_t)canUpdate, (uint32_t)usbUpdate};
-        // if(usb->transmit((char*)&cfg, sizeof(cfg), true))
-        //     if(usb->rxBuffer[0] == CONFIG_CANDLE)
-        //         return true;
-        return false;
+        GenericMd80Frame frame;
+        frame.frameId = USB_FRAME_MD80_GENERIC_FRAME;
+        frame.driveCanId = canId;
+        frame.canMsgLen = msgLen;
+        frame.canMsg[0] = canFrameId;
+        frame.canMsg[1] = 0x00;
+        return frame;
     }
     bool Candle::addMd80(uint16_t canId)
     {
@@ -82,13 +82,6 @@ namespace mab
                     return true;
                 }
         return false;
-    }
-    bool Candle::configMd80(uint16_t canId, float max_current, mab::Md80Mode_E mode)
-    {
-        ConfigMd80Frame_t cfg = {0x03, canId, mode, max_current};
-        char tx[128];
-        usb->transmit(tx, 127, true);
-        return true; //TODO: Acknowleagement
     }
     bool Candle::ping()
     {
@@ -122,12 +115,8 @@ namespace mab
 
     bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout)
     {
-        GenericMd80Frame frame;
+        GenericMd80Frame frame = _packMd80Frame(canId, 10, Md80FrameId_E::FRAME_CAN_CONFIG);
         frame.frameId = USB_FRAME_MD80_CONFIG_CAN;
-        frame.driveCanId = canId;
-        frame.canMsgLen = 10;
-        frame.canMsg[0] = Md80FrameId_E::FRAME_CAN_CONFIG;
-        frame.canMsg[1] = 0x00;
         *(uint16_t*)&frame.canMsg[2] = newId;
         *(uint32_t*)&frame.canMsg[4] = newBaudrateMbps * 1000000;
         *(uint16_t*)&frame.canMsg[8] = newTimeout;
@@ -149,16 +138,6 @@ namespace mab
                 std::cout << "CAN config change failed!" << std::endl;
 #endif
         return false;
-    }
-    GenericMd80Frame _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameId)
-    {
-        GenericMd80Frame frame;
-        frame.frameId = USB_FRAME_MD80_GENERIC_FRAME;
-        frame.driveCanId = canId;
-        frame.canMsgLen = msgLen;
-        frame.canMsg[0] = canFrameId;
-        frame.canMsg[1] = 0x00;
-        return frame;
     }
     bool Candle::configMd80Save(uint16_t canId)
     {
@@ -207,7 +186,7 @@ namespace mab
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
         if(usb->transmit(tx, len, true, 50))
-            if (usb->rxBuffer[1] == true)
+            if (usb->rxBuffer[0] == USB_FRAME_MD80_GENERIC_FRAME && usb->rxBuffer[1] == true)
             {
 #ifdef CANDLE_VERBOSE
                 std::cout << "Setting new current limit succesfull!" << std::endl;
@@ -228,6 +207,46 @@ namespace mab
         if(usb->transmit(tx, 2, true, 50))
             if(usb->rxBuffer[0] == USB_FARME_CANDLE_CONFIG_BAUDRATE && usb->rxBuffer[1] == true)
                 return true;
+        return false;
+    }
+    bool Candle::controlMd80Mode(uint16_t canId, Md80Mode_E mode)
+    {
+        GenericMd80Frame frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_CONTROL_SELECT);
+        frame.canMsg[2] = mode;
+        char tx[32];
+        int len = sizeof(frame);
+        memcpy(tx, &frame, len);
+        if(usb->transmit(tx, len, true, 50))
+            if (usb->rxBuffer[1] == true)
+            {
+#ifdef CANDLE_VERBOSE
+                std::cout << "Seting control mode succesfull!" << std::endl;
+#endif
+                return true;
+            }
+#ifdef CANDLE_VERBOSE
+        std::cout << "Seting control mode failed!" << std::endl;
+#endif
+        return false;
+    }
+    bool Candle::controlMd80Enable(uint16_t canId, bool enable)
+    {
+        GenericMd80Frame frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_MOTOR_ENABLE);
+        frame.canMsg[2] = enable;
+        char tx[32];
+        int len = sizeof(frame);
+        memcpy(tx, &frame, len);
+        if(usb->transmit(tx, len, true, 50))
+            if (usb->rxBuffer[1] == true)
+            {
+#ifdef CANDLE_VERBOSE
+                std::cout << "Enabling succesfull!" << std::endl;
+#endif
+                return true;
+            }
+#ifdef CANDLE_VERBOSE
+        std::cout << "Enabling failed!" << std::endl;
+#endif
         return false;
     }
     void Candle::begin()
