@@ -72,7 +72,13 @@ namespace mab
             if(usb->rxBuffer[0] == USB_FRAME_MD80_ADD)
                 if(usb->rxBuffer[1] == true)
                 {
-                    StdMd80Frame_t newFrame = {.canId = canId, .toMd80 = {0, {0}}};
+#ifdef CANDLE_VERBOSE
+                    std::cout << "Added Md80." << std::endl;
+#endif        
+                    for(int i = 0; i < md80s.size(); i++)
+                        if(md80s[i].canId == canId)
+                            return true;    //To avoid copies in the buffers
+                    StdMd80CommandFrame_t newFrame = {.canId = canId, .toMd80 = {0, {0}}};
                     stdFrame.md80Frames.push_back(newFrame);
                     md80_t newMd80 = {.canId = canId, .controlMode = 0,
 						.velocityController = {0,0,0,0},
@@ -255,6 +261,7 @@ namespace mab
             return; //TODO: Add printing?
         mode = CANdleMode_E::UPDATE;
         transmitterThread = std::thread(&Candle::transmit, this);
+        receiverThread = std::thread(&Candle::receive, this);
     }
     void Candle::end()
     {
@@ -345,7 +352,7 @@ namespace mab
                 break;
             }
         }
-        int length = 1 + md80s.size() * sizeof(StdMd80Frame_t);
+        int length = 1 + md80s.size() * sizeof(StdMd80CommandFrame_t);
         memcpy(txBuffer, &stdFrame, length);
         usb->transmit(txBuffer, length, false);
     }
