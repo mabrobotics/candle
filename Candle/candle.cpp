@@ -148,6 +148,40 @@ namespace mab
 #endif
         return false;
     }
+    bool Candle::configMd80Save(uint16_t canId)
+    {
+        GenericMd80Frame frame;
+        frame.frameId = USB_FRAME_MD80_CONFIG_SAVE;
+        frame.driveCanId = canId;
+        frame.canMsgLen = 2;
+        frame.canMsg[0] = Md80FrameId_E::FRAME_CAN_SAVE;
+        frame.canMsg[1] = 0x00;
+        char tx[32];
+        int len = sizeof(frame);
+        memcpy(tx, &frame, len);
+        if(usb->transmit(tx, len, true, 400))
+            if (usb->rxBuffer[1] == true)
+            {
+#ifdef CANDLE_VERBOSE
+                std::cout << "Saving in flash succesfull!" << std::endl;
+#endif
+                return true;
+            }
+#ifdef CANDLE_VERBOSE
+        std::cout << "Saving in flash failed!" << std::endl;
+#endif
+        return false;
+    }
+    bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate)
+    {
+        char tx[10];
+        tx[0] = USB_FARME_CANDLE_CONFIG_BAUDRATE;
+        tx[1] = (uint8_t)canBaudrate;
+        if(usb->transmit(tx, 2, true, 50))
+            if(usb->rxBuffer[0] == USB_FARME_CANDLE_CONFIG_BAUDRATE && usb->rxBuffer[1] == true)
+                return true;
+        return false;
+    }
     void Candle::begin()
     {
         if(mode == CANdleMode_E::UPDATE)

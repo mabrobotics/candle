@@ -117,8 +117,10 @@ namespace mab
         
         bool addMd80(uint16_t canId);
         bool configMd80(uint16_t canId, float max_current, mab::Md80Mode_E mode);
+        bool configCandleBaudrate(CANdleBaudrate_E canBaudrate);
         bool ping();
         bool configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout);
+        bool configMd80Save(uint16_t canId);
 
         
         void begin();
