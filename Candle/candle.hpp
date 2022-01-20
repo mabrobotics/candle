@@ -111,16 +111,19 @@ namespace mab
         bool inUpdateMode();
         bool inConfigMode();
     public:
-        Candle();
+        Candle(CANdleBaudrate_E canBaudrate);
         ~Candle();
         bool transmitConfig(int canBaudrate, int canUpdateRateHz, int usbUpdateRateHz);
         
         bool addMd80(uint16_t canId);
         bool configMd80(uint16_t canId, float max_current, mab::Md80Mode_E mode);
+
         bool configCandleBaudrate(CANdleBaudrate_E canBaudrate);
         bool ping();
         bool configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout);
         bool configMd80Save(uint16_t canId);
+        bool configMd80SetZero(uint16_t canId);
+        bool configMd80SetCurrentLimit(uint16_t canId, float currentLimit);
 
         
         void begin();
