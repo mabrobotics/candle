@@ -13,7 +13,7 @@ int main()
     candle.md80s[0].setImpedanceRegulator(1.0, 0.01);
     candle.begin();
 
-    for(int i = 0; i < 100; i++)
+    for(int i = 0; i < 1000; i++)
     {
         std::cout << candle.md80s[0].getPosition() << std::endl;
         usleep(100000);

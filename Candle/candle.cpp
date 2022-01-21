@@ -41,10 +41,9 @@ namespace mab
         {
             if(usb->receive())
             {
-                char*rx = usb->rxBuffer;
-                if(rx[0] == USB_FRAME_UPDATE)
+                if(usb->rxBuffer[0] == USB_FRAME_UPDATE)
                     for(int i = 0; i < md80s.size(); i++)
-                        md80s[i].updateResponseData((StdMd80ResponseFrame_t*)rx[1 + i * sizeof(StdMd80ResponseFrame_t)]);
+                        md80s[i].updateResponseData((StdMd80ResponseFrame_t*)&usb->rxBuffer[1 + i * sizeof(StdMd80ResponseFrame_t)]);
             }
         }
     }
