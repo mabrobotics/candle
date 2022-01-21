@@ -3,7 +3,7 @@ set (CMAKE_CXX_STANDARD 20)
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-add_library(candle SHARED usbDevice.cpp candle.cpp)
+add_library(candle SHARED usbDevice.cpp candle.cpp md80.cpp)
 target_include_directories (candle PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(candle pthread)
 set_target_properties(candle PROPERTIES PUBLIC_HEADER candle.hpp)

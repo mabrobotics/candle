@@ -1,5 +1,4 @@
-#ifndef USB_DEVICE_H_
-#define USB_DEVICE_H_
+#pragma once
 
 #include <string>
 #include <mutex>
@@ -26,5 +25,3 @@ private:
     bool gotResponse;
     std::mutex rxLock;
 };
-
-#endif

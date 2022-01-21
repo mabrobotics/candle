@@ -1,16 +1,18 @@
+#pragma once
 
 #include <cstdint>
 
 enum UsbFrameId_t : uint8_t
 {
-    USB_FRAME_NONE,
-    USB_FRAME_PING_START,
-    USB_FARME_CANDLE_CONFIG_BAUDRATE,
-	USB_FRAME_MD80_ADD,
-	USB_FRAME_MD80_GENERIC_FRAME,
-    USB_FRAME_MD80_CONFIG_CAN,
-	USB_FRAME_BEGIN,
-	USB_FRAME_END,
+    USB_FRAME_NONE = 0,
+    USB_FRAME_PING_START = 1,
+    USB_FARME_CANDLE_CONFIG_BAUDRATE = 2,
+	USB_FRAME_MD80_ADD = 3,
+	USB_FRAME_MD80_GENERIC_FRAME = 4,
+    USB_FRAME_MD80_CONFIG_CAN = 5,
+	USB_FRAME_BEGIN = 6,
+	USB_FRAME_END = 7,
+    USB_FRAME_UPDATE = 8,
 };
 
 #pragma pack(push, 1)   //Ensures there in no padding (dummy) bytes in the structures below

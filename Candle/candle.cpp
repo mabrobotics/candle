@@ -41,7 +41,10 @@ namespace mab
         {
             if(usb->receive())
             {
-                //parse
+                char*rx = usb->rxBuffer;
+                if(rx[0] == USB_FRAME_UPDATE)
+                    for(int i = 0; i < md80s.size(); i++)
+                        md80s[i].updateResponseData((StdMd80ResponseFrame_t*)rx[1 + i * sizeof(StdMd80ResponseFrame_t)]);
             }
         }
     }
@@ -50,7 +53,7 @@ namespace mab
         while(!shouldStopTransmitter)
         {
             transmitNewStdFrame();
-            usleep(1000);
+            usleep(10000);
         }
     }
     GenericMd80Frame _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameId)
@@ -75,16 +78,7 @@ namespace mab
 #ifdef CANDLE_VERBOSE
                     std::cout << "Added Md80." << std::endl;
 #endif        
-                    for(int i = 0; i < md80s.size(); i++)
-                        if(md80s[i].canId == canId)
-                            return true;    //To avoid copies in the buffers
-                    StdMd80CommandFrame_t newFrame = {.canId = canId, .toMd80 = {0, {0}}};
-                    stdFrame.md80Frames.push_back(newFrame);
-                    md80_t newMd80 = {.canId = canId, .controlMode = 0,
-						.velocityController = {0,0,0,0},
-                    	.positionController = {0,0,0,0}, 
-                    	.impedanceController = {0,0,0}};	//TODO: Should be filled with defaults? 
-					md80s.push_back(newMd80);
+					md80s.push_back(Md80(canId));
                     return true;
                 }
         return false;
@@ -215,8 +209,23 @@ namespace mab
                 return true;
         return false;
     }
+    Md80* Candle::getMd80FromList(uint16_t id)
+    {
+        for(int i = 0; i < md80s.size(); i++)
+            if(md80s[i].getId() == id)
+                return &md80s[i];
+        return nullptr;
+    }
     bool Candle::controlMd80Mode(uint16_t canId, Md80Mode_E mode)
     {
+        Md80*drive = getMd80FromList(canId);
+        if(drive == nullptr)
+        {
+#ifdef CANDLE_VERBOSE
+            std::cout << "Drive not found in the Candle database. Use Candle.addMd80() to add drives first!" << std::endl;
+#endif
+            return false;
+        }
         GenericMd80Frame frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_CONTROL_SELECT);
         frame.canMsg[2] = mode;
         char tx[32];
@@ -226,17 +235,26 @@ namespace mab
             if (usb->rxBuffer[1] == true)
             {
 #ifdef CANDLE_VERBOSE
-                std::cout << "Seting control mode succesfull!" << std::endl;
+                std::cout << "Setting control mode succesfull!" << std::endl;
 #endif
+                drive->setControlMode(mode);
                 return true;
             }
 #ifdef CANDLE_VERBOSE
-        std::cout << "Seting control mode failed!" << std::endl;
+        std::cout << "Setting control mode failed!" << std::endl;
 #endif
         return false;
     }
     bool Candle::controlMd80Enable(uint16_t canId, bool enable)
     {
+        Md80*drive = getMd80FromList(canId);
+        if(drive == nullptr)
+        {
+#ifdef CANDLE_VERBOSE
+            std::cout << "Drive not found in the Candle database. Use Candle.addMd80() to add drives first!" << std::endl;
+#endif
+            return false;
+        }
         GenericMd80Frame frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_MOTOR_ENABLE);
         frame.canMsg[2] = enable;
         char tx[32];
@@ -255,18 +273,27 @@ namespace mab
 #endif
         return false;
     }
-    void Candle::begin()
+    bool Candle::begin()
     {
         if(mode == CANdleMode_E::UPDATE)
-            return; //TODO: Add printing?
-        mode = CANdleMode_E::UPDATE;
-        transmitterThread = std::thread(&Candle::transmit, this);
-        receiverThread = std::thread(&Candle::receive, this);
+            return false; //TODO: Add printing?
+        char tx[128];
+        tx[0] = USB_FRAME_BEGIN;
+        tx[1] = 0x00;
+        if(usb->transmit(tx, 2, true, 10))
+        {
+            mode = CANdleMode_E::UPDATE;
+            transmitterThread = std::thread(&Candle::transmit, this);
+            receiverThread = std::thread(&Candle::receive, this);
+            return true;
+        }
+        return false;
+
     }
-    void Candle::end()
+    bool Candle::end()
     {
         if(mode == CANdleMode_E::CONFIG)
-            return;
+            return false;
         mode = CANdleMode_E::CONFIG;
         shouldStopTransmitter = true;
         transmitterThread.join();
@@ -293,76 +320,20 @@ namespace mab
 	}
     void Candle::transmitNewStdFrame()
     {
-        char txBuffer[512];
-        stdFrame.id = 0x05;
+        char tx[512];
+        tx[0] = USB_FRAME_UPDATE;
         for(int i = 0; i < (int)md80s.size(); i++)
         {
-            switch (md80s[i].controlMode)
-            {
-            case Md80Mode_E::IDLE:
-                stdFrame.md80Frames[i].canId = md80s[i].canId;
-                stdFrame.md80Frames[i].toMd80.length = 2;
-                stdFrame.md80Frames[i].toMd80.data[0] = Md80FrameId_E::FRAME_GET_INFO;
-                break;
-            case Md80Mode_E::IMPEDANCE:
-                stdFrame.md80Frames[i].canId = md80s[i].canId;
-                stdFrame.md80Frames[i].toMd80.length = 32;
-                stdFrame.md80Frames[i].toMd80.data[0] = Md80FrameId_E::FRAME_IMP_CONTROL;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[2] = md80s[i].impedanceController.kp;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[6] = md80s[i].impedanceController.kd;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[10] = md80s[i].positionTarget;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[14] = md80s[i].velocityTarget;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[18] = md80s[i].torqueSet;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[22] = md80s[i].maxTorque;
-                break;
-            case Md80Mode_E::POSITION_PID:
-                stdFrame.md80Frames[i].canId = md80s[i].canId;
-                stdFrame.md80Frames[i].toMd80.length = 32;
-                stdFrame.md80Frames[i].toMd80.data[0] = Md80FrameId_E::FRAME_POS_CONTROL;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[2] = md80s[i].positionController.kp;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[6] = md80s[i].positionController.ki;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[10] = md80s[i].positionController.kd;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[14] = md80s[i].positionController.i_windup;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[18] = md80s[i].maxTorque;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[22] = md80s[i].positionTarget;
-                break;
-            case Md80Mode_E::VELOCITY_PID:
-                stdFrame.md80Frames[i].canId = md80s[i].canId;
-                stdFrame.md80Frames[i].toMd80.length = 32;
-                stdFrame.md80Frames[i].toMd80.data[0] = Md80FrameId_E::FRAME_VEL_CONTROL;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[2] = md80s[i].velocityController.kp;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[6] = md80s[i].velocityController.ki;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[10] = md80s[i].velocityController.kd;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[14] = md80s[i].velocityController.i_windup;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[18] = md80s[i].maxVelocity;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[22] = md80s[i].velocityTarget;
-                break;
-            case Md80Mode_E::TORQUE:
-                stdFrame.md80Frames[i].canId = md80s[i].canId;
-                stdFrame.md80Frames[i].toMd80.length = 32;
-                stdFrame.md80Frames[i].toMd80.data[0] = Md80FrameId_E::FRAME_IMP_CONTROL;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[2] = 0.0f;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[6] = 0.0f;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[10] = 0.0f;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[14] = 0.0f;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[18] = md80s[i].torqueSet;
-                *(float*)&stdFrame.md80Frames[i].toMd80.data[22] = md80s[i].maxTorque;
-                break;
-            default:
-                break;
-            }
+            md80s[i].updateCommandFrame();
+            *(StdMd80CommandFrame_t*)&tx[1 + i*sizeof(StdMd80CommandFrame_t)] = md80s[i].getCommandFrame();
         }
+        
         int length = 1 + md80s.size() * sizeof(StdMd80CommandFrame_t);
-        memcpy(txBuffer, &stdFrame, length);
-        usb->transmit(txBuffer, length, false);
+        usb->transmit(tx, length, false);
     }
     bool Candle::isOk()
     {
         return true;
         return false;
-    }
-
-
-    
+    }    
 }
-

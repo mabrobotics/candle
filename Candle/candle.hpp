@@ -1,5 +1,4 @@
-#ifndef _CANDLE_H_
-#define _CANDLE_H_
+#pragma once
 
 #include "usbDevice.hpp"
 #include "mab_types.hpp"
@@ -42,7 +41,7 @@ namespace mab
         std::thread transmitterThread;
         CANdleMode_E mode = CANdleMode_E::CONFIG;
         stdUsbFrame_t stdFrame;
-        std::vector<0> md80s;
+
         bool shouldStopReceiver;
         bool shouldStopTransmitter;
 
@@ -53,10 +52,12 @@ namespace mab
 
         bool inUpdateMode();
         bool inConfigMode();
+        Md80* getMd80FromList(uint16_t id);
     public:
         Candle(CANdleBaudrate_E canBaudrate);
         ~Candle();
-       
+        std::vector<Md80> md80s;
+
         bool addMd80(uint16_t canId);
 
         bool configCandleBaudrate(CANdleBaudrate_E canBaudrate);
@@ -68,9 +69,8 @@ namespace mab
         bool controlMd80Enable(uint16_t canId, bool enable);
         bool controlMd80Mode(uint16_t canId, Md80Mode_E mode);
         
-        void begin();
-        void end();
+        bool begin();
+        bool end();
         bool isOk();
     };
 }
-#endif

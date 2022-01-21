@@ -1,3 +1,6 @@
+#pragma once
+
+#include <cstdint>
 namespace mab
 {
     struct RegImpedance_t
@@ -13,11 +16,11 @@ namespace mab
 
     enum Md80Mode_E : uint8_t
     {
-        IDLE,
-        POSITION_PID,
-        VELOCITY_PID,
-        TORQUE,
-        IMPEDANCE
+        IDLE = 0,
+        POSITION_PID = 1,
+        VELOCITY_PID = 2,
+        TORQUE = 3,
+        IMPEDANCE = 4,
     };
     enum Md80FrameId_E : uint8_t 
     {
@@ -48,5 +51,10 @@ namespace mab
     {
         uint16_t canId;
         CanFrame_t toMd80;
+    };
+    struct StdMd80ResponseFrame_t
+    {
+        uint16_t canId;
+        CanFrame_t fromMd80;
     };
 } // namespace mab

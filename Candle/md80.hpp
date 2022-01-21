@@ -1,3 +1,5 @@
+#pragma once
+
 #include "mab_types.hpp"
 
 #include <cstdint>
@@ -27,21 +29,25 @@ private:
 
     bool regulatorsAdjusted = false;
     StdMd80CommandFrame_t commandFrame;
+    StdMd80ResponseFrame_t responseFrame;
+
+    void packImpedanceFrame();
+    void packPositionFrame();
+    void packVelocityFrame();
+    void packMotionTargetsFrame();
 public:
     Md80(uint16_t canID);
     ~Md80();
     void setPositionRegulator(float kp, float ki, float kd, float iWindup);
     void setVelocityRegulator(float kp, float ki, float kd, float iWindup);
-    void setImpedanceRegulator(float kp, float kd, float torque);
+    void setImpedanceRegulator(float kp, float kd);
     void updateCommandFrame();
-    void updateResponseData();
+    void updateResponseData(StdMd80ResponseFrame_t*_responseFrame);
     
-    //advanced setters
+    //simple setters
     void setMaxTorque(float maxTorque);
     void setMaxVelocity(float maxVelocity);
     void setControlMode(Md80Mode_E mode);
-    
-    //simple setters
     void setTargetPosition(float target)    {positionTarget = target; };
     void setTargetVelocity(float target)    {velocityTarget = target; };
     void setTorque(float target)            {torqueSet = target; };
@@ -49,5 +55,10 @@ public:
     //getters
     uint16_t getErrorVector()               {return errorVector; };
     StdMd80CommandFrame_t getCommandFrame() {return commandFrame;};
+    uint16_t getId()    {return canId;};
+    float getPosition() {return position;};
+    float getVelocity() {return velocity;};
+    float getTorque()   {return torque;};
+
 };
 
