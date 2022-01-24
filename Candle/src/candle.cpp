@@ -20,7 +20,6 @@ namespace mab
 
     Candle::Candle(CANdleBaudrate_E canBaudrate)
     {
-        shouldStopReceiver = false;
         usb = new UsbDevice();
         std::string setSerialCommand = "setserial " + usb->getSerialDeviceName() + " low_latency";
         if (system(setSerialCommand.c_str()) != 0)
@@ -38,7 +37,8 @@ namespace mab
             receiverThread.join();
         if(transmitterThread.joinable())
             transmitterThread.join();
-        this->end();
+        if(this->inUpdateMode())
+            this->end();
     }
     void Candle::receive()
     {
