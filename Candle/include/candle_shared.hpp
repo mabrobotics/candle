@@ -1,11 +1,7 @@
 #pragma once
-
-#include "usbDevice.hpp"
 #include "mab_types.hpp"
 #include "md80.hpp"
 
-#include <string>
-#include <thread>
 #include <vector>
 namespace mab
 {
@@ -24,27 +20,6 @@ namespace mab
 
     class Candle
     {
-    private:
-        UsbDevice*usb;
-        std::thread receiverThread;
-        std::thread transmitterThread;
-        CANdleMode_E mode = CANdleMode_E::CONFIG;
-
-        const int MAX_DEVICES = 12;
-        bool shouldStopReceiver;
-        bool shouldStopTransmitter;
-
-        int msgsReceived = 0;
-        int msgsSent = 0;
-
-        void transmitNewStdFrame();
-
-        void receive();
-        void transmit();
-
-        bool inUpdateMode();
-        bool inConfigMode();
-        Md80* getMd80FromList(uint16_t id);
     public:
         Candle(CANdleBaudrate_E canBaudrate);
         ~Candle();
@@ -70,6 +45,8 @@ namespace mab
 
         bool controlMd80Enable(uint16_t canId, bool enable);
         bool controlMd80Mode(uint16_t canId, Md80Mode_E mode);
+
+        Md80* getMd80FromList(uint16_t id);
         
         bool begin();
         bool end();
