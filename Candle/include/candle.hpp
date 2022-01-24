@@ -38,7 +38,7 @@ namespace mab
         int msgsReceived = 0;
         int msgsSent = 0;
 
-        bool print_verbose = true;
+        bool printVerbose = true;
 
         void transmitNewStdFrame();
 
@@ -48,7 +48,7 @@ namespace mab
         bool inUpdateMode();
         bool inConfigMode();
     public:
-        Candle(CANdleBaudrate_E canBaudrate, bool printVerbose);
+        Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false);
         ~Candle();
         std::vector<Md80> md80s;
 

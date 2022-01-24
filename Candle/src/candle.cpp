@@ -14,7 +14,7 @@ namespace mab
     class mystreambuf: public std::streambuf {    };
     mystreambuf nostreambuf;
     std::ostream nocout(&nostreambuf);
-    #define vout ((this->print_verbose)? std::cout : nocout)
+    #define vout ((this->printVerbose)? std::cout : nocout)
 
     uint64_t getTimestamp() 
     {
@@ -22,8 +22,9 @@ namespace mab
         return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
     }
 
-    Candle::Candle(CANdleBaudrate_E canBaudrate)
+    Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose)
     {
+        printVerbose = _printVerbose;
         usb = new UsbDevice();
         std::string setSerialCommand = "setserial " + usb->getSerialDeviceName() + " low_latency";
         if (system(setSerialCommand.c_str()) != 0)
