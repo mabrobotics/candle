@@ -13,6 +13,7 @@ enum UsbFrameId_t : uint8_t
 	USB_FRAME_BEGIN = 6,
 	USB_FRAME_END = 7,
     USB_FRAME_UPDATE = 8,
+    USB_FRAME_RESET = 9,
 };
 
 #pragma pack(push, 1)   //Ensures there in no padding (dummy) bytes in the structures below

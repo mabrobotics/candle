@@ -12,19 +12,23 @@
 #define CANDLE_VERBOSE
 namespace mab
 {
+    uint64_t getTimestamp() 
+    {
+        using namespace std::chrono;
+        return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    }
+
     Candle::Candle(CANdleBaudrate_E canBaudrate)
     {
         shouldStopReceiver = false;
         usb = new UsbDevice();
         std::string setSerialCommand = "setserial " + usb->getSerialDeviceName() + " low_latency";
         if (system(setSerialCommand.c_str()) != 0)
-        {
             std:: cout << "Could not execute command '" << setSerialCommand <<"'. Communication in low-speed mode." << std::endl;
-            return;
-        }
+        this->reset();
+        usleep(100000);
         if (!configCandleBaudrate(canBaudrate))
             std::cout << "Failed to set up CANdle baudrate @" << canBaudrate << "Mbps!" << std::endl;
-        //receiverThread = std::thread(&Candle::receive, this);
     }
     Candle::~Candle()
     {
@@ -34,6 +38,7 @@ namespace mab
             receiverThread.join();
         if(transmitterThread.joinable())
             transmitterThread.join();
+        this->end();
     }
     void Candle::receive()
     {
@@ -42,8 +47,11 @@ namespace mab
             if(usb->receive())
             {
                 if(usb->rxBuffer[0] == USB_FRAME_UPDATE)
-                    for(int i = 0; i < md80s.size(); i++)
+                {
+
+                    for(int i = 0; i < (int)md80s.size(); i++)
                         md80s[i].updateResponseData((StdMd80ResponseFrame_t*)&usb->rxBuffer[1 + i * sizeof(StdMd80ResponseFrame_t)]);
+                }
             }
         }
     }
@@ -52,6 +60,7 @@ namespace mab
         while(!shouldStopTransmitter)
         {
             transmitNewStdFrame();
+            msgsSent++;
             usleep(10000);
         }
     }
@@ -82,24 +91,33 @@ namespace mab
                 }
         return false;
     }
-    bool Candle::ping()
+    std::vector<uint16_t> Candle::ping()
     {
         char tx[128];
         tx[0] = USB_FRAME_PING_START;
         tx[1] = 0x00;
+        std::vector<uint16_t> ids;
         if(usb->transmit(tx, 2, true, 2500))    //Scanning 2047 FDCAN ids, takes ~2100ms, thus wait for 2.5 sec
         {
-            uint16_t*ids = (uint16_t*)&usb->rxBuffer[1];
-            if(ids[0] == 0)
+            uint16_t*idsPointer = (uint16_t*)&usb->rxBuffer[1];
+            for(int i = 0; i < MAX_DEVICES; i++)
+            {
+                uint16_t id = idsPointer[i];
+                if(id == 0x00)
+                    break;
+                ids.push_back(id);
+            }
+            if(ids.size() == 0)
             {
 #ifdef CANDLE_VERBOSE
                 std::cout << "No drives found." << std::endl;
 #endif
-                return false;   //No drives found at this baudrate
+                return ids;
             }
 #ifdef CANDLE_VERBOSE
+
             std::cout << "Found drives."  << std::endl;
-            for(int i = 0; i < 16; i++)
+            for(int i = 0; i < MAX_DEVICES; i++)
             {
                 if (ids[i] == 0)
                     break;  //No more ids in the message
@@ -107,9 +125,8 @@ namespace mab
                     " (0x" << std::hex << ids[i] << std::dec << ")" << std::endl;
             }
 #endif
-            return true;
         }
-        return false;
+        return ids;
     }
 
     bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout)
@@ -210,7 +227,7 @@ namespace mab
     }
     Md80* Candle::getMd80FromList(uint16_t id)
     {
-        for(int i = 0; i < md80s.size(); i++)
+        for(int i = 0; i < (int)md80s.size(); i++)
             if(md80s[i].getId() == id)
                 return &md80s[i];
         return nullptr;
@@ -282,12 +299,15 @@ namespace mab
         if(usb->transmit(tx, 2, true, 10))
         {
             mode = CANdleMode_E::UPDATE;
+            shouldStopTransmitter = false;
+            shouldStopReceiver = false;
+            msgsSent = 0;
+            msgsReceived = 0;
             transmitterThread = std::thread(&Candle::transmit, this);
             receiverThread = std::thread(&Candle::receive, this);
             return true;
         }
         return false;
-
     }
     bool Candle::end()
     {
@@ -295,7 +315,26 @@ namespace mab
             return false;
         mode = CANdleMode_E::CONFIG;
         shouldStopTransmitter = true;
+        shouldStopReceiver = true;
         transmitterThread.join();
+        return true;
+    }
+    bool Candle::reset()
+    {
+        char tx[128];
+        tx[0] = USB_FRAME_RESET;
+        tx[1] = 0x00;
+        if(usb->transmit(tx, 2, true, 100))
+        {
+#ifdef CANDLE_VERBOSE
+            std::cout << "Reset succesfull!" << std::endl;
+#endif
+            return true;
+        }
+#ifdef CANDLE_VERBOSE
+        std::cout << "Reset failed!" << std::endl;
+#endif
+        return false;
     }
 	bool Candle::inUpdateMode()
 	{
@@ -330,9 +369,4 @@ namespace mab
         int length = 1 + md80s.size() * sizeof(StdMd80CommandFrame_t);
         usb->transmit(tx, length, false);
     }
-    bool Candle::isOk()
-    {
-        return true;
-        return false;
-    }    
 }
