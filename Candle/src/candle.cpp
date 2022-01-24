@@ -9,9 +9,13 @@
 
 #include "candle_protocol.hpp"
 
-#define CANDLE_VERBOSE
 namespace mab
 {
+    class mystreambuf: public std::streambuf {    };
+    mystreambuf nostreambuf;
+    std::ostream nocout(&nostreambuf);
+    #define vout ((this->print_verbose)? std::cout : nocout)
+
     uint64_t getTimestamp() 
     {
         using namespace std::chrono;
@@ -27,7 +31,7 @@ namespace mab
         this->reset();
         usleep(100000);
         if (!configCandleBaudrate(canBaudrate))
-            std::cout << "Failed to set up CANdle baudrate @" << canBaudrate << "Mbps!" << std::endl;
+            vout << "Failed to set up CANdle baudrate @" << canBaudrate << "Mbps!" << std::endl;
     }
     Candle::~Candle()
     {
@@ -83,9 +87,7 @@ namespace mab
             if(usb->rxBuffer[0] == USB_FRAME_MD80_ADD)
                 if(usb->rxBuffer[1] == true)
                 {
-#ifdef CANDLE_VERBOSE
-                    std::cout << "Added Md80." << std::endl;
-#endif        
+                    vout << "Added Md80." << std::endl;
 					md80s.push_back(Md80(canId));
                     return true;
                 }
@@ -109,22 +111,18 @@ namespace mab
             }
             if(ids.size() == 0)
             {
-#ifdef CANDLE_VERBOSE
-                std::cout << "No drives found." << std::endl;
-#endif
+                vout << "No drives found." << std::endl;
                 return ids;
             }
-#ifdef CANDLE_VERBOSE
-
-            std::cout << "Found drives."  << std::endl;
+            vout << "Found drives."  << std::endl;
             for(int i = 0; i < MAX_DEVICES; i++)
             {
                 if (ids[i] == 0)
                     break;  //No more ids in the message
-                std::cout << std::to_string(i+1) <<": ID = " << ids[i]  << 
+                vout << std::to_string(i+1) <<": ID = " << ids[i]  << 
                     " (0x" << std::hex << ids[i] << std::dec << ")" << std::endl;
             }
-#endif
+
         }
         return ids;
     }
@@ -142,17 +140,13 @@ namespace mab
         if (usb->transmit(tx, len, true, 100))
             if(usb->rxBuffer[1] == 1)
             {
-#ifdef CANDLE_VERBOSE
-                std::cout << "CAN config change succesfull!" << std::endl;
-                std::cout << "Drive ID = " << std::to_string(canId) << " was changed to ID = " << std::to_string(newId) << std::endl;
-                std::cout << "It's baudrate is now " << std::to_string(newBaudrateMbps) << "Mbps" << std::endl;
-                std::cout << "It's CAN timeout (watchdog) is now " << (newTimeout == 0 ? "Disabled" : std::to_string(newTimeout) + "ms")  << std::endl;
-#endif
+                vout << "CAN config change succesfull!" << std::endl;
+                vout << "Drive ID = " << std::to_string(canId) << " was changed to ID = " << std::to_string(newId) << std::endl;
+                vout << "It's baudrate is now " << std::to_string(newBaudrateMbps) << "Mbps" << std::endl;
+                vout << "It's CAN timeout (watchdog) is now " << (newTimeout == 0 ? "Disabled" : std::to_string(newTimeout) + "ms")  << std::endl;
                 return true;
             }
-#ifdef CANDLE_VERBOSE
-                std::cout << "CAN config change failed!" << std::endl;
-#endif
+                vout << "CAN config change failed!" << std::endl;
         return false;
     }
     bool Candle::configMd80Save(uint16_t canId)
@@ -164,14 +158,10 @@ namespace mab
         if(usb->transmit(tx, len, true, 500))
             if (usb->rxBuffer[1] == true)
             {
-#ifdef CANDLE_VERBOSE
-                std::cout << "Saving in flash succesfull!" << std::endl;
-#endif
+                vout << "Saving in flash succesfull!" << std::endl;
                 return true;
             }
-#ifdef CANDLE_VERBOSE
-        std::cout << "Saving in flash failed!" << std::endl;
-#endif
+        vout << "Saving in flash failed!" << std::endl;
         return false;
     }
 
@@ -184,14 +174,10 @@ namespace mab
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-#ifdef CANDLE_VERBOSE
-                std::cout << "Setting new zero position succesfull!" << std::endl;
-#endif
+                vout << "Setting new zero position succesfull!" << std::endl;
                 return true;
             }
-#ifdef CANDLE_VERBOSE
-        std::cout << "Setting new zero position failed!" << std::endl;
-#endif
+        vout << "Setting new zero position failed!" << std::endl;
         return false;
     }
     bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
@@ -204,14 +190,10 @@ namespace mab
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[0] == USB_FRAME_MD80_GENERIC_FRAME && usb->rxBuffer[1] == true)
             {
-#ifdef CANDLE_VERBOSE
-                std::cout << "Setting new current limit succesfull!" << std::endl;
-#endif
+                vout << "Setting new current limit succesfull!" << std::endl;
                 return true;
             }
-#ifdef CANDLE_VERBOSE
-        std::cout << "Setting new current limit failed!" << std::endl;
-#endif
+        vout << "Setting new current limit failed!" << std::endl;
         return false;
     }
 
@@ -237,9 +219,7 @@ namespace mab
         Md80*drive = getMd80FromList(canId);
         if(drive == nullptr)
         {
-#ifdef CANDLE_VERBOSE
-            std::cout << "Drive not found in the Candle database. Use Candle.addMd80() to add drives first!" << std::endl;
-#endif
+            vout << "Drive not found in the Candle database. Use Candle.addMd80() to add drives first!" << std::endl;
             return false;
         }
         GenericMd80Frame frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_CONTROL_SELECT);
@@ -250,15 +230,11 @@ namespace mab
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-#ifdef CANDLE_VERBOSE
-                std::cout << "Setting control mode succesfull!" << std::endl;
-#endif
+                vout << "Setting control mode succesfull!" << std::endl;
                 drive->setControlMode(mode);
                 return true;
             }
-#ifdef CANDLE_VERBOSE
-        std::cout << "Setting control mode failed!" << std::endl;
-#endif
+        vout << "Setting control mode failed!" << std::endl;
         return false;
     }
     bool Candle::controlMd80Enable(uint16_t canId, bool enable)
@@ -266,9 +242,7 @@ namespace mab
         Md80*drive = getMd80FromList(canId);
         if(drive == nullptr)
         {
-#ifdef CANDLE_VERBOSE
-            std::cout << "Drive not found in the Candle database. Use Candle.addMd80() to add drives first!" << std::endl;
-#endif
+            vout << "Drive not found in the Candle database. Use Candle.addMd80() to add drives first!" << std::endl;
             return false;
         }
         GenericMd80Frame frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_MOTOR_ENABLE);
@@ -279,14 +253,10 @@ namespace mab
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-#ifdef CANDLE_VERBOSE
-                std::cout << "Enabling succesfull!" << std::endl;
-#endif
+                vout << "Enabling succesfull!" << std::endl;
                 return true;
             }
-#ifdef CANDLE_VERBOSE
-        std::cout << "Enabling failed!" << std::endl;
-#endif
+        vout << "Enabling failed!" << std::endl;
         return false;
     }
     bool Candle::begin()
@@ -326,22 +296,18 @@ namespace mab
         tx[1] = 0x00;
         if(usb->transmit(tx, 2, true, 100))
         {
-#ifdef CANDLE_VERBOSE
-            std::cout << "Reset succesfull!" << std::endl;
-#endif
+            vout << "Reset succesfull!" << std::endl;
             return true;
         }
-#ifdef CANDLE_VERBOSE
-        std::cout << "Reset failed!" << std::endl;
-#endif
+        vout << "Reset failed!" << std::endl;
         return false;
     }
 	bool Candle::inUpdateMode()
 	{
 		if(mode == CANdleMode_E::UPDATE)
 		{
-			std::cout << "Invalid Action. CANDLE is currently in UPDATE mode, and requested action requires CONFIG mode!" << std::endl;
-			std::cout << "Change mode by using `Candle.end()`" << std::endl;
+			vout << "Invalid Action. CANDLE is currently in UPDATE mode, and requested action requires CONFIG mode!" << std::endl;
+			vout << "Change mode by using `Candle.end()`" << std::endl;
 			return true;
 		}
 		return false;
@@ -350,8 +316,8 @@ namespace mab
 	{
 		if(mode == CANdleMode_E::CONFIG)
 		{
-			std::cout << "Invalid Action. CANDLE is currently in CONFIG mode, and requested action requires UPDATE mode!" << std::endl;
-			std::cout << "Change mode by using `Candle.begin()`" << std::endl;
+			vout << "Invalid Action. CANDLE is currently in CONFIG mode, and requested action requires UPDATE mode!" << std::endl;
+			vout << "Change mode by using `Candle.begin()`" << std::endl;
 			return true;
 		}
 		return false;
@@ -379,14 +345,10 @@ namespace mab
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-#ifdef CANDLE_VERBOSE
-                std::cout << "Starting calibration!" << std::endl;
-#endif
+                vout << "Starting calibration!" << std::endl;
                 return true;
             }
-#ifdef CANDLE_VERBOSE
-        std::cout << "Starting calibration failed!" << std::endl;
-#endif
+        vout << "Starting calibration failed!" << std::endl;
         return false;
     }
 }
