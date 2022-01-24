@@ -369,4 +369,24 @@ namespace mab
         int length = 1 + md80s.size() * sizeof(StdMd80CommandFrame_t);
         usb->transmit(tx, length, false);
     }
+
+    bool Candle::setupMd80Calibration(uint16_t canId)
+    {
+        GenericMd80Frame frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CALIBRATION);
+        char tx[32];
+        int len = sizeof(frame);
+        memcpy(tx, &frame, len);
+        if(usb->transmit(tx, len, true, 50))
+            if (usb->rxBuffer[1] == true)
+            {
+#ifdef CANDLE_VERBOSE
+                std::cout << "Starting calibration!" << std::endl;
+#endif
+                return true;
+            }
+#ifdef CANDLE_VERBOSE
+        std::cout << "Starting calibration failed!" << std::endl;
+#endif
+        return false;
+    }
 }

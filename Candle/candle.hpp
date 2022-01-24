@@ -65,6 +65,8 @@ namespace mab
         bool configMd80Save(uint16_t canId);
         bool configMd80SetZero(uint16_t canId);
         bool configMd80SetCurrentLimit(uint16_t canId, float currentLimit);
+        
+        bool setupMd80Calibration(uint16_t canId);
 
         bool controlMd80Enable(uint16_t canId, bool enable);
         bool controlMd80Mode(uint16_t canId, Md80Mode_E mode);
