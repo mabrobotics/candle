@@ -7,6 +7,15 @@ Communication frequency is currently fixed at 100Hz. This is true for both trans
 (CANdle->PC). The CANdle will haandle low level FDCAN communications with the MD80s, as rate sufficient to update 
 all states (and send all commands), faster that the update rate with PC, regardless of selected FDCAN baudrate.
 
+## Documentation
+Documentation is based on Doxygen. To build it use:
+```
+doxygen Doxyfile
+```
+A new Documentation directory will be created. Easly accesible HTML version will then be available at:
+```
+Documentation/html/index.html
+```
 ## Building
 Make sure you are in md80_driver main directory. 
 ```
