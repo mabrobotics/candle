@@ -18,3 +18,9 @@ target_link_libraries(example2 candle)
 
 add_executable(example3 examples/example3.cpp)
 target_link_libraries(example3 candle)
+
+add_executable(example4 examples/example4.cpp)
+target_link_libraries(example4 candle)
+
+add_executable(example5 examples/example5.cpp)
+target_link_libraries(example5 candle)

@@ -53,7 +53,6 @@ namespace mab
             {
                 if(usb->rxBuffer[0] == USB_FRAME_UPDATE)
                 {
-
                     for(int i = 0; i < (int)md80s.size(); i++)
                         md80s[i].updateResponseData((StdMd80ResponseFrame_t*)&usb->rxBuffer[1 + i * sizeof(StdMd80ResponseFrame_t)]);
                 }
@@ -123,7 +122,6 @@ namespace mab
                 vout << std::to_string(i+1) <<": ID = " << ids[i]  << 
                     " (0x" << std::hex << ids[i] << std::dec << ")" << std::endl;
             }
-
         }
         return ids;
     }
