@@ -5,8 +5,10 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 
 file(GLOB CANDLE_SOURCE "src/*cpp")
 
+# candle can be compiled both as STATIC or SHARED. User may choose what they prefer
 # add_library(candle STATIC ${CANDLE_SOURCE})
 add_library(candle SHARED ${CANDLE_SOURCE})
+
 target_include_directories (candle PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(candle pthread)
 set_target_properties(candle PROPERTIES PUBLIC_HEADER candle.hpp)
