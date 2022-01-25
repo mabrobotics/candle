@@ -6,7 +6,7 @@
 int main()
 {
     //Create CANdle object and set FDCAN baudrate to 1Mbps
-    mab::Candle candle(mab::CAN_BAUD_1M);
+    mab::Candle candle(mab::CAN_BAUD_1M, true);
 
     //Ping FDCAN bus in search of drives
     auto ids = candle.ping();
