@@ -48,6 +48,15 @@ make
 This will trigger the build of the library and examples. The library will be placed in libs/ directory, 
 include files in include/ directory, and examples in examples/directory
 
+By default the library is build as STATIC, but can also be built as SHARED. If SHARED library is desired, 
+the user shall uncomment line
+```
+set(LIB_TYPE SHARED)
+```
+in ```Candle/CMakeLists.txt```. Thiss will not only change the build type to SHAREd, but also generate a project
+template at: ```build/Project/```. The project features a custom CMakeLists.txt file that links all necessary libs and 
+header files to main.cpp. 
+Feel free to copy the project and start your develepoment from there.
 ## Examples
 When building a set of examples will be built. The example executables are placed in 
 ```

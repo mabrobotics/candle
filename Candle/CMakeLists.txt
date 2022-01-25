@@ -6,8 +6,10 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 file(GLOB CANDLE_SOURCE "src/*cpp")
 
 # candle can be compiled both as STATIC or SHARED. User may choose what they prefer
-# add_library(candle STATIC ${CANDLE_SOURCE})
-add_library(candle SHARED ${CANDLE_SOURCE})
+set(LIB_TYPE STATIC)
+# set(LIB_TYPE SHARED)
+
+add_library(candle ${LIB_TYPE} ${CANDLE_SOURCE})
 
 target_include_directories (candle PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(candle pthread)
@@ -27,3 +29,34 @@ target_link_libraries(example4 candle)
 
 add_executable(example5 examples/example5.cpp)
 target_link_libraries(example5 candle)
+
+
+# Below instructions
+if(${LIB_TYPE} MATCHES "SHARED")
+    message(STATUS "Generating project template at ./build/Project/")
+    add_custom_command(
+        TARGET candle
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND}
+        ARGS -E copy $<TARGET_FILE:candle> ../Project/libs/libcandle.so
+        )
+    add_custom_command(
+        TARGET candle
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND}
+        ARGS -E copy ${CMAKE_HOME_DIRECTORY}/Candle/cmake_template.txt ../Project/CMakeLists.txt
+        )
+    add_custom_command(
+        TARGET candle
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND}
+        ARGS -E copy_directory ${CMAKE_HOME_DIRECTORY}/Candle/include/ ../Project/include/
+        )
+    add_custom_command(
+        TARGET candle
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND}
+        ARGS -E copy ${CMAKE_HOME_DIRECTORY}/Candle/examples/example1.cpp ../Project/src/main.cpp
+        )
+    message(STATUS "Generation complete!")
+endif()
