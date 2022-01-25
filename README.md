@@ -2,6 +2,27 @@
 This driver will make it simple to implement MD80 into existing projects. The driver will let the user change MD80's 
 configuration as well as control the MD80 with most/all of its functionality.
 
+## Dependencies
+The library does not require any additional software to be functional, It can work as-is. 
+However to make full use of it, two additional packages can be used - setserial (for increasing maximal access frequency
+to the serial port used for communication with CANdle) and doxygen (for building the documentation). To get them:
+```
+sudo apt install setserial
+sudo apt install doxygen
+```
+
+## USB Access
+To enable access to CANdle from userspace, the user should be added to dialout group by calling:
+```
+sudo usermod -a -G dialout <user>     # where <user> is current username
+```
+If this is not possible, devices access level can be granted by:
+```
+sudo chmod /dev/ttyACMx     # where x is CANdle port number, usually 0
+```
+If this is also not possible, programs that use CANdle (including examples), can be launched with ```sudo```
+
+
 ## Latency and bandwith
 Communication frequency is currently fixed at 100Hz. This is true for both transmitting (PC->CANdle) and receiving 
 (CANdle->PC). The CANdle will haandle low level FDCAN communications with the MD80s, as rate sufficient to update 
