@@ -16,11 +16,14 @@ namespace mab
         UPDATE
     };
 
+    /**
+     * @brief Enum with coded FDCAN baudrates available.     * 
+     */
     enum CANdleBaudrate_E : uint8_t
     {
-        CAN_BAUD_1M = 1,
-        CAN_BAUD_5M = 5,
-        CAN_BAUD_8M = 8
+        CAN_BAUD_1M = 1,    //FDCAN Baudrate of 1Mbps (1 000 000 bits per second)
+        CAN_BAUD_5M = 5,    //FDCAN Baudrate of 5Mbps (5 000 000 bits per second)
+        CAN_BAUD_8M = 8     //FDCAN Baudrate of 8Mbps (8 000 000 bits per second)
     };
 
     /*! \class Candle
@@ -56,8 +59,22 @@ namespace mab
         bool inUpdateMode();
         bool inConfigMode();
     public:
+        /**
+         * @brief A constructor of Candle class
+         * @param canBaudrate Sets a baudrate that CANdle will use to talk to drives
+         * @param printVerbose if true, additional printing will be enables. Usefull for debugging
+         * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
+        */
         Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false);
+        /**
+         * @brief A destructor of Candle class. Takes care of all started threads that need to be stopped before clean exit
+        */
         ~Candle();
+
+        /**
+         * @brief A vector holding all md80 instances that were succesfully added via `addMd80` method. This vector
+         * can be used to modify regulator and control parameters of the md80 drives.
+         */
         std::vector<Md80> md80s;
 
         /**

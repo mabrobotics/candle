@@ -3,17 +3,31 @@
 #include <cstdint>
 namespace mab
 {
+    /**
+     * @brief Impedance regulator parameters. Impedance regulator output is computed as:
+     * torque = kp * position_error + kd * velocity_error + torque_ff;
+     */
     struct RegImpedance_t
     {
         float kp;
         float kd;
         float torque_ff;
     };
+    /**
+     * @brief PID regulator parameters. This is used to setup either Position PID regulator or Velocity PID regulator.
+     * @note i_windup is an anti-windup parameter. This limits the maximum output of the integral (i) part of the regulator.
+     */
     struct RegPid_t
     {
         float kp, ki, kd, i_windup;
     };
 
+    /**
+     * @brief Md80 Control Mode 
+     * @note Position PID is a cascade regulator, output of the Position PID (target velocity) is passed as an input
+     *  of Velocity PID. Velocity PID output (torque) is then passed directly to internal current/torque controller.
+     * @note TORQUE mode directly sends torque to internal current/torque controller.
+     */
     enum Md80Mode_E : uint8_t
     {
         IDLE = 0,
@@ -22,6 +36,9 @@ namespace mab
         TORQUE = 3,
         IMPEDANCE = 4,
     };
+    /**
+     * @brief FDCAN frame ids supported by Md80
+     */
     enum Md80FrameId_E : uint8_t 
     {
         FRAME_FLASH_LED			= 0x00,
@@ -35,10 +52,8 @@ namespace mab
         FRAME_IMP_CONTROL		= 0x12,
         FRAME_RESTART			= 0x13,
         FRAME_SET_MOTION_TARGETS= 0x14,
-        FRAME_STOP_WDG			= 0x19,
         FRAME_CAN_CONFIG		= 0x20,
         FRAME_CAN_SAVE			= 0x21,
-        FRAME_DIAGNOSTIC		= 0x69,
         FRAME_CALIBRATION		= 0x70,
         RESPONSE_DEFAULT		= 0xA0
     };
