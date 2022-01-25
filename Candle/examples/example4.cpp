@@ -18,7 +18,7 @@ int main()
     for(auto &id : ids)
         candle.addMd80(id);
 
-    candle.configMd80SetZero(ids[0]);       // Reset encoder at current position
+    candle.controlMd80SetEncoderZero(ids[0]);       // Reset encoder at current position
 
     candle.controlMd80Mode(ids[0], mab::Md80Mode_E::IMPEDANCE);     //Set mode to impedance control
     candle.controlMd80Enable(ids[0], true);     //Enable the drive

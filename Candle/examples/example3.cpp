@@ -19,7 +19,7 @@ int main()
     candle.configMd80Can(ids[0], 55, mab::CAN_BAUD_1M, 250);    //Set custom FDCAN parameters of  the drive
     candle.configMd80Save(ids[0]);      // Save current limit setting and CAN configuration
 
-    candle.configMd80SetZero(ids[0]);       // Reset the absolute encoder at current position
+    candle.controlMd80SetEncoderZero(ids[0]);       // Reset the absolute encoder at current position
 
     return EXIT_SUCCESS;
 }

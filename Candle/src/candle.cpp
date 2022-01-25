@@ -95,6 +95,7 @@ namespace mab
     }
     std::vector<uint16_t> Candle::ping()
     {
+        vout << "Starting pinging drives..." << std::endl;
         char tx[128];
         tx[0] = USB_FRAME_PING_START;
         tx[1] = 0x00;
@@ -164,7 +165,7 @@ namespace mab
         return false;
     }
 
-    bool Candle::configMd80SetZero(uint16_t canId)
+    bool Candle::controlMd80SetEncoderZero(uint16_t canId)
     {
         GenericMd80Frame frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_ZERO_ENCODER);
         char tx[32];
@@ -212,6 +213,18 @@ namespace mab
             if(md80s[i].getId() == id)
                 return &md80s[i];
         return nullptr;
+    }
+    bool Candle::controlMd80SetEncoderZero(Md80*drive)
+    {
+        return this->controlMd80SetEncoderZero(drive->getId());
+    }
+    bool Candle::controlMd80Enable(Md80*drive, bool enable)
+    {
+        return this->controlMd80Enable(drive->getId(), enable);
+    }
+    bool Candle::controlMd80Mode(Md80*drive, Md80Mode_E mode)
+    {
+        return this->controlMd80Mode(drive->getId(), mode);
     }
     bool Candle::controlMd80Mode(uint16_t canId, Md80Mode_E mode)
     {
