@@ -4,8 +4,9 @@
 namespace mab
 {
     /**
-     * @brief Impedance regulator parameters. Impedance regulator output is computed as:
-     * torque = kp * position_error + kd * velocity_error + torque_ff;
+     * @brief Impedance regulator parameters
+     * 
+     * Impedance regulator output is computed as: torque = kp * position_error + kd * velocity_error + torque_ff;
      */
     struct RegImpedance_t
     {
@@ -30,11 +31,11 @@ namespace mab
      */
     enum Md80Mode_E : uint8_t
     {
-        IDLE = 0,
-        POSITION_PID = 1,
-        VELOCITY_PID = 2,
-        TORQUE = 3,
-        IMPEDANCE = 4,
+        IDLE = 0,           /*!< Idle mode, no control output */
+        POSITION_PID = 1,   /*!< Position PID mode (cascade regulators) */
+        VELOCITY_PID = 2,   /*!< Velocity PID mode */
+        TORQUE = 3,         /*!< Torque mode, raw torque control, no regulators used */
+        IMPEDANCE = 4,      /*!< Impedance mode, uses Impedance controller similar to spring-damper system */
     };
     /**
      * @brief FDCAN frame ids supported by Md80

@@ -17,13 +17,14 @@ namespace mab
     };
 
     /**
-     * @brief Enum with coded FDCAN baudrates available.     * 
+     * @enum CANdleBaudrate_E
+     * @brief Enum with coded FDCAN baudrates
      */
     enum CANdleBaudrate_E : uint8_t
     {
-        CAN_BAUD_1M = 1,    //FDCAN Baudrate of 1Mbps (1 000 000 bits per second)
-        CAN_BAUD_5M = 5,    //FDCAN Baudrate of 5Mbps (5 000 000 bits per second)
-        CAN_BAUD_8M = 8     //FDCAN Baudrate of 8Mbps (8 000 000 bits per second)
+        CAN_BAUD_1M = 1,    /*!< FDCAN Baudrate of 1Mbps (1 000 000 bits per second) */
+        CAN_BAUD_5M = 5,    /*!< FDCAN Baudrate of 5Mbps (5 000 000 bits per second) */
+        CAN_BAUD_8M = 8,    /*!< FDCAN Baudrate of 8Mbps (8 000 000 bits per second) */
     };
 
     /*! \class Candle
@@ -78,26 +79,26 @@ namespace mab
         std::vector<Md80> md80s;
 
         /**
-        Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80;
+        @brief Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80;
         @return the vector FDCAN IDs of drives that were found. If no drives were found, the vector is empty
         */
         std::vector<uint16_t> ping();
 
         /**
-        Adds Md80 to auto update vector.
+        @brief Adds Md80 to auto update vector.
         @param canId FDCAN ID of the drive to be added
         @return true if drive has been found and was added, false otherwise
         */
         bool addMd80(uint16_t canId);
         /**
-        Changes FDCAN baudrate that CANdle uses to talk to Md80s.
+        @brief Changes FDCAN baudrate that CANdle uses to talk to Md80s.
         @param canBaudrate enum listing all available baudrates. CAN_BAUD_1M is equal to baudrate of 1 000 000 bits per second.
         @return true if baudrate was changed, false otherwise
         */
         bool configCandleBaudrate(CANdleBaudrate_E canBaudrate);
 
         /**
-        Changes FDCAN parameters of the Md80.
+        @brief Changes FDCAN parameters of the Md80.
         @param canId ID of the drive to be modified
         @param newId ID that the drive shall change to
         @param newBaudrateMbps FDCAN baudrate that the drive shall use
@@ -106,27 +107,27 @@ namespace mab
         */
         bool configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout);
         /**
-        Changes max phase-to-phase motor current. 
+        @brief Changes max phase-to-phase motor current. 
         @param canId ID of the drive
         @param currentLimit phase-to-phase current limit in Amps
         @return true if setting was succesfull, false otherwise
         */
         bool configMd80SetCurrentLimit(uint16_t canId, float currentLimit);
         /**
-        Saves FDCAN and Current Limiter settings to Md80's non-volatile memory
+        @brief Saves FDCAN and Current Limiter settings to Md80's non-volatile memory
         @param canId ID of the drive
         @return true if saveing was succesfull, false otherwise
         */
         bool configMd80Save(uint16_t canId);
         
         /**
-        Sets current motor position as zero position -> reference for any future movements. 
+        @brief Sets current motor position as zero position -> reference for any future movements. 
         @param drive Pointer to a Md80 class (candle.md80s memeber)
         @return true if setting was succesfull, false otherwise
         */
         bool controlMd80SetEncoderZero(Md80*drive);
         /**
-        Changes max phase-to-phase motor current. 
+        @brief Changes max phase-to-phase motor current. 
         @param canId ID of the drive
         @param currentLimit phase-to-phase current limit in Amps
         @return true if setting was succesfull, false otherwise
@@ -134,14 +135,14 @@ namespace mab
         bool controlMd80SetEncoderZero(uint16_t canId);
 
         /**
-        Sets control mode of the Md80
+        @brief Sets control mode of the Md80
         @param drive Pointer to a Md80 class (candle.md80s memeber)
         @param mode Control mode to be used on the drive
         @return true if setting was succesfull, false otherwise
         */
         bool controlMd80Mode(Md80*drive, Md80Mode_E mode);
         /**
-        Sets control mode of the Md80
+        @brief Sets control mode of the Md80
         @param canId ID of the drive
         @param mode Control mode to be used on the drive
         @return true if setting was succesfull, false otherwise
@@ -149,14 +150,14 @@ namespace mab
         bool controlMd80Mode(uint16_t canId, Md80Mode_E mode);
 
         /**
-        Enables/disabled actuaction of the Md80
+        @brief Enables/disabled actuaction of the Md80
         @param drive Pointer to a Md80 class (candle.md80s memeber)
         @param enable if true the drive will be enabled, if false the drive will be disabled
         @return true if setting was succesfull, false otherwise
         */
         bool controlMd80Enable(Md80*drive, bool enable);
         /**
-        Enables/disabled actuaction of the Md80
+        @brief Enables/disabled actuaction of the Md80
         @param canId ID of the drive
         @param enable if true the drive will be enabled, if false the drive will be disabled
         @return true if setting was succesfull, false otherwise
@@ -164,7 +165,7 @@ namespace mab
         bool controlMd80Enable(uint16_t canId, bool enable);
 
         /**
-        Searched if the drive with provided FDCAN canId exists in `Md80s` list (exists only if was previously added 
+        @brief Searched if the drive with provided FDCAN canId exists in `Md80s` list (exists only if was previously added 
         by `addMd80` method)
         @param canId ID of the drive
         @return a pointer to a drive if found, nullptr otherwise
@@ -172,26 +173,26 @@ namespace mab
         Md80* getMd80FromList(uint16_t canId);
         
         /**
-        Begin auto update mode. In this mode, host and CANdle will automatically exchange USB messages with md80 commands
+        @brief Begins auto update mode. In this mode, host and CANdle will automatically exchange USB messages with md80 commands
         and states. In this mode CANdle will automatically send commands and gather state from all Md80's added to update
         vector with `::addMd80` method. In this mode no config* or control* methods can be called.
         @return true if mode was set succesfully, false otherwise
         */
         bool begin();
         /**
-        Ends auto update mode. Sets mode back to idle (config) mode. In this mode, control*, config* and other methods
+        @brief Ends auto update mode. Sets mode back to idle (config) mode. In this mode, control*, config* and other methods
         can be used.
         @return true if mode was set succesfully, false otherwise
         */
         bool end();
         /**
-        Clears all parameters set on the CANdle, returning it to the state same as after a powerup.
+        @brief Clears all parameters set on the CANdle, returning it to the state same as after a powerup.
         @return true if reset was succesfull, false otherwise
         */
         bool reset();
 
         /**
-        Triggers a calibration routine of the drive's internal electronics.
+        @brief Triggers a calibration routine of the drive's internal electronics.
         @note **This method should not be ever used without consultation with MAB Robotics**, it may make drive unusable and
         prone to fail if used incorrectly.
         @param canId ID of the drive to be modified
