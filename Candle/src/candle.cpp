@@ -38,12 +38,6 @@ namespace mab
     }
     Candle::~Candle()
     {
-        shouldStopReceiver = true;
-        shouldStopTransmitter = true;
-        if(receiverThread.joinable())
-            receiverThread.join();
-        if(transmitterThread.joinable())
-            transmitterThread.join();
         if(this->inUpdateMode())
             this->end();
     }
@@ -290,6 +284,7 @@ namespace mab
         tx[1] = 0x00;
         if(usb->transmit(tx, 2, true, 10))
         {
+            vout << "Begginig auto update loop mode" << std::endl;
             mode = CANdleMode_E::UPDATE;
             shouldStopTransmitter = false;
             shouldStopReceiver = false;
@@ -299,16 +294,25 @@ namespace mab
             receiverThread = std::thread(&Candle::receive, this);
             return true;
         }
+        vout << "Failed to begin auto update loop mode" << std::endl;
         return false;
     }
     bool Candle::end()
     {
         if(mode == CANdleMode_E::CONFIG)
             return false;
-        mode = CANdleMode_E::CONFIG;
         shouldStopTransmitter = true;
         shouldStopReceiver = true;
         transmitterThread.join();
+        receiverThread.join();
+        
+        char tx[128];
+        tx[0] = USB_FRAME_END;
+        tx[1] = 0x00;
+        if(usb->transmit(tx, 2, true, 10))
+            mode = CANdleMode_E::CONFIG;
+        vout << "Ending auto update loop mode" << std::endl;
+
         return true;
     }
     bool Candle::reset()
@@ -327,21 +331,13 @@ namespace mab
 	bool Candle::inUpdateMode()
 	{
 		if(mode == CANdleMode_E::UPDATE)
-		{
-			vout << "Invalid Action. CANDLE is currently in UPDATE mode, and requested action requires CONFIG mode!" << std::endl;
-			vout << "Change mode by using `Candle.end()`" << std::endl;
 			return true;
-		}
 		return false;
 	}
 	bool Candle::inConfigMode()
 	{
 		if(mode == CANdleMode_E::CONFIG)
-		{
-			vout << "Invalid Action. CANDLE is currently in CONFIG mode, and requested action requires UPDATE mode!" << std::endl;
-			vout << "Change mode by using `Candle.begin()`" << std::endl;
 			return true;
-		}
 		return false;
 	}
     void Candle::transmitNewStdFrame()
