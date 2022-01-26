@@ -122,11 +122,19 @@ namespace mab
             {
                 if (ids[i] == 0)
                     break;  //No more ids in the message
+                
                 vout << std::to_string(i+1) <<": ID = " << ids[i]  << 
                     " (0x" << std::hex << ids[i] << std::dec << ")" << std::endl;
+                if(ids[i] > 2047)
+                {
+                    vout << "Error! This ID is invalid! Probably two or more drives share same ID." <<
+                        "Communication will most likely be broken until IDs are unique!" << std::endl;
+                    std::vector<uint16_t>empty;
+                    return empty;
+                }
             }
-        }
         return ids;
+        }
     }
 
     bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout)
@@ -160,10 +168,10 @@ namespace mab
         if(usb->transmit(tx, len, true, 500))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Saving in flash succesfull!" << std::endl;
+                vout << "Saving in flash succesfull at ID = " << canId << std::endl;
                 return true;
             }
-        vout << "Saving in flash failed!" << std::endl;
+        vout << "Saving in flash failed at ID = " << canId << std::endl;
         return false;
     }
 
@@ -176,10 +184,10 @@ namespace mab
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Setting new zero position succesfull!" << std::endl;
+                vout << "Setting new zero position succesfull at ID = " << canId << std::endl;
                 return true;
             }
-        vout << "Setting new zero position failed!" << std::endl;
+        vout << "Setting new zero position failed at ID = " << canId << std::endl;
         return false;
     }
     bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
@@ -192,10 +200,10 @@ namespace mab
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[0] == USB_FRAME_MD80_GENERIC_FRAME && usb->rxBuffer[1] == true)
             {
-                vout << "Setting new current limit succesfull!" << std::endl;
+                vout << "Setting new current limit succesfull at ID = " << canId << std::endl;
                 return true;
             }
-        vout << "Setting new current limit failed!" << std::endl;
+        vout << "Setting new current limit failed at ID = " << canId << std::endl;
         return false;
     }
 
@@ -244,11 +252,11 @@ namespace mab
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Setting control mode succesfull!" << std::endl;
+                vout << "Setting control mode succesfull at ID = " << canId << std::endl;
                 drive->setControlMode(mode);
                 return true;
             }
-        vout << "Setting control mode failed!" << std::endl;
+        vout << "Setting control mode failed at ID = " << canId << std::endl;
         return false;
     }
     bool Candle::controlMd80Enable(uint16_t canId, bool enable)
@@ -267,10 +275,10 @@ namespace mab
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Enabling succesfull!" << std::endl;
+                vout << "Enabling succesfull at ID = " << canId << std::endl;
                 return true;
             }
-        vout << "Enabling failed!" << std::endl;
+        vout << "Enabling failed at ID = " << canId << std::endl;
         return false;
     }
     bool Candle::begin()
@@ -359,10 +367,10 @@ namespace mab
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Starting calibration!" << std::endl;
+                vout << "Starting calibration at ID = " << canId << std::endl;
                 return true;
             }
-        vout << "Starting calibration failed!" << std::endl;
+        vout << "Starting calibration failed at ID = " << canId << std::endl;
         return false;
     }
     bool Candle::setupMd80Diagnostic(uint16_t canId)
@@ -373,10 +381,10 @@ namespace mab
         memcpy(tx, &frame, len);
         if(usb->transmit(tx, len, true, 50))
         {
-            std::cout << "[CANDLE] DIAG: " << std::string(&usb->rxBuffer[2]) << std::endl;
+            std::cout << "[CANDLE] DIAG at ID = " << canId << ": " << std::string(&usb->rxBuffer[2]) << std::endl;
             return true;
         }
-        vout << "Diagnostic failed" << std::endl;
+        vout << "Diagnostic failed at ID = " << canId << std::endl;
         return false;
     }
 }

@@ -35,7 +35,8 @@ int main()
         // After powerup the drive will load set of default parameters for every regulator.
         // To make the drive move all we got to do is set mode (.controlMd80Mode) and set target
         // (.setTargetPosition, .setTargetVelocity, .setTargetTorque)
-        candle.md80s[0].setTargetPosition(sin(t));  
+        candle.md80s[0].setTargetPosition(sin(t) * 3.0f);  
+        usleep(10000);  //Add some delay
     }
 
     //Close the update loop

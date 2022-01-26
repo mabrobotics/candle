@@ -30,6 +30,10 @@ target_link_libraries(example4 candle)
 add_executable(example5 examples/example5.cpp)
 target_link_libraries(example5 candle)
 
+add_executable(example6 examples/example6.cpp)
+target_link_libraries(example6 candle)
+
+
 
 # Below instructions
 if(${LIB_TYPE} MATCHES "SHARED")

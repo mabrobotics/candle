@@ -98,7 +98,7 @@ namespace mab
     void Md80::packImpedanceFrame()
     {
         commandFrame.toMd80.length = 32;
-        commandFrame.toMd80.data[0] = 0x12;
+        commandFrame.toMd80.data[0] = mab::Md80FrameId_E::FRAME_IMP_CONTROL;
         commandFrame.toMd80.data[1] = 0x00;
         *(float*)&commandFrame.toMd80.data[2] = impedanceRegulator.kp;
         *(float*)&commandFrame.toMd80.data[6] = impedanceRegulator.kd;
@@ -110,7 +110,7 @@ namespace mab
     void Md80::packPositionFrame()
     {
         commandFrame.toMd80.length = 32;
-        commandFrame.toMd80.data[0] = 0x10;
+        commandFrame.toMd80.data[0] = mab::Md80FrameId_E::FRAME_POS_CONTROL;
         commandFrame.toMd80.data[1] = 0x00;
         *(float*)&commandFrame.toMd80.data[2] = positionRegulator.kp;
         *(float*)&commandFrame.toMd80.data[6] = positionRegulator.ki;
@@ -122,7 +122,7 @@ namespace mab
     void Md80::packVelocityFrame()
     {
         commandFrame.toMd80.length = 32;
-        commandFrame.toMd80.data[0] = 0x11;
+        commandFrame.toMd80.data[0] = mab::Md80FrameId_E::FRAME_VEL_CONTROL;
         commandFrame.toMd80.data[1] = 0x00;
         *(float*)&commandFrame.toMd80.data[2] = velocityRegulator.kp;
         *(float*)&commandFrame.toMd80.data[6] = velocityRegulator.ki;
@@ -134,7 +134,7 @@ namespace mab
     void Md80::packMotionTargetsFrame()
     {
         commandFrame.toMd80.length = 16;
-        commandFrame.toMd80.data[0] = 0x14;
+        commandFrame.toMd80.data[0] = mab::Md80FrameId_E::FRAME_SET_MOTION_TARGETS;
         commandFrame.toMd80.data[1] = 0x00;
         *(float*)&commandFrame.toMd80.data[2] = velocityTarget;
         *(float*)&commandFrame.toMd80.data[6] = positionTarget;
