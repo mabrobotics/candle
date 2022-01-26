@@ -55,6 +55,7 @@ namespace mab
         FRAME_SET_MOTION_TARGETS= 0x14,
         FRAME_CAN_CONFIG		= 0x20,
         FRAME_CAN_SAVE			= 0x21,
+        FRAME_DIAGNOSTIC        = 0x69,
         FRAME_CALIBRATION		= 0x70,
         RESPONSE_DEFAULT		= 0xA0
     };

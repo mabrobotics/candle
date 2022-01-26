@@ -14,7 +14,7 @@ namespace mab
     class mystreambuf: public std::streambuf {    };
     mystreambuf nostreambuf;
     std::ostream nocout(&nostreambuf);
-    #define vout ((this->printVerbose)? std::cout : nocout)
+    #define vout ((this->printVerbose)? std::cout << "[CANDLE] " : nocout)
 
     uint64_t getTimestamp() 
     {
@@ -24,6 +24,7 @@ namespace mab
 
     Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose)
     {
+        vout << "Creating CANdle object." << std::endl;
         printVerbose = _printVerbose;
         usb = new UsbDevice();
         std::string setSerialCommand = "setserial " + usb->getSerialDeviceName() + " low_latency";
@@ -33,6 +34,7 @@ namespace mab
         usleep(100000);
         if (!configCandleBaudrate(canBaudrate))
             vout << "Failed to set up CANdle baudrate @" << canBaudrate << "Mbps!" << std::endl;
+        vout << "CANdle ready." << std::endl;
     }
     Candle::~Candle()
     {
@@ -361,6 +363,20 @@ namespace mab
                 return true;
             }
         vout << "Starting calibration failed!" << std::endl;
+        return false;
+    }
+    bool Candle::setupMd80Diagnostic(uint16_t canId)
+    {
+        GenericMd80Frame frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_DIAGNOSTIC);
+        char tx[32];
+        int len = sizeof(frame);
+        memcpy(tx, &frame, len);
+        if(usb->transmit(tx, len, true, 50))
+        {
+            std::cout << "[CANDLE] DIAG: " << std::string(&usb->rxBuffer[2]) << std::endl;
+            return true;
+        }
+        vout << "Diagnostic failed" << std::endl;
         return false;
     }
 }

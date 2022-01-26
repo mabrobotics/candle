@@ -43,6 +43,7 @@ namespace mab
         std::thread transmitterThread;
         CANdleMode_E mode = CANdleMode_E::CONFIG;
 
+
         const int MAX_DEVICES = 12;
         bool shouldStopReceiver;
         bool shouldStopTransmitter;
@@ -195,9 +196,15 @@ namespace mab
         @brief Triggers a calibration routine of the drive's internal electronics.
         @note **This method should not be ever used without consultation with MAB Robotics**, it may make drive unusable and
         prone to fail if used incorrectly.
-        @param canId ID of the drive to be modified
+        @param canId ID of the drive
         @return true if the calibration started succesfully, false otherwise
         */
         bool setupMd80Calibration(uint16_t canId);
+        /**
+        @brief Prints diagnostic message from md80.
+        @param canId ID of the drive
+        @return true if the succesfull, false otherwise
+        */
+        bool setupMd80Diagnostic(uint16_t canId);
     };
 }
