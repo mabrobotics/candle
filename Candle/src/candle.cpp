@@ -112,7 +112,7 @@ namespace mab
                 return ids;
             }
             vout << "Found drives."  << std::endl;
-            for(int i = 0; i < MAX_DEVICES; i++)
+            for(int i = 0; i < ids.size(); i++)
             {
                 if (ids[i] == 0)
                     break;  //No more ids in the message

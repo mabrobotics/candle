@@ -154,7 +154,9 @@ std::string open_device(int *fd)
                 //if modalias exists check if its contents mach CANdle descriptor (usb:vidpid)
                 char modline[14];
                 modalias.read(modline, 14);
-                if(strcmp(modline, "usb:v0069p1000") == 0)
+                std::string modlineString(modline);
+                std::string usbDevString("usb:v0069p1000");
+                if(modlineString == usbDevString)
                 {
                     *fd = open(devName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
                     return devName;
