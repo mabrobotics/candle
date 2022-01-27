@@ -1,5 +1,6 @@
 #include "md80.hpp"
 #include "mab_types.hpp"
+    #include <iostream>
 
 namespace mab
 {
@@ -15,27 +16,28 @@ namespace mab
     {
 
     }
-    void Md80::setPositionRegulator(float kp, float ki, float kd, float iWindup)
+    void Md80::setPositionController(float kp, float ki, float kd, float iWindup)
     {
         regulatorsAdjusted = true;
-        positionRegulator.kp = kp;
-        positionRegulator.ki = ki;
-        positionRegulator.kd = kd;
-        positionRegulator.i_windup = iWindup;
+        positionController.kp = kp;
+        positionController.ki = ki;
+        positionController.kd = kd;
+        positionController.i_windup = iWindup;
     }
-    void Md80::setVelocityRegulator(float kp, float ki, float kd, float iWindup)
+    void Md80::setVelocityController(float kp, float ki, float kd, float iWindup)
     {
         regulatorsAdjusted = true;
-        velocityRegulator.kp = kp;
-        velocityRegulator.ki = ki;
-        velocityRegulator.kd = kd;
-        velocityRegulator.i_windup = iWindup;
+        velocityRegulatorAdjusted = true;
+        velocityController.kp = kp;
+        velocityController.ki = ki;
+        velocityController.kd = kd;
+        velocityController.i_windup = iWindup;
     }
-    void Md80::setImpedanceRegulator(float kp, float kd)
+    void Md80::setImpedanceController(float kp, float kd)
     {
         regulatorsAdjusted = true;
-        impedanceRegulator.kp = kp;
-        impedanceRegulator.kd = kd;
+        impedanceController.kp = kp;
+        impedanceController.kd = kd;
     }
     void Md80::updateCommandFrame()
     {
@@ -54,7 +56,13 @@ namespace mab
             break;
         case Md80Mode_E::POSITION_PID:
             if(regulatorsAdjusted)
-                packPositionFrame();
+                if(velocityRegulatorAdjusted)
+                {
+                    velocityRegulatorAdjusted = false;
+                    packVelocityFrame();
+                }
+                else
+                    packPositionFrame();
             else
                 packMotionTargetsFrame();
             break;
@@ -100,8 +108,8 @@ namespace mab
         commandFrame.toMd80.length = 32;
         commandFrame.toMd80.data[0] = mab::Md80FrameId_E::FRAME_IMP_CONTROL;
         commandFrame.toMd80.data[1] = 0x00;
-        *(float*)&commandFrame.toMd80.data[2] = impedanceRegulator.kp;
-        *(float*)&commandFrame.toMd80.data[6] = impedanceRegulator.kd;
+        *(float*)&commandFrame.toMd80.data[2] = impedanceController.kp;
+        *(float*)&commandFrame.toMd80.data[6] = impedanceController.kd;
         *(float*)&commandFrame.toMd80.data[10] = positionTarget;
         *(float*)&commandFrame.toMd80.data[14] = velocityTarget;
         *(float*)&commandFrame.toMd80.data[18] = torqueSet;
@@ -112,24 +120,24 @@ namespace mab
         commandFrame.toMd80.length = 32;
         commandFrame.toMd80.data[0] = mab::Md80FrameId_E::FRAME_POS_CONTROL;
         commandFrame.toMd80.data[1] = 0x00;
-        *(float*)&commandFrame.toMd80.data[2] = positionRegulator.kp;
-        *(float*)&commandFrame.toMd80.data[6] = positionRegulator.ki;
-        *(float*)&commandFrame.toMd80.data[10] = positionRegulator.kd;
-        *(float*)&commandFrame.toMd80.data[14] = positionRegulator.i_windup;
-        *(float*)&commandFrame.toMd80.data[18] = positionTarget;
-        *(float*)&commandFrame.toMd80.data[22] = maxVelocity;
+        *(float*)&commandFrame.toMd80.data[2] = positionController.kp;
+        *(float*)&commandFrame.toMd80.data[6] = positionController.ki;
+        *(float*)&commandFrame.toMd80.data[10] = positionController.kd;
+        *(float*)&commandFrame.toMd80.data[14] = positionController.i_windup;
+        *(float*)&commandFrame.toMd80.data[18] = maxVelocity;
+        *(float*)&commandFrame.toMd80.data[22] = positionTarget;
     }
     void Md80::packVelocityFrame()
     {
         commandFrame.toMd80.length = 32;
         commandFrame.toMd80.data[0] = mab::Md80FrameId_E::FRAME_VEL_CONTROL;
         commandFrame.toMd80.data[1] = 0x00;
-        *(float*)&commandFrame.toMd80.data[2] = velocityRegulator.kp;
-        *(float*)&commandFrame.toMd80.data[6] = velocityRegulator.ki;
-        *(float*)&commandFrame.toMd80.data[10] = velocityRegulator.kd;
-        *(float*)&commandFrame.toMd80.data[14] = velocityRegulator.i_windup;
-        *(float*)&commandFrame.toMd80.data[18] = velocityTarget;
-        *(float*)&commandFrame.toMd80.data[22] = maxTorque;
+        *(float*)&commandFrame.toMd80.data[2] = velocityController.kp;
+        *(float*)&commandFrame.toMd80.data[6] = velocityController.ki;
+        *(float*)&commandFrame.toMd80.data[10] = velocityController.kd;
+        *(float*)&commandFrame.toMd80.data[14] = velocityController.i_windup;
+        *(float*)&commandFrame.toMd80.data[18] = maxTorque;
+        *(float*)&commandFrame.toMd80.data[22] = velocityTarget;
     }
     void Md80::packMotionTargetsFrame()
     {

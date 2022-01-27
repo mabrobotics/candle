@@ -20,9 +20,16 @@ int main()
 
     candle.controlMd80SetEncoderZero(ids[0]);       // Reset encoder at current position
 
-    candle.controlMd80Mode(ids[0], mab::Md80Mode_E::IMPEDANCE);     //Set mode to impedance control
+    candle.controlMd80Mode(ids[0], mab::Md80Mode_E::VELOCITY_PID);     //Set mode to impedance control
     candle.controlMd80Enable(ids[0], true);     //Enable the drive
 
+    // Now we set up Velocity Regulator, and additionaly max output velocity just to be on a safe side
+    candle.md80s[0].setVelocityController(0.05f, 0.25f, 0.0, 1.0f);
+    candle.md80s[0].setMaxVelocity(30.0f);
+
+    // To reload default regulator parameters, simply disable the drive (contorlMd80Enable(id, false)), 
+    // stop the communications (candle.end()) or power cycle the drive (off-on).
+    
     float t = 0.0f;
     float dt = 0.04f;
     
@@ -32,11 +39,9 @@ int main()
     for(int i = 0; i < 1000; i++)
     {
         t+=dt;
-        // After powerup the drive will load set of default parameters for every regulator.
-        // To make the drive move all we got to do is set mode (.controlMd80Mode) and set target
-        // (.setTargetPosition, .setTargetVelocity, .setTargetTorque)
-        candle.md80s[0].setTargetPosition(sin(t) * 3.0f);  
-        usleep(10000);  //Add some delay
+        candle.md80s[0].setTargetVelocity( 20.0f + sin(t) * 10.0f);  
+        std::cout << "Drive ID = " << candle.md80s[0].getId() << " Velocity: " << candle.md80s[0].getVelocity() << std::endl;
+        usleep(10000);
     }
 
     //Close the update loop

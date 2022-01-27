@@ -19,7 +19,10 @@ int main()
     //any commands starting with config* can be accessed without adding Md80 to List (addMd80 method)
     candle.configMd80SetCurrentLimit(ids[0], 2.5f);     // Set motor current limit 
     candle.configMd80Can(ids[0], newFDCanId, mab::CAN_BAUD_1M, 250);    //Set custom FDCAN parameters of  the drive
-    candle.configMd80Save(newFDCanId);      // Save current limit setting and CAN configuration
+    
+    // Save current limit setting and CAN configuration. Note this is commented out by default not to mess your 
+    // drives
+    // candle.configMd80Save(newFDCanId);      
 
     return EXIT_SUCCESS;
 }

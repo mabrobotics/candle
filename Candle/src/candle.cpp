@@ -144,7 +144,7 @@ namespace mab
         if (usb->transmit(tx, len, true, 100))
             if(usb->rxBuffer[1] == 1)
             {
-                vout << "CAN config change succesfull!" << std::endl;
+                vout << "CAN config change successfull!" << std::endl;
                 vout << "Drive ID = " << std::to_string(canId) << " was changed to ID = " << std::to_string(newId) << std::endl;
                 vout << "It's baudrate is now " << std::to_string(newBaudrateMbps) << "Mbps" << std::endl;
                 vout << "It's CAN timeout (watchdog) is now " << (newTimeout == 0 ? "Disabled" : std::to_string(newTimeout) + "ms")  << std::endl;
@@ -162,7 +162,7 @@ namespace mab
         if(usb->transmit(tx, len, true, 500))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Saving in flash succesfull at ID = " << canId << std::endl;
+                vout << "Saving in flash successfull at ID = " << canId << std::endl;
                 return true;
             }
         vout << "Saving in flash failed at ID = " << canId << std::endl;
@@ -178,7 +178,7 @@ namespace mab
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Setting new zero position succesfull at ID = " << canId << std::endl;
+                vout << "Setting new zero position successfull at ID = " << canId << std::endl;
                 return true;
             }
         vout << "Setting new zero position failed at ID = " << canId << std::endl;
@@ -194,7 +194,7 @@ namespace mab
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[0] == USB_FRAME_MD80_GENERIC_FRAME && usb->rxBuffer[1] == true)
             {
-                vout << "Setting new current limit succesfull at ID = " << canId << std::endl;
+                vout << "Setting new current limit successfull at ID = " << canId << std::endl;
                 return true;
             }
         vout << "Setting new current limit failed at ID = " << canId << std::endl;
@@ -246,7 +246,7 @@ namespace mab
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Setting control mode succesfull at ID = " << canId << std::endl;
+                vout << "Setting control mode successfull at ID = " << canId << std::endl;
                 drive->setControlMode(mode);
                 return true;
             }
@@ -269,7 +269,7 @@ namespace mab
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Enabling succesfull at ID = " << canId << std::endl;
+                vout << "Enabling successfull at ID = " << canId << std::endl;
                 return true;
             }
         vout << "Enabling failed at ID = " << canId << std::endl;
@@ -322,7 +322,7 @@ namespace mab
         tx[1] = 0x00;
         if(usb->transmit(tx, 2, true, 100))
         {
-            vout << "Reset succesfull!" << std::endl;
+            vout << "Reset successfull!" << std::endl;
             return true;
         }
         vout << "Reset failed!" << std::endl;

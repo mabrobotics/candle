@@ -68,3 +68,30 @@ Candle/examples/
 ```
 Examples feature a simple use cases for most of the methods supplied with the library as well as comments guiding user 
 around the code and implementation.
+
+# Example1
+This is a most basic project showcasing a Candle::ping() method. It will ping the FDCAN bus for active drives and print 
+all FDCAN IDs (drive IDs) that have responded.
+
+# Example 2
+This program will ping the FDCAN bus. If any md80 is found it will print out it's rotor position for a few seconds.
+
+# Example 3
+This is a demonstration how to properly configure a single md80. It will ping the drives and set new current limit 
+to the first drive found. It will also change the FDCAN Id of this drive to ```newFDCanId```. There is also a commented
+you saving method. If the ```configMd80Save``` stays commented out, the current and FDCAN parameters will be volatile, 
+meaning they will be there untile the drives is powered down. Usaing ```configMd80Save``` will make the change pernament 
+(or until you change it next time).
+
+# Example 4
+This example will move the motor in Impedance Control mode, using defualt regulator parameters. The drive will slowly  
+perform a sinusoidal movement from the position of -3 [rad] to +[3] rad from the position at the start.
+
+# Example 5
+Example 5 is simialr to ```Example 4``` with the difference being the this time a regulator parameters are custom.
+Feel free to modify ```candle.md80s[0].setImpedanceRegulator(5.0, 0.5);``` line to any set of values you want, but be
+carefull, with high gains the servos can get quite violent!
+
+# Example 6 
+This example shows how to control more that just one drive - it will ping the FDCAN bus and move all the drives it finds
+(up to 12), in a synchronized manner. 

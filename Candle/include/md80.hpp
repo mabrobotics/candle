@@ -28,11 +28,12 @@ namespace mab
         float torqueSet = 0.0f;
         float maxTorque = 1.8f;
         float maxVelocity = 300.0f;
-        RegPid_t velocityRegulator;
-        RegPid_t positionRegulator;
-        RegImpedance_t impedanceRegulator;
+        RegPid_t velocityController;
+        RegPid_t positionController;
+        RegImpedance_t impedanceController;
 
         bool regulatorsAdjusted = false;
+        bool velocityRegulatorAdjusted = false;
         StdMd80CommandFrame_t commandFrame;
         StdMd80ResponseFrame_t responseFrame;
 
@@ -59,7 +60,7 @@ namespace mab
          * @param kd derivative gain
          * @param iWindup anti-windup - maximal output of the integral (i) part of the regulator
          */
-        void setPositionRegulator(float kp, float ki, float kd, float iWindup);
+        void setPositionController(float kp, float ki, float kd, float iWindup);
         /**
          * @brief Set the Velocity PID Regulator parameters.
          * @note Regulator output is Torque in Nm. The output is then passed directly to internal current/torque regulator.
@@ -68,13 +69,13 @@ namespace mab
          * @param kd derivative gain
          * @param iWindup anti-windup - maximal output of the integral (i) part of the regulator
          */
-        void setVelocityRegulator(float kp, float ki, float kd, float iWindup);
+        void setVelocityController(float kp, float ki, float kd, float iWindup);
         /**
          * @brief Set the Impedance Regulator parameters.
          * @param kp Displacement gain ( analogic to 'k' parameter of the spring-damper equation)
          * @param kd Damping coefficient (analogin to 'b' parameter of the spring-damper equation)
          */
-        void setImpedanceRegulator(float kp, float kd);
+        void setImpedanceController(float kp, float kd);
 
         void updateCommandFrame();  //Updates FDCAN frame based on parameters. For internal use.
         void updateResponseData(StdMd80ResponseFrame_t*_responseFrame); //Updates FDCAN frame parameters. For internal use.
