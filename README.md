@@ -38,7 +38,7 @@ A new Documentation directory will be created. Easly accesible HTML version will
 Documentation/html/index.html
 ```
 ## Building
-Make sure you are in md80_driver main directory. 
+Make sure you are in `md80_usbcan` main directory. 
 ```
 mkdir build
 cd build 
@@ -88,10 +88,24 @@ This example will move the motor in Impedance Control mode, using defualt regula
 perform a sinusoidal movement from the position of -3 [rad] to +[3] rad from the position at the start.
 
 # Example 5
-Example 5 is simialr to ```Example 4``` with the difference being the this time a regulator parameters are custom.
-Feel free to modify ```candle.md80s[0].setImpedanceRegulator(5.0, 0.5);``` line to any set of values you want, but be
-carefull, with high gains the servos can get quite violent!
+Example 5 is simialr to ```Example 4``` with the difference being the this time a regulator parameters are custom. Enter the desired control paramters as 'kp' and 'kd' arguments of the commannd:
+```
+./example5 kp kd
+
+# for example
+./example5 0.1 0.01
+```
+Be carefull when picking the kp/kd, with high gains the servos can get quite violent!
 
 # Example 6 
 This example shows how to control more that just one drive - it will ping the FDCAN bus and move all the drives it finds
 (up to 12), in a synchronized manner. 
+
+# Example 7
+Demonstrates Velocity PID mode. The drive will follow a step velocity command - starting at 20 rad/s and going sligtly 
+faster every ~2 seconds.
+
+# Example 8
+Shows how Position PID mode works. An example will move the drive in similar trajectory as Example 4 and 5, but using
+a Position PID regulator. You can see how it is different from Impedance mode and how much more parameters can be
+customized.

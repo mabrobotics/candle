@@ -23,12 +23,10 @@ int main()
     candle.controlMd80Mode(ids[0], mab::Md80Mode_E::POSITION_PID);     //Set mode to impedance control
     candle.controlMd80Enable(ids[0], true);     //Enable the drive
 
-    // Now we modify the Impedance regulator parameters - the drive will behave much different than in 
-    // previous examples. The drive will change default params to the ones we select below.
-    // mab_motion_setVelocityControllerConfig(0.05f, 0.5f, 0.0f, 1.5f, 10.0f);
-    // mab_motion_setPositionControllerConfig(20.0f, 0.5f, 0.0f, 15.0f, 30.0f);
-    candle.md80s[0].setPositionController(20.0f, 0.5f, 0.0f, 15.0f);
-    candle.md80s[0].setVelocityController(0.1f, 0.0f, 0.0f, 1.5f);
+    // Now we modify the BOTH position and velocity regulator parameters. As Position mode uses both Position PID and 
+    // Velocity PID controllers, changeing any of the parameters below will have an impact of overall drive performance.
+    candle.md80s[0].setPositionController(20.0f, 0.2f, 0.0f, 15.0f);
+    candle.md80s[0].setVelocityController(0.0f, 0.1f, 0.0f, 1.5f);
     candle.md80s[0].setMaxVelocity(50.0);
     candle.md80s[0].setMaxTorque(0.5f);
 

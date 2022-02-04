@@ -3,8 +3,30 @@
 #include <iostream>
 #include <unistd.h>
 
-int main()
+float _range(float x, float min, float max);
+
+int main(int argc, char**argv)
 {
+    float kp = 0.0f;
+    float kd = 0.0f;
+    if(argc == 3)
+    {
+        kp = atof(argv[1]);
+        kd = atof(argv[2]);
+        kp = _range(kp, 0, 5.0f);
+        kd = _range(kd, 0, 0.5f);
+        std::cout << "Arguments incorrect!" << std::endl;
+    }
+    else
+    {
+        std::cout << "Not correct arguments!" << std::endl;
+        std::cout << "Arguments are: kp kd" << std::endl;
+        std::cout << "kp = <0, 5.0>, kd = <0, 0.5f>" << std::endl;
+        std::cout << "For example:" << std::endl;
+        std::cout << "./example5 1.0 0.1" << std::endl;
+        return EXIT_FAILURE;
+    }
+
     //Create CANdle object and set FDCAN baudrate to 1Mbps
     mab::Candle candle(mab::CAN_BAUD_1M, true);
 
@@ -25,7 +47,7 @@ int main()
 
     // Now we modify the Impedance regulator parameters - the drive will behave much different than in 
     // previous examples. The drive will change default params to the ones we select below.
-    candle.md80s[0].setImpedanceController(5.0, 0.5);
+    candle.md80s[0].setImpedanceController(kp, kd);
 
     // To reload default regulator parameters, simply disable the drive (contorlMd80Enable(id, false)), 
     // stop the communications (candle.end()) or power cycle the drive (off-on).
@@ -47,4 +69,13 @@ int main()
     candle.end();
 
     return EXIT_SUCCESS;
+}
+
+float _range(float x, float min, float max)
+{
+    if (x < min)
+        return min;
+    if (x > max)
+        return max;
+    return x;
 }

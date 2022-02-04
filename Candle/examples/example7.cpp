@@ -36,13 +36,17 @@ int main()
     //Begin update loop (it starts in the background)
     candle.begin();
 
-    for(int i = 0; i < 1000; i++)
+    float targetVelocity = 20.0f;
+    for(int i = 0; i < 2000; i++)
     {
+        if(i % 200 == 0)
+            targetVelocity += 1.0f;
         t+=dt;
-        candle.md80s[0].setTargetVelocity( 20.0f + sin(t) * 10.0f);  
+        candle.md80s[0].setTargetVelocity(targetVelocity);  
         std::cout << "Drive ID = " << candle.md80s[0].getId() << " Velocity: " << candle.md80s[0].getVelocity() << std::endl;
         usleep(10000);
     }
+    
 
     //Close the update loop
     candle.end();
