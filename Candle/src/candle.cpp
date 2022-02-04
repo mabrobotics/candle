@@ -268,11 +268,17 @@ namespace mab
         memcpy(tx, &frame, len);
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
-            {
-                vout << "Enabling successfull at ID = " << canId << std::endl;
+            {   
+                if(enable)
+                    vout << "Enabling successfull at ID = " << canId << std::endl;
+                else
+                {
+                    vout << "Disabling successfull at ID = " << canId << std::endl;
+                    this->getMd80FromList(canId)->updateRegulatorsAdjusted(false);  //Drive will operate at default params
+                }
                 return true;
             }
-        vout << "Enabling failed at ID = " << canId << std::endl;
+        vout << "Enabling/Disabling failed at ID = " << canId << std::endl;
         return false;
     }
     bool Candle::begin()

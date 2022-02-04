@@ -79,6 +79,7 @@ namespace mab
 
         void updateCommandFrame();  //Updates FDCAN frame based on parameters. For internal use.
         void updateResponseData(StdMd80ResponseFrame_t*_responseFrame); //Updates FDCAN frame parameters. For internal use.
+        void updateRegulatorsAdjusted(bool adjusted); //Updates regulatorsAdjusted variable. For internal use.
         
         //simple setters
         /**

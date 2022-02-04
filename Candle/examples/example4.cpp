@@ -41,6 +41,5 @@ int main()
 
     //Close the update loop
     candle.end();
-
     return EXIT_SUCCESS;
 }

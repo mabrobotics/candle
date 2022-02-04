@@ -88,6 +88,10 @@ namespace mab
         velocity = *(float*)&_responseFrame->fromMd80.data[8];
         torque = *(float*)&_responseFrame->fromMd80.data[12];
     }
+    void Md80::updateRegulatorsAdjusted(bool adjusted)
+    {
+        this->regulatorsAdjusted = adjusted;
+    }
 
     //advanced setters
     void Md80::setMaxTorque(float _maxTorque)
