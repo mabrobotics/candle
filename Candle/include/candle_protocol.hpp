@@ -23,12 +23,19 @@ namespace mab
     };
 
 #pragma pack(push, 1)   //Ensures there in no padding (dummy) bytes in the structures below
-    struct GenericMd80Frame
+    struct GenericMd80Frame32
     {
         uint8_t frameId;
         uint8_t canMsgLen; 
         uint16_t driveCanId;
         uint8_t canMsg[32];
+    };
+    struct GenericMd80Frame64
+    {
+        uint8_t frameId;
+        uint8_t canMsgLen = 64; 
+        uint16_t driveCanId;
+        uint8_t canMsg[64];
     };
     struct AddMd80Frame_t
     {

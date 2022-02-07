@@ -23,6 +23,7 @@ namespace mab
     enum CANdleBaudrate_E : uint8_t
     {
         CAN_BAUD_1M = 1,    /*!< FDCAN Baudrate of 1Mbps (1 000 000 bits per second) */
+        CAN_BAUD_2M = 2,    /*!< FDCAN Baudrate of 2Mbps (2 000 000 bits per second) */
         CAN_BAUD_5M = 5,    /*!< FDCAN Baudrate of 5Mbps (5 000 000 bits per second) */
         CAN_BAUD_8M = 8,    /*!< FDCAN Baudrate of 8Mbps (8 000 000 bits per second) */
     };
@@ -83,6 +84,17 @@ namespace mab
         @return the vector FDCAN IDs of drives that were found. If no drives were found, the vector is empty
         */
         std::vector<uint16_t> ping();
+
+        /**
+        @brief Sends a Generic FDCAN Frame to the IDs in range (10 - 2047), and checks for valid responses from Md80;
+        @param canId FDCAN ID of the device
+        @param msgLen length of FDCAN message
+        @param txBuffer pointer to data buffer to be transmited
+        @param rxBuffer pointer to data buffer for storing a response. Buffer should be 64 bytes long.
+        @param timeoutMs timeout for receiving in milliseconds
+        @return true if received response, false otherwise
+        */
+        bool sengGenericFDCanFrame(uint16_t canId, int msgLen, const char*txBuffer, char*rxBuffer, int timeoutMs = 100);
 
         /**
         @brief Adds Md80 to auto update vector.

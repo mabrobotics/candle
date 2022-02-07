@@ -64,9 +64,9 @@ namespace mab
             usleep(10000);
         }
     }
-    GenericMd80Frame _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameId)
+    GenericMd80Frame32 _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameId)
     {
-        GenericMd80Frame frame;
+        GenericMd80Frame32 frame;
         frame.frameId = USB_FRAME_MD80_GENERIC_FRAME;
         frame.driveCanId = canId;
         frame.canMsgLen = msgLen;
@@ -130,10 +130,33 @@ namespace mab
         return ids;
         }
     }
+    bool Candle::sengGenericFDCanFrame(uint16_t canId, int msgLen, const char*txBuffer, char*rxBuffer, int timeoutMs)
+    {
+        GenericMd80Frame64 frame;
+        frame.frameId = mab::UsbFrameId_t::USB_FRAME_MD80_GENERIC_FRAME;
+        frame.driveCanId = canId;
+        frame.canMsgLen = msgLen;
+        memcpy(frame.canMsg, txBuffer, msgLen);
+        char tx[96];
+        int len = sizeof(frame);
+        memcpy(tx, &frame, len);
+        if (usb->transmit(tx, len, true, timeoutMs))    //Got some response
+        {
+            if(usb->rxBuffer[0] == tx[0] && // USB Frame ID matches
+                usb->rxBuffer[1] == true &&
+                usb->bytesReceived <= 64 + 2)   // response can ID matches
+            {
+                memcpy(rxBuffer, &usb->rxBuffer[2], usb->bytesReceived - 2);
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout)
     {
-        GenericMd80Frame frame = _packMd80Frame(canId, 10, Md80FrameId_E::FRAME_CAN_CONFIG);
+        GenericMd80Frame32 frame = _packMd80Frame(canId, 10, Md80FrameId_E::FRAME_CAN_CONFIG);
         frame.frameId = USB_FRAME_MD80_CONFIG_CAN;
         *(uint16_t*)&frame.canMsg[2] = newId;
         *(uint32_t*)&frame.canMsg[4] = newBaudrateMbps * 1000000;
@@ -155,7 +178,7 @@ namespace mab
     }
     bool Candle::configMd80Save(uint16_t canId)
     {
-        GenericMd80Frame frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CAN_SAVE);
+        GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CAN_SAVE);
         char tx[32];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
@@ -171,7 +194,7 @@ namespace mab
 
     bool Candle::controlMd80SetEncoderZero(uint16_t canId)
     {
-        GenericMd80Frame frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_ZERO_ENCODER);
+        GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_ZERO_ENCODER);
         char tx[32];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
@@ -186,7 +209,7 @@ namespace mab
     }
     bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
     {
-        GenericMd80Frame frame = _packMd80Frame(canId, 6, Md80FrameId_E::FRAME_BASE_CONFIG);
+        GenericMd80Frame32 frame = _packMd80Frame(canId, 6, Md80FrameId_E::FRAME_BASE_CONFIG);
         *(float*)&frame.canMsg[2] = currentLimit;
         char tx[32];
         int len = sizeof(frame);
@@ -238,7 +261,7 @@ namespace mab
             vout << "Drive not found in the Candle database. Use Candle.addMd80() to add drives first!" << std::endl;
             return false;
         }
-        GenericMd80Frame frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_CONTROL_SELECT);
+        GenericMd80Frame32 frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_CONTROL_SELECT);
         frame.canMsg[2] = mode;
         char tx[32];
         int len = sizeof(frame);
@@ -261,7 +284,7 @@ namespace mab
             vout << "Drive not found in the Candle database. Use Candle.addMd80() to add drives first!" << std::endl;
             return false;
         }
-        GenericMd80Frame frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_MOTOR_ENABLE);
+        GenericMd80Frame32 frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_MOTOR_ENABLE);
         frame.canMsg[2] = enable;
         char tx[32];
         int len = sizeof(frame);
@@ -362,7 +385,7 @@ namespace mab
 
     bool Candle::setupMd80Calibration(uint16_t canId)
     {
-        GenericMd80Frame frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CALIBRATION);
+        GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CALIBRATION);
         char tx[32];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
@@ -377,7 +400,7 @@ namespace mab
     }
     bool Candle::setupMd80Diagnostic(uint16_t canId)
     {
-        GenericMd80Frame frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_DIAGNOSTIC);
+        GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_DIAGNOSTIC);
         char tx[32];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);

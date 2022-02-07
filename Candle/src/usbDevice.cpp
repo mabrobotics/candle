@@ -28,7 +28,7 @@ UsbDevice::UsbDevice()
     serialDeviceName = open_device(&device_descriptor);
     if (device_descriptor < 0) 
     {
-        std::cout << "CANdle device not found! Try re-plugging the dongle" << std::endl;
+        std::cout << "[USB] Device not found! Try re-plugging the device!" << std::endl;
         exit(-1);
     }
     
@@ -61,13 +61,17 @@ UsbDevice::UsbDevice()
 }
 bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeout)
 {
-    write(fd, buffer, len);
+    if (write(fd, buffer, len) == -1)
+    {
+        std::cout << "[USB] Writing to USB Device failed. Device Unavailable!" << std::endl;
+        return false;
+    }
     if(_waitForResponse)
         if (receive(timeout))
             return true;
         else
         {
-            std::cout << "Did not receive response from CANdle." << std::endl;
+            std::cout << "[USB] Did not receive response from USB Device." << std::endl;
             return false;
         }
     return true;
