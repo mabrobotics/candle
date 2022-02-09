@@ -86,11 +86,13 @@ namespace mab
          * @brief Set the Max Torque object
          * @note This can be overriden by current limiter set by 'Candle.configMd80CurrentLimit'. Current/torque
          * will be limited to whichever limit has a lower value.
+         * @note This is only applied with CUSTOM Impedance/Velocity PID controller settings.
          * @param maxTorque Torque limit for PID/Impedance regulators
          */
         void setMaxTorque(float maxTorque);
         /**
          * @brief Set the Max Velocity for Position PID and Velocity PID modes.
+         * @note This is only applied with CUSTOM Position PID and Velocity PID controller settings.
          * @note Has no effect in Torque or Impedance mode.
          * @param maxVelocity 
          */
