@@ -27,6 +27,7 @@ namespace mab
     {
         uint8_t frameId;
         uint8_t canMsgLen; 
+        uint8_t timeoutMs = 1;
         uint16_t driveCanId;
         uint8_t canMsg[32];
     };
@@ -34,6 +35,7 @@ namespace mab
     {
         uint8_t frameId;
         uint8_t canMsgLen = 64; 
+        uint8_t timeoutMs = 2;
         uint16_t driveCanId;
         uint8_t canMsg[64];
     };

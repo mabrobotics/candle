@@ -132,10 +132,17 @@ namespace mab
     }
     bool Candle::sengGenericFDCanFrame(uint16_t canId, int msgLen, const char*txBuffer, char*rxBuffer, int timeoutMs)
     {
+        int fdcanTimeout = timeoutMs - 3;
+        if(timeoutMs < 3)
+        {
+            timeoutMs = 3;
+            fdcanTimeout = 1;
+        }
         GenericMd80Frame64 frame;
         frame.frameId = mab::UsbFrameId_t::USB_FRAME_MD80_GENERIC_FRAME;
         frame.driveCanId = canId;
         frame.canMsgLen = msgLen;
+        frame.timeoutMs = fdcanTimeout;
         memcpy(frame.canMsg, txBuffer, msgLen);
         char tx[96];
         int len = sizeof(frame);
