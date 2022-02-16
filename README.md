@@ -78,9 +78,9 @@ This program will ping the FDCAN bus. If any md80 is found it will print out it'
 
 # Example 3
 This is a demonstration how to properly configure a single md80. It will ping the drives and set new current limit 
-to the first drive found. It will also change the FDCAN Id of this drive to ```newFDCanId```. There is also a commented
-you saving method. If the ```configMd80Save``` stays commented out, the current and FDCAN parameters will be volatile, 
-meaning they will be there untile the drives is powered down. Usaing ```configMd80Save``` will make the change pernament 
+to the first drive found. It will also change the FDCAN Id of this drive to ```newFDCanId```, which is randomly generated.
+There is also a commented you saving method. If the ```configMd80Save``` stays commented out, the current and FDCAN parameters will be volatile, 
+meaning they will be there until the drives is powered down. Using ```configMd80Save``` will make the change pernament 
 (or until you change it next time).
 
 # Example 4

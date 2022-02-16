@@ -1,7 +1,7 @@
 #include "candle.hpp"
 
 #include <iostream>
-#include <unistd.h>
+#include <random>
 
 int main()
 {
@@ -14,8 +14,9 @@ int main()
     if(ids.size() == 0)
         return EXIT_FAILURE;
 
-    uint16_t newFDCanId = 59;
-
+    srand (time(NULL));
+    uint16_t newFDCanId = rand() % 990 + 10;   //Generate random id in range 10 - 1000
+    
     //any commands starting with config* can be accessed without adding Md80 to List (addMd80 method)
     candle.configMd80SetCurrentLimit(ids[0], 2.5f);     // Set motor current limit 
     candle.configMd80Can(ids[0], newFDCanId, mab::CAN_BAUD_1M, 250);    //Set custom FDCAN parameters of  the drive
