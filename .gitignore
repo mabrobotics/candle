@@ -1,6 +1,9 @@
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,ros
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,ros
+Documentation
+*/build/
+build/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
@@ -195,3 +198,24 @@ qtcreator-*
 CATKIN_IGNORE
 
 # End of https://www.toptal.com/developers/gitignore/api/python,ros
+log/COLCON_IGNORE
+log/latest
+log/latest_build
+install/_local_setup_util_ps1.py
+install/_local_setup_util_sh.py
+install/.colcon_install_layout
+install/COLCON_IGNORE
+install/local_setup.bash
+install/local_setup.ps1
+install/local_setup.sh
+install/local_setup.zsh
+install/setup.bash
+install/setup.ps1
+install/setup.sh
+install/setup.zsh
+install/share/colcon-core/packages/md80
+install/share/md80/package.bash
+install/share/md80/package.dsv
+install/share/md80/package.ps1
+install/share/md80/package.sh
+install/share/md80/package.zsh
