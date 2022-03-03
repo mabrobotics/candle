@@ -24,8 +24,9 @@ namespace mab
 
     Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose)
     {
-        vout << "Creating CANdle object." << std::endl;
         printVerbose = _printVerbose;
+
+        vout << "Creating CANdle object." << std::endl;
         usb = new UsbDevice();
         std::string setSerialCommand = "setserial " + usb->getSerialDeviceName() + " low_latency";
         if (system(setSerialCommand.c_str()) != 0)
@@ -63,6 +64,10 @@ namespace mab
             msgsSent++;
             usleep(10000);
         }
+    }
+    void Candle::setVebose(bool enable)
+    {
+        printVerbose = enable;
     }
     GenericMd80Frame32 _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameId)
     {

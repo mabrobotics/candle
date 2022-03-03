@@ -80,6 +80,11 @@ namespace mab
         std::vector<Md80> md80s;
 
         /**
+        @brief Enables/disables extended printing.
+        */
+        void setVebose(bool enable);
+        
+        /**
         @brief Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80;
         @return the vector FDCAN IDs of drives that were found. If no drives were found, the vector is empty
         */
