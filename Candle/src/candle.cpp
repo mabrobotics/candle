@@ -208,6 +208,21 @@ namespace mab
         vout << "Saving in flash failed at ID = " << canId << std::endl;
         return false;
     }
+    bool Candle::configMd80Blink(uint16_t canId)
+    {
+        GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_FLASH_LED);
+        char tx[64];
+        int len = sizeof(frame);
+        memcpy(tx, &frame, len);
+        if(usb->transmit(tx, len, true, 500))
+            if (usb->rxBuffer[1] == true)
+            {
+                vout << "LEDs blining at ID = " << canId << std::endl;
+                return true;
+            }
+        vout << "Blinking failed at ID = " << canId << std::endl;
+        return false;
+    }
 
     bool Candle::controlMd80SetEncoderZero(uint16_t canId)
     {

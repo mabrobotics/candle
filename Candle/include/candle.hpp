@@ -142,6 +142,13 @@ namespace mab
         @return true if saveing was succesfull, false otherwise
         */
         bool configMd80Save(uint16_t canId);
+        /**
+        @brief Blink on board LED
+        @param canId ID of the drive
+        @return true if blinking, false otherwise
+        */
+        bool configMd80Blink(uint16_t canId);
+        
         
         /**
         @brief Sets current motor position as zero position -> reference for any future movements. 
