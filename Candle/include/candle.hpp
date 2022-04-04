@@ -39,6 +39,7 @@ namespace mab
     class Candle
     {
     private:
+        const std::string version = "v2.1";
         UsbDevice*usb;
         std::thread receiverThread;
         std::thread transmitterThread;
@@ -72,6 +73,11 @@ namespace mab
          * @brief A destructor of Candle class. Takes care of all started threads that need to be stopped before clean exit
         */
         ~Candle();
+        /**
+         * @brief Getter for version number
+         * @return std::string with version in format "vMAJOR.MINOR"
+        */
+        const std::string getVersion();
 
         /**
          * @brief A vector holding all md80 instances that were succesfully added via `addMd80` method. This vector

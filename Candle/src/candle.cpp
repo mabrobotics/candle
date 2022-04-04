@@ -24,6 +24,7 @@ namespace mab
 
     Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose)
     {
+        vout << "CANdle library version: " << getVersion() << std::endl;
         vout << "Creating CANdle object." << std::endl;
         printVerbose = _printVerbose;
         usb = new UsbDevice();
@@ -40,6 +41,10 @@ namespace mab
     {
         if(this->inUpdateMode())
             this->end();
+    }
+    const std::string Candle::getVersion()
+    {
+        return version;
     }
     void Candle::receive()
     {
@@ -418,6 +423,7 @@ namespace mab
         memcpy(tx, &frame, len);
         if(usb->transmit(tx, len, true, 50))
         {
+            std::cout << "[CANDLE] Library version: " << getVersion() << std::endl;
             std::cout << "[CANDLE] DIAG at ID = " << canId << ": " << std::string(&usb->rxBuffer[2]) << std::endl;
             return true;
         }
