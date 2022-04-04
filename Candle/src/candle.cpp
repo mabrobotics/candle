@@ -112,7 +112,7 @@ namespace mab
                 return ids;
             }
             vout << "Found drives."  << std::endl;
-            for(int i = 0; i < ids.size(); i++)
+            for(size_t i = 0; i < ids.size(); i++)
             {
                 if (ids[i] == 0)
                     break;  //No more ids in the message
@@ -241,62 +241,61 @@ namespace mab
                 return true;
         return false;
     }
-    Md80* Candle::getMd80FromList(uint16_t id)
+    Md80& Candle::getMd80FromList(uint16_t id)
     {
         for(int i = 0; i < (int)md80s.size(); i++)
             if(md80s[i].getId() == id)
-                return &md80s[i];
-        return nullptr;
+                return md80s[i];
+        throw "getMd80FromList(id): Id not found on the list!";
     }
-    bool Candle::controlMd80SetEncoderZero(Md80*drive)
+    bool Candle::controlMd80SetEncoderZero(Md80&drive)
     {
-        return this->controlMd80SetEncoderZero(drive->getId());
+        return this->controlMd80SetEncoderZero(drive.getId());
     }
-    bool Candle::controlMd80Enable(Md80*drive, bool enable)
+    bool Candle::controlMd80Enable(Md80&drive, bool enable)
     {
-        return this->controlMd80Enable(drive->getId(), enable);
+        return this->controlMd80Enable(drive.getId(), enable);
     }
-    bool Candle::controlMd80Mode(Md80*drive, Md80Mode_E mode)
+    bool Candle::controlMd80Mode(Md80&drive, Md80Mode_E mode)
     {
-        return this->controlMd80Mode(drive->getId(), mode);
+        return this->controlMd80Mode(drive.getId(), mode);
     }
     bool Candle::controlMd80Mode(uint16_t canId, Md80Mode_E mode)
     {
-        Md80*drive = getMd80FromList(canId);
-        if(drive == nullptr)
+        try
         {
-            vout << "Drive not found in the Candle database. Use Candle.addMd80() to add drives first!" << std::endl;
-            return false;
-        }
-        GenericMd80Frame32 frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_CONTROL_SELECT);
-        frame.canMsg[2] = mode;
-        char tx[32];
-        int len = sizeof(frame);
-        memcpy(tx, &frame, len);
-        if(usb->transmit(tx, len, true, 50))
+            Md80&drive = getMd80FromList(canId);
+            GenericMd80Frame32 frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_CONTROL_SELECT);
+            frame.canMsg[2] = mode;
+            char tx[32];
+            int len = sizeof(frame);
+            memcpy(tx, &frame, len);
+            if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
                 vout << "Setting control mode successfull at ID = " << canId << std::endl;
-                drive->setControlMode(mode);
+                drive.setControlMode(mode);
                 return true;
             }
-        vout << "Setting control mode failed at ID = " << canId << std::endl;
-        return false;
+            vout << "Setting control mode failed at ID = " << canId << std::endl;
+            return false;
+        }
+        catch (const char*msg)
+        {
+            vout << msg << std::endl;
+            return false;
+        }        
     }
     bool Candle::controlMd80Enable(uint16_t canId, bool enable)
     {
-        Md80*drive = getMd80FromList(canId);
-        if(drive == nullptr)
+        try
         {
-            vout << "Drive not found in the Candle database. Use Candle.addMd80() to add drives first!" << std::endl;
-            return false;
-        }
-        GenericMd80Frame32 frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_MOTOR_ENABLE);
-        frame.canMsg[2] = enable;
-        char tx[32];
-        int len = sizeof(frame);
-        memcpy(tx, &frame, len);
-        if(usb->transmit(tx, len, true, 50))
+            GenericMd80Frame32 frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_MOTOR_ENABLE);
+            frame.canMsg[2] = enable;
+            char tx[32];
+            int len = sizeof(frame);
+            memcpy(tx, &frame, len);
+            if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {   
                 if(enable)
@@ -304,12 +303,18 @@ namespace mab
                 else
                 {
                     vout << "Disabling successfull at ID = " << canId << std::endl;
-                    this->getMd80FromList(canId)->updateRegulatorsAdjusted(false);  //Drive will operate at default params
+                    this->getMd80FromList(canId).updateRegulatorsAdjusted(false);  //Drive will operate at default params
                 }
                 return true;
             }
-        vout << "Enabling/Disabling failed at ID = " << canId << std::endl;
-        return false;
+            vout << "Enabling/Disabling failed at ID = " << canId << std::endl;
+            return false;
+        }
+        catch(const char*msg)
+        {
+            vout << msg << std::endl;
+            return false;
+        }        
     }
     bool Candle::begin()
     {

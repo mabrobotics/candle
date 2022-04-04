@@ -21,9 +21,9 @@ int main()
     //Now we shall loop over all found drives to change control mode and enable them one by one
     for(auto &md : candle.md80s)
     {
-        candle.controlMd80SetEncoderZero(&md);       // Reset encoder at current position
-        candle.controlMd80Mode(&md, mab::Md80Mode_E::IMPEDANCE);     //Set mode to impedance control
-        candle.controlMd80Enable(&md, true);     //Enable the drive
+        candle.controlMd80SetEncoderZero(md);       // Reset encoder at current position
+        candle.controlMd80Mode(md, mab::Md80Mode_E::IMPEDANCE);     //Set mode to impedance control
+        candle.controlMd80Enable(md, true);     //Enable the drive
     }
 
     

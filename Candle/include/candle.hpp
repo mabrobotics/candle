@@ -134,10 +134,10 @@ namespace mab
         
         /**
         @brief Sets current motor position as zero position -> reference for any future movements. 
-        @param drive Pointer to a Md80 class (candle.md80s memeber)
+        @param drive reference to a Md80 class (candle.md80s memeber)
         @return true if setting was succesfull, false otherwise
         */
-        bool controlMd80SetEncoderZero(Md80*drive);
+        bool controlMd80SetEncoderZero(Md80&drive);
         /**
         @brief Changes max phase-to-phase motor current. 
         @param canId ID of the drive
@@ -148,11 +148,11 @@ namespace mab
 
         /**
         @brief Sets control mode of the Md80
-        @param drive Pointer to a Md80 class (candle.md80s memeber)
+        @param drive reference to a Md80 class (candle.md80s memeber)
         @param mode Control mode to be used on the drive
         @return true if setting was succesfull, false otherwise
         */
-        bool controlMd80Mode(Md80*drive, Md80Mode_E mode);
+        bool controlMd80Mode(Md80&drive, Md80Mode_E mode);
         /**
         @brief Sets control mode of the Md80
         @param canId ID of the drive
@@ -163,11 +163,11 @@ namespace mab
 
         /**
         @brief Enables/disabled actuaction of the Md80
-        @param drive Pointer to a Md80 class (candle.md80s memeber)
+        @param drive reference to a Md80 class (candle.md80s memeber)
         @param enable if true the drive will be enabled, if false the drive will be disabled
         @return true if setting was succesfull, false otherwise
         */
-        bool controlMd80Enable(Md80*drive, bool enable);
+        bool controlMd80Enable(Md80&drive, bool enable);
         /**
         @brief Enables/disabled actuaction of the Md80
         @param canId ID of the drive
@@ -180,9 +180,9 @@ namespace mab
         @brief Searched if the drive with provided FDCAN canId exists in `Md80s` list (exists only if was previously added 
         by `addMd80` method)
         @param canId ID of the drive
-        @return a pointer to a drive if found, nullptr otherwise
+        @return a reference to a drive if found, nullptr otherwise
         */
-        Md80* getMd80FromList(uint16_t canId);
+        Md80& getMd80FromList(uint16_t canId);
         
         /**
         @brief Begins auto update mode. In this mode, host and CANdle will automatically exchange USB messages with md80 commands
