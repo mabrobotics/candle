@@ -26,6 +26,7 @@ namespace mab
     {
         vout << "CANdle library version: " << getVersion() << std::endl;
         vout << "Creating CANdle object." << std::endl;
+        
         printVerbose = _printVerbose;
         usb = new UsbDevice();
         std::string setSerialCommand = "setserial " + usb->getSerialDeviceName() + " low_latency";
@@ -68,6 +69,10 @@ namespace mab
             msgsSent++;
             usleep(10000);
         }
+    }
+    void Candle::setVebose(bool enable)
+    {
+        printVerbose = enable;
     }
     GenericMd80Frame32 _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameId)
     {
@@ -324,7 +329,10 @@ namespace mab
     bool Candle::begin()
     {
         if(mode == CANdleMode_E::UPDATE)
-            return false; //TODO: Add printing?
+        {
+            vout << "Cannot run 'begin', already in update mode." << std::endl;
+            return false;
+        }
         char tx[128];
         tx[0] = USB_FRAME_BEGIN;
         tx[1] = 0x00;
