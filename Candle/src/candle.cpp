@@ -50,7 +50,7 @@ namespace mab
                 if(usb->rxBuffer[0] == USB_FRAME_UPDATE)
                 {
                     for(int i = 0; i < (int)md80s.size(); i++)
-                        md80s[i].updateResponseData((StdMd80ResponseFrame_t*)&usb->rxBuffer[1 + i * sizeof(StdMd80ResponseFrame_t)]);
+                        md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)&usb->rxBuffer[1 + i * sizeof(StdMd80ResponseFrame_t)]);
                 }
             }
         }
@@ -274,7 +274,7 @@ namespace mab
             if (usb->rxBuffer[1] == true)
             {
                 vout << "Setting control mode successfull at ID = " << canId << std::endl;
-                drive.setControlMode(mode);
+                drive.__setControlMode(mode);
                 return true;
             }
             vout << "Setting control mode failed at ID = " << canId << std::endl;
@@ -303,7 +303,7 @@ namespace mab
                 else
                 {
                     vout << "Disabling successfull at ID = " << canId << std::endl;
-                    this->getMd80FromList(canId).updateRegulatorsAdjusted(false);  //Drive will operate at default params
+                    this->getMd80FromList(canId).__updateRegulatorsAdjusted(false);  //Drive will operate at default params
                 }
                 return true;
             }
@@ -387,8 +387,8 @@ namespace mab
         tx[0] = USB_FRAME_UPDATE;
         for(int i = 0; i < (int)md80s.size(); i++)
         {
-            md80s[i].updateCommandFrame();
-            *(StdMd80CommandFrame_t*)&tx[1 + i*sizeof(StdMd80CommandFrame_t)] = md80s[i].getCommandFrame();
+            md80s[i].__updateCommandFrame();
+            *(StdMd80CommandFrame_t*)&tx[1 + i*sizeof(StdMd80CommandFrame_t)] = md80s[i].__getCommandFrame();
         }
         
         int length = 1 + md80s.size() * sizeof(StdMd80CommandFrame_t);

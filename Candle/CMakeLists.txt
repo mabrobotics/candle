@@ -7,8 +7,8 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 file(GLOB CANDLE_SOURCE "src/*cpp")
 
 # candle can be compiled both as STATIC or SHARED. User may choose what they prefer
-# set(LIB_TYPE STATIC)
-set(LIB_TYPE SHARED)
+set(LIB_TYPE STATIC)
+# set(LIB_TYPE SHARED)
 
 add_library(candle ${LIB_TYPE} ${CANDLE_SOURCE})
 
