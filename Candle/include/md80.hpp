@@ -60,7 +60,7 @@ namespace mab
          * @param kd derivative gain
          * @param iWindup anti-windup - maximal output of the integral (i) part of the regulator
          */
-        void setPositionController(float kp, float ki, float kd, float iWindup);
+        void setPositionControllerParams(float kp, float ki, float kd, float iWindup);
         /**
          * @brief Set the Velocity PID Regulator parameters.
          * @note Regulator output is Torque in Nm. The output is then passed directly to internal current/torque regulator.
@@ -69,13 +69,13 @@ namespace mab
          * @param kd derivative gain
          * @param iWindup anti-windup - maximal output of the integral (i) part of the regulator
          */
-        void setVelocityController(float kp, float ki, float kd, float iWindup);
+        void setVelocityControllerParams(float kp, float ki, float kd, float iWindup);
         /**
          * @brief Set the Impedance Regulator parameters.
          * @param kp Displacement gain ( analogic to 'k' parameter of the spring-damper equation)
          * @param kd Damping coefficient (analogin to 'b' parameter of the spring-damper equation)
          */
-        void setImpedanceController(float kp, float kd);
+        void setImpedanceControllerParams(float kp, float kd);
         
         //simple setters
         /**

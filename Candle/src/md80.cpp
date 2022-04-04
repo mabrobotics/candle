@@ -16,7 +16,7 @@ namespace mab
     {
 
     }
-    void Md80::setPositionController(float kp, float ki, float kd, float iWindup)
+    void Md80::setPositionControllerParams(float kp, float ki, float kd, float iWindup)
     {
         regulatorsAdjusted = true;
         positionController.kp = kp;
@@ -24,7 +24,7 @@ namespace mab
         positionController.kd = kd;
         positionController.i_windup = iWindup;
     }
-    void Md80::setVelocityController(float kp, float ki, float kd, float iWindup)
+    void Md80::setVelocityControllerParams(float kp, float ki, float kd, float iWindup)
     {
         regulatorsAdjusted = true;
         velocityRegulatorAdjusted = true;
@@ -33,7 +33,7 @@ namespace mab
         velocityController.kd = kd;
         velocityController.i_windup = iWindup;
     }
-    void Md80::setImpedanceController(float kp, float kd)
+    void Md80::setImpedanceControllerParams(float kp, float kd)
     {
         regulatorsAdjusted = true;
         impedanceController.kp = kp;

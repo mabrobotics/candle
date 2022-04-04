@@ -127,8 +127,8 @@ namespace mab
                     return empty;
                 }
             }
-        return ids;
         }
+        return ids;
     }
     bool Candle::sengGenericFDCanFrame(uint16_t canId, int msgLen, const char*txBuffer, char*rxBuffer, int timeoutMs)
     {
@@ -186,7 +186,7 @@ namespace mab
     bool Candle::configMd80Save(uint16_t canId)
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CAN_SAVE);
-        char tx[32];
+        char tx[64];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
         if(usb->transmit(tx, len, true, 500))
@@ -202,7 +202,7 @@ namespace mab
     bool Candle::controlMd80SetEncoderZero(uint16_t canId)
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_ZERO_ENCODER);
-        char tx[32];
+        char tx[64];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
         if(usb->transmit(tx, len, true, 50))
@@ -218,7 +218,7 @@ namespace mab
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 6, Md80FrameId_E::FRAME_BASE_CONFIG);
         *(float*)&frame.canMsg[2] = currentLimit;
-        char tx[32];
+        char tx[64];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
         if(usb->transmit(tx, len, true, 50))
@@ -267,7 +267,7 @@ namespace mab
             Md80&drive = getMd80FromList(canId);
             GenericMd80Frame32 frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_CONTROL_SELECT);
             frame.canMsg[2] = mode;
-            char tx[32];
+            char tx[64];
             int len = sizeof(frame);
             memcpy(tx, &frame, len);
             if(usb->transmit(tx, len, true, 50))
@@ -292,7 +292,7 @@ namespace mab
         {
             GenericMd80Frame32 frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_MOTOR_ENABLE);
             frame.canMsg[2] = enable;
-            char tx[32];
+            char tx[64];
             int len = sizeof(frame);
             memcpy(tx, &frame, len);
             if(usb->transmit(tx, len, true, 50))
@@ -398,7 +398,7 @@ namespace mab
     bool Candle::setupMd80Calibration(uint16_t canId)
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CALIBRATION);
-        char tx[32];
+        char tx[64];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
         if(usb->transmit(tx, len, true, 50))
@@ -413,7 +413,7 @@ namespace mab
     bool Candle::setupMd80Diagnostic(uint16_t canId)
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_DIAGNOSTIC);
-        char tx[32];
+        char tx[64];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
         if(usb->transmit(tx, len, true, 50))

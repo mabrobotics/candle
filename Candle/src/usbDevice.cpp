@@ -67,6 +67,7 @@ bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeo
         return false;
     }
     if(_waitForResponse)
+    {
         if (receive(timeout))
             return true;
         else
@@ -74,6 +75,7 @@ bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeo
             std::cout << "[USB] Did not receive response from USB Device." << std::endl;
             return false;
         }
+    }
     return true;
 }
 bool UsbDevice::receive(int timeoutMs)
