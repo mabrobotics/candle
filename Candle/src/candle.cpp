@@ -24,7 +24,9 @@ namespace mab
 
     Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose)
     {
+        vout << "CANdle library version: " << getVersion() << std::endl;
         vout << "Creating CANdle object." << std::endl;
+        
         printVerbose = _printVerbose;
         usb = new UsbDevice();
         std::string setSerialCommand = "setserial " + usb->getSerialDeviceName() + " low_latency";
@@ -41,6 +43,10 @@ namespace mab
         if(this->inUpdateMode())
             this->end();
     }
+    const std::string Candle::getVersion()
+    {
+        return version;
+    }
     void Candle::receive()
     {
         while(!shouldStopReceiver)
@@ -50,7 +56,7 @@ namespace mab
                 if(usb->rxBuffer[0] == USB_FRAME_UPDATE)
                 {
                     for(int i = 0; i < (int)md80s.size(); i++)
-                        md80s[i].updateResponseData((StdMd80ResponseFrame_t*)&usb->rxBuffer[1 + i * sizeof(StdMd80ResponseFrame_t)]);
+                        md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)&usb->rxBuffer[1 + i * sizeof(StdMd80ResponseFrame_t)]);
                 }
             }
         }
@@ -63,6 +69,10 @@ namespace mab
             msgsSent++;
             usleep(10000);
         }
+    }
+    void Candle::setVebose(bool enable)
+    {
+        printVerbose = enable;
     }
     GenericMd80Frame32 _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameId)
     {
@@ -112,7 +122,7 @@ namespace mab
                 return ids;
             }
             vout << "Found drives."  << std::endl;
-            for(int i = 0; i < ids.size(); i++)
+            for(size_t i = 0; i < ids.size(); i++)
             {
                 if (ids[i] == 0)
                     break;  //No more ids in the message
@@ -127,8 +137,8 @@ namespace mab
                     return empty;
                 }
             }
-        return ids;
         }
+        return ids;
     }
     bool Candle::sengGenericFDCanFrame(uint16_t canId, int msgLen, const char*txBuffer, char*rxBuffer, int timeoutMs)
     {
@@ -186,7 +196,7 @@ namespace mab
     bool Candle::configMd80Save(uint16_t canId)
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CAN_SAVE);
-        char tx[32];
+        char tx[64];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
         if(usb->transmit(tx, len, true, 500))
@@ -198,11 +208,26 @@ namespace mab
         vout << "Saving in flash failed at ID = " << canId << std::endl;
         return false;
     }
+    bool Candle::configMd80Blink(uint16_t canId)
+    {
+        GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_FLASH_LED);
+        char tx[64];
+        int len = sizeof(frame);
+        memcpy(tx, &frame, len);
+        if(usb->transmit(tx, len, true, 500))
+            if (usb->rxBuffer[1] == true)
+            {
+                vout << "LEDs blining at ID = " << canId << std::endl;
+                return true;
+            }
+        vout << "Blinking failed at ID = " << canId << std::endl;
+        return false;
+    }
 
     bool Candle::controlMd80SetEncoderZero(uint16_t canId)
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_ZERO_ENCODER);
-        char tx[32];
+        char tx[64];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
         if(usb->transmit(tx, len, true, 50))
@@ -218,7 +243,7 @@ namespace mab
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 6, Md80FrameId_E::FRAME_BASE_CONFIG);
         *(float*)&frame.canMsg[2] = currentLimit;
-        char tx[32];
+        char tx[64];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
         if(usb->transmit(tx, len, true, 50))
@@ -241,62 +266,61 @@ namespace mab
                 return true;
         return false;
     }
-    Md80* Candle::getMd80FromList(uint16_t id)
+    Md80& Candle::getMd80FromList(uint16_t id)
     {
         for(int i = 0; i < (int)md80s.size(); i++)
             if(md80s[i].getId() == id)
-                return &md80s[i];
-        return nullptr;
+                return md80s[i];
+        throw "getMd80FromList(id): Id not found on the list!";
     }
-    bool Candle::controlMd80SetEncoderZero(Md80*drive)
+    bool Candle::controlMd80SetEncoderZero(Md80&drive)
     {
-        return this->controlMd80SetEncoderZero(drive->getId());
+        return this->controlMd80SetEncoderZero(drive.getId());
     }
-    bool Candle::controlMd80Enable(Md80*drive, bool enable)
+    bool Candle::controlMd80Enable(Md80&drive, bool enable)
     {
-        return this->controlMd80Enable(drive->getId(), enable);
+        return this->controlMd80Enable(drive.getId(), enable);
     }
-    bool Candle::controlMd80Mode(Md80*drive, Md80Mode_E mode)
+    bool Candle::controlMd80Mode(Md80&drive, Md80Mode_E mode)
     {
-        return this->controlMd80Mode(drive->getId(), mode);
+        return this->controlMd80Mode(drive.getId(), mode);
     }
     bool Candle::controlMd80Mode(uint16_t canId, Md80Mode_E mode)
     {
-        Md80*drive = getMd80FromList(canId);
-        if(drive == nullptr)
+        try
         {
-            vout << "Drive not found in the Candle database. Use Candle.addMd80() to add drives first!" << std::endl;
-            return false;
-        }
-        GenericMd80Frame32 frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_CONTROL_SELECT);
-        frame.canMsg[2] = mode;
-        char tx[32];
-        int len = sizeof(frame);
-        memcpy(tx, &frame, len);
-        if(usb->transmit(tx, len, true, 50))
+            Md80&drive = getMd80FromList(canId);
+            GenericMd80Frame32 frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_CONTROL_SELECT);
+            frame.canMsg[2] = mode;
+            char tx[64];
+            int len = sizeof(frame);
+            memcpy(tx, &frame, len);
+            if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
                 vout << "Setting control mode successfull at ID = " << canId << std::endl;
-                drive->setControlMode(mode);
+                drive.__setControlMode(mode);
                 return true;
             }
-        vout << "Setting control mode failed at ID = " << canId << std::endl;
-        return false;
+            vout << "Setting control mode failed at ID = " << canId << std::endl;
+            return false;
+        }
+        catch (const char*msg)
+        {
+            vout << msg << std::endl;
+            return false;
+        }        
     }
     bool Candle::controlMd80Enable(uint16_t canId, bool enable)
     {
-        Md80*drive = getMd80FromList(canId);
-        if(drive == nullptr)
+        try
         {
-            vout << "Drive not found in the Candle database. Use Candle.addMd80() to add drives first!" << std::endl;
-            return false;
-        }
-        GenericMd80Frame32 frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_MOTOR_ENABLE);
-        frame.canMsg[2] = enable;
-        char tx[32];
-        int len = sizeof(frame);
-        memcpy(tx, &frame, len);
-        if(usb->transmit(tx, len, true, 50))
+            GenericMd80Frame32 frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_MOTOR_ENABLE);
+            frame.canMsg[2] = enable;
+            char tx[64];
+            int len = sizeof(frame);
+            memcpy(tx, &frame, len);
+            if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {   
                 if(enable)
@@ -304,17 +328,26 @@ namespace mab
                 else
                 {
                     vout << "Disabling successfull at ID = " << canId << std::endl;
-                    this->getMd80FromList(canId)->updateRegulatorsAdjusted(false);  //Drive will operate at default params
+                    this->getMd80FromList(canId).__updateRegulatorsAdjusted(false);  //Drive will operate at default params
                 }
                 return true;
             }
-        vout << "Enabling/Disabling failed at ID = " << canId << std::endl;
-        return false;
+            vout << "Enabling/Disabling failed at ID = " << canId << std::endl;
+            return false;
+        }
+        catch(const char*msg)
+        {
+            vout << msg << std::endl;
+            return false;
+        }        
     }
     bool Candle::begin()
     {
         if(mode == CANdleMode_E::UPDATE)
-            return false; //TODO: Add printing?
+        {
+            vout << "Cannot run 'begin', already in update mode." << std::endl;
+            return false;
+        }
         char tx[128];
         tx[0] = USB_FRAME_BEGIN;
         tx[1] = 0x00;
@@ -382,8 +415,8 @@ namespace mab
         tx[0] = USB_FRAME_UPDATE;
         for(int i = 0; i < (int)md80s.size(); i++)
         {
-            md80s[i].updateCommandFrame();
-            *(StdMd80CommandFrame_t*)&tx[1 + i*sizeof(StdMd80CommandFrame_t)] = md80s[i].getCommandFrame();
+            md80s[i].__updateCommandFrame();
+            *(StdMd80CommandFrame_t*)&tx[1 + i*sizeof(StdMd80CommandFrame_t)] = md80s[i].__getCommandFrame();
         }
         
         int length = 1 + md80s.size() * sizeof(StdMd80CommandFrame_t);
@@ -393,7 +426,7 @@ namespace mab
     bool Candle::setupMd80Calibration(uint16_t canId)
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CALIBRATION);
-        char tx[32];
+        char tx[64];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
         if(usb->transmit(tx, len, true, 50))
@@ -408,11 +441,12 @@ namespace mab
     bool Candle::setupMd80Diagnostic(uint16_t canId)
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_DIAGNOSTIC);
-        char tx[32];
+        char tx[64];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
         if(usb->transmit(tx, len, true, 50))
         {
+            std::cout << "[CANDLE] Library version: " << getVersion() << std::endl;
             std::cout << "[CANDLE] DIAG at ID = " << canId << ": " << std::string(&usb->rxBuffer[2]) << std::endl;
             return true;
         }

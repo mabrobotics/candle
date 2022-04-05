@@ -24,7 +24,7 @@ int main()
     candle.controlMd80Enable(ids[0], true);     //Enable the drive
 
     // Now we set up Velocity Regulator, and additionaly max output velocity just to be on a safe side
-    candle.md80s[0].setVelocityController(0.05f, 0.25f, 0.0, 1.0f);
+    candle.md80s[0].setVelocityControllerParams(0.05f, 0.25f, 0.0, 1.0f);
     candle.md80s[0].setMaxVelocity(30.0f);
 
     // To reload default regulator parameters, simply disable the drive (contorlMd80Enable(id, false)), 

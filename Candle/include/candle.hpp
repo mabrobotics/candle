@@ -39,6 +39,7 @@ namespace mab
     class Candle
     {
     private:
+        const std::string version = "v2.1";
         UsbDevice*usb;
         std::thread receiverThread;
         std::thread transmitterThread;
@@ -72,6 +73,11 @@ namespace mab
          * @brief A destructor of Candle class. Takes care of all started threads that need to be stopped before clean exit
         */
         ~Candle();
+        /**
+         * @brief Getter for version number
+         * @return std::string with version in format "vMAJOR.MINOR"
+        */
+        const std::string getVersion();
 
         /**
          * @brief A vector holding all md80 instances that were succesfully added via `addMd80` method. This vector
@@ -79,6 +85,11 @@ namespace mab
          */
         std::vector<Md80> md80s;
 
+        /**
+        @brief Enables/disables extended printing.
+        */
+        void setVebose(bool enable);
+        
         /**
         @brief Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80;
         @return the vector FDCAN IDs of drives that were found. If no drives were found, the vector is empty
@@ -131,13 +142,20 @@ namespace mab
         @return true if saveing was succesfull, false otherwise
         */
         bool configMd80Save(uint16_t canId);
+        /**
+        @brief Blink on board LED
+        @param canId ID of the drive
+        @return true if blinking, false otherwise
+        */
+        bool configMd80Blink(uint16_t canId);
+        
         
         /**
         @brief Sets current motor position as zero position -> reference for any future movements. 
-        @param drive Pointer to a Md80 class (candle.md80s memeber)
+        @param drive reference to a Md80 class (candle.md80s memeber)
         @return true if setting was succesfull, false otherwise
         */
-        bool controlMd80SetEncoderZero(Md80*drive);
+        bool controlMd80SetEncoderZero(Md80&drive);
         /**
         @brief Changes max phase-to-phase motor current. 
         @param canId ID of the drive
@@ -148,11 +166,11 @@ namespace mab
 
         /**
         @brief Sets control mode of the Md80
-        @param drive Pointer to a Md80 class (candle.md80s memeber)
+        @param drive reference to a Md80 class (candle.md80s memeber)
         @param mode Control mode to be used on the drive
         @return true if setting was succesfull, false otherwise
         */
-        bool controlMd80Mode(Md80*drive, Md80Mode_E mode);
+        bool controlMd80Mode(Md80&drive, Md80Mode_E mode);
         /**
         @brief Sets control mode of the Md80
         @param canId ID of the drive
@@ -163,11 +181,11 @@ namespace mab
 
         /**
         @brief Enables/disabled actuaction of the Md80
-        @param drive Pointer to a Md80 class (candle.md80s memeber)
+        @param drive reference to a Md80 class (candle.md80s memeber)
         @param enable if true the drive will be enabled, if false the drive will be disabled
         @return true if setting was succesfull, false otherwise
         */
-        bool controlMd80Enable(Md80*drive, bool enable);
+        bool controlMd80Enable(Md80&drive, bool enable);
         /**
         @brief Enables/disabled actuaction of the Md80
         @param canId ID of the drive
@@ -180,9 +198,9 @@ namespace mab
         @brief Searched if the drive with provided FDCAN canId exists in `Md80s` list (exists only if was previously added 
         by `addMd80` method)
         @param canId ID of the drive
-        @return a pointer to a drive if found, nullptr otherwise
+        @return a reference to a drive if found, nullptr otherwise
         */
-        Md80* getMd80FromList(uint16_t canId);
+        Md80& getMd80FromList(uint16_t canId);
         
         /**
         @brief Begins auto update mode. In this mode, host and CANdle will automatically exchange USB messages with md80 commands

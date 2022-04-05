@@ -26,7 +26,7 @@ int main()
     // We will run both Position PID and Velocity PID at default settings. If you wish you can play with the parameters
     // Using the methods below:
     // candle.md80s[0].setPositionController(20.0f, 0.2f, 0.0f, 15.0f);
-    // candle.md80s[0].setVelocityController(0.0f, 0.1f, 0.0f, 1.5f);
+    // candle.md80s[0].setVelocityControllerParams(0.0f, 0.1f, 0.0f, 1.5f);
     // candle.md80s[0].setMaxVelocity(50.0);
     // candle.md80s[0].setMaxTorque(0.5f);
 
