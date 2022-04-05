@@ -16,7 +16,7 @@ namespace mab
     {
 
     }
-    void Md80::setPositionController(float kp, float ki, float kd, float iWindup)
+    void Md80::setPositionControllerParams(float kp, float ki, float kd, float iWindup)
     {
         regulatorsAdjusted = true;
         positionController.kp = kp;
@@ -24,7 +24,7 @@ namespace mab
         positionController.kd = kd;
         positionController.i_windup = iWindup;
     }
-    void Md80::setVelocityController(float kp, float ki, float kd, float iWindup)
+    void Md80::setVelocityControllerParams(float kp, float ki, float kd, float iWindup)
     {
         regulatorsAdjusted = true;
         velocityRegulatorAdjusted = true;
@@ -33,13 +33,13 @@ namespace mab
         velocityController.kd = kd;
         velocityController.i_windup = iWindup;
     }
-    void Md80::setImpedanceController(float kp, float kd)
+    void Md80::setImpedanceControllerParams(float kp, float kd)
     {
         regulatorsAdjusted = true;
         impedanceController.kp = kp;
         impedanceController.kd = kd;
     }
-    void Md80::updateCommandFrame()
+    void Md80::__updateCommandFrame()
     {
         switch (controlMode)
         {
@@ -79,7 +79,7 @@ namespace mab
             break;
         }
     }
-    void Md80::updateResponseData(StdMd80ResponseFrame_t*_responseFrame)
+    void Md80::__updateResponseData(StdMd80ResponseFrame_t*_responseFrame)
     {
         if(_responseFrame->canId != canId || _responseFrame->fromMd80.data[0] != Md80FrameId_E::RESPONSE_DEFAULT)
             return;
@@ -88,7 +88,7 @@ namespace mab
         velocity = *(float*)&_responseFrame->fromMd80.data[8];
         torque = *(float*)&_responseFrame->fromMd80.data[12];
     }
-    void Md80::updateRegulatorsAdjusted(bool adjusted)
+    void Md80::__updateRegulatorsAdjusted(bool adjusted)
     {
         this->regulatorsAdjusted = adjusted;
     }
@@ -102,7 +102,7 @@ namespace mab
     {
         maxVelocity = _maxVelocity;
     }
-    void Md80::setControlMode(Md80Mode_E mode)
+    void Md80::__setControlMode(Md80Mode_E mode)
     {
         controlMode = mode;
     }

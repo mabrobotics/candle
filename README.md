@@ -71,7 +71,7 @@ around the code and implementation.
 
 # Example1
 This is a most basic project showcasing a Candle::ping() method. It will ping the FDCAN bus for active drives and print 
-all FDCAN IDs (drive IDs) that have responded.
+all FDCAN IDs (drive IDs) that have responded. It will also blink LEDs on all drives that were detected.
 
 # Example 2
 This program will ping the FDCAN bus. If any md80 is found it will print out it's rotor position for a few seconds.
