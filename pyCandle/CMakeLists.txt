@@ -4,7 +4,7 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 
 project(pybindtest)
 
-add_subdirectory(pybind11)
+add_subdirectory(pybind)
 
 add_library(candle SHARED IMPORTED)
 set_property(TARGET candle PROPERTY IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libcandle.so)

@@ -21,7 +21,7 @@ PYBIND11_MODULE(pyCandle, m) {
   py::enum_<mab::Md80Mode_E>(m, "Md80Mode_E")
     .value("IDLE", mab::IDLE)
     .value("POSITION_PID", mab::POSITION_PID)
-    .value("ELOCITY_PID", mab::VELOCITY_PID)
+    .value("VELOCITY_PID", mab::VELOCITY_PID)
     .value("TORQUE", mab::TORQUE)
     .value("IMPEDANCE", mab::IMPEDANCE)
     .export_values();
