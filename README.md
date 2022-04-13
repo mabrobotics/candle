@@ -18,7 +18,7 @@ sudo usermod -a -G dialout <user>     # where <user> is current username
 ```
 If this is not possible, devices access level can be granted by:
 ```
-sudo chmod /dev/ttyACMx     # where x is CANdle port number, usually 0
+sudo chmod 777 /dev/ttyACMx     # where x is CANdle port number, usually 0
 ```
 If this is also not possible, programs that use CANdle (including examples), can be launched with ```sudo```
 
