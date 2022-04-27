@@ -1,0 +1,3 @@
+[submodule "pyCandle/pybind"]
+	path = pyCandle/pybind
+	url = git@github.com:MafishMCH/pybind11.git
