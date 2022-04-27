@@ -39,7 +39,7 @@ namespace mab
     class Candle
     {
     private:
-        const std::string version = "v2.1";
+        const std::string version = "v2.2";
         UsbDevice*usb;
         std::thread receiverThread;
         std::thread transmitterThread;

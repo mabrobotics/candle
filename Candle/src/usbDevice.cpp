@@ -144,7 +144,7 @@ bool fileExists(std::string&filename)
 }
 
 std::string open_device(int *fd)
-{       
+{
     std::string baseDeviceName = "/dev/ttyACM";
     for(int i = 0; i < 10; i++)
     {
@@ -158,8 +158,9 @@ std::string open_device(int *fd)
             if(modalias.is_open())
             {
                 //if modalias exists check if its contents mach CANdle descriptor (usb:vidpid)
-                char modline[14];
+                char modline[15];
                 modalias.read(modline, 14);
+		modline[14] = (char)NULL;
                 std::string modlineString(modline);
                 std::string usbDevString("usb:v0069p1000");
                 if(modlineString == usbDevString)
