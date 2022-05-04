@@ -6,8 +6,10 @@ project(pybindtest)
 
 add_subdirectory(pybind)
 
-add_library(candle SHARED IMPORTED)
-set_property(TARGET candle PROPERTY IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libcandle.so)
+if(NOT TARGET candle)
+    add_library(candle SHARED IMPORTED)
+    set_property(TARGET candle PROPERTY IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libcandle.so)
+endif()
 
 pybind11_add_module(pyCandle main.cpp)
 

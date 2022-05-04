@@ -1,4 +1,4 @@
-import build.pyCandle as pyCandle
+import mab.pyCandle as pyCandle
 import sys
 
 candle = pyCandle.Candle(pyCandle.CAN_BAUD_1M,True)
