@@ -8,7 +8,7 @@ add_subdirectory(pybind)
 
 if(NOT TARGET candle)
     add_library(candle SHARED IMPORTED)
-    set_property(TARGET candle PROPERTY IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libcandle.so)
+    set_property(TARGET candle PROPERTY IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/Candle/libcandle.so) #TODO: verify if this 'if' is needed at all 
 endif()
 
 pybind11_add_module(pyCandle main.cpp)
