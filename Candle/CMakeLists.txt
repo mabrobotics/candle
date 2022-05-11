@@ -6,9 +6,12 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 
 file(GLOB CANDLE_SOURCE "src/*cpp")
 
-# candle can be compiled both as STATIC or SHARED. User may choose what they prefer
-# set(LIB_TYPE STATIC)
-set(LIB_TYPE SHARED)
+if(DEFINED CANDLE_BUILD_STATIC)
+    set(LIB_TYPE STATIC)
+else()
+    set(LIB_TYPE SHARED)
+endif()
+message("CANDLE BUILT TYPE: ${LIB_TYPE}")
 
 add_library(candle ${LIB_TYPE} ${CANDLE_SOURCE})
 
@@ -42,9 +45,8 @@ if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
     target_link_libraries(example8 candle)
 endif()
 
-# Below instructions
 if(${LIB_TYPE} MATCHES "SHARED")
-    message(STATUS "Generating project template at ./build/Project/")
+    message("Generating project template at ${CMAKE_BINARY_DIR}/Project/")
     add_custom_command(
         TARGET candle
         POST_BUILD

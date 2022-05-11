@@ -45,18 +45,23 @@ cd build
 cmake ..
 make
 ```
-This will trigger the build of the library and examples. The library will be placed in libs/ directory, 
-include files in include/ directory, and examples in examples/directory
+This will trigger the build of the library and examples. The library will be placed in `libs/` directory, 
+include files in `include/` directory, and examples in examples/directory
 
-By default the library is build as STATIC, but can also be built as SHARED. If SHARED library is desired, 
-the user shall uncomment line
+By default the library is build as SHARED library, and generates project template in selected build directory
+The project template features a custom CMakeLists.txt file that links all necessary libs and 
+header files to main.cpp. Feel free to copy the project and start your develepoment from there.
+
+The library can be build as static library with CMake variable CANDLE_BUILD_STATIC:
 ```
-set(LIB_TYPE SHARED)
+cmake .. -DCANDLE_BUILD_STATIC=TRUE
 ```
-in ```Candle/CMakeLists.txt```. Thiss will not only change the build type to SHAREd, but also generate a project
-template at: ```build/Project/```. The project features a custom CMakeLists.txt file that links all necessary libs and 
-header files to main.cpp. 
-Feel free to copy the project and start your develepoment from there.
+
+To build python library version, use CANDLE_BUILD_PYTHON CMake variable:
+```
+cmake .. -DCANDLE_BUILD_PYTHON=TRUE
+```
+
 ## Examples
 When building a set of examples will be built. The example executables are placed in 
 ```

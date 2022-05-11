@@ -1,4 +1,4 @@
-import build.pyCandle as pyCandle
+import mab.pyCandle as pyCandle
 import random
 import sys
 
