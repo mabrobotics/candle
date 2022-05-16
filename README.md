@@ -2,6 +2,12 @@
 This driver will make it simple to implement MD80 into existing projects. The driver will let the user change MD80's 
 configuration as well as control the MD80 with most/all of its functionality.
 
+## Md80 x CANdle quick start guide
+The following video, demostrates basics of working with MD80 drives using CANdle and the library from this repo.
+## Quick start guide
+For quick guide on how to get started with MD80 drives and CANdle, check out the video below:
+[![MD80xCANdle Quick start guide](https://img.youtube.com/vi/bIZuhFpFtus/0.jpg)](https://www.youtube.com/watch?v=bIZuhFpFtus)
+
 ## Dependencies
 The library does not require any additional software to be functional, It can work as-is. 
 However to make full use of it, two additional packages can be used - setserial (for increasing maximal access frequency
