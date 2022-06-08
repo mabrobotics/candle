@@ -453,4 +453,10 @@ namespace mab
         vout << "Diagnostic failed at ID = " << canId << std::endl;
         return false;
     }
+    void Candle::updateMd80s()
+    {
+        this->begin();
+        usleep(50000);
+        this->end();
+    }
 }

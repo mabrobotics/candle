@@ -235,5 +235,7 @@ namespace mab
         @return true if the succesfull, false otherwise
         */
         bool setupMd80Diagnostic(uint16_t canId);
+
+        void updateMd80s();
     };
 }
