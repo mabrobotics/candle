@@ -88,6 +88,12 @@ namespace mab
     {
 		if(inUpdateMode())
 			return false;
+        for(auto &d : md80s)
+            if(d.getId() == canId)
+            {
+                vout << "Md80 with ID: " << canId << " is already on the update list." << std::endl;
+                return true;
+            }
         AddMd80Frame_t add = {USB_FRAME_MD80_ADD, canId};
         if(usb->transmit((char*)&add, sizeof(AddMd80Frame_t), true))
             if(usb->rxBuffer[0] == USB_FRAME_MD80_ADD)
