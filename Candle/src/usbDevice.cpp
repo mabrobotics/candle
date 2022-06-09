@@ -134,13 +134,19 @@ UsbDevice::~UsbDevice()
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
-
-bool fileExists(std::string&filename)
-{
-    struct stat buffer;   
-    if(!stat(filename.c_str() , &buffer) == 0)
-        return false;
-    return true;
+#include <memory>
+#include <sstream>
+std::string exec(const char* cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
 }
 
 std::string open_device(int *fd)
@@ -150,26 +156,26 @@ std::string open_device(int *fd)
     {
         //loop all ttyACMx devices
         std::string devName = baseDeviceName + std::to_string(i);
-        if(fileExists(devName))
+        std::string cmdOutput = exec(std::string("udevadm info " + devName).c_str());
+
+        if (cmdOutput.find("Unknown") != std::string::npos) 
+            continue;   //no device of name /dev/ttyACMx
+
+        std::stringstream result(cmdOutput);
+        std::string line;
+        bool vendorOk = false, productOk = false;
+        while(getline(result, line))
         {
-            //if the ttyACMx exists check if it has CANdle descriptor in modalias file
-            std::string modaliasFilePath = "/sys/class/tty/ttyACM" + std::to_string(i) + std::string("/device/modalias");
-            std::ifstream modalias(modaliasFilePath);
-            if(modalias.is_open())
-            {
-                //if modalias exists check if its contents mach CANdle descriptor (usb:vidpid)
-                char modline[15];
-                modalias.read(modline, 14);
-		modline[14] = (char)NULL;
-                std::string modlineString(modline);
-                std::string usbDevString("usb:v0069p1000");
-                if(modlineString == usbDevString)
-                {
-                    *fd = open(devName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
-                    return devName;
-                }
-            }
+            if(line.find("MAB_Robotics") != std::string::npos)
+                vendorOk = true;
+            if(line.find("MD_USB-TO-CAN") != std::string::npos)
+                productOk = true;
         }
+        if(!vendorOk || !productOk)
+            continue;
+        
+        *fd = open(devName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+        return devName;
     }
     *fd = -1;
     return "";
