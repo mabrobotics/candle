@@ -56,7 +56,7 @@ loopdone:
         usleep(100000);
         if (!configCandleBaudrate(canBaudrate))
             vout << "Failed to set up CANdle baudrate @" << canBaudrate << "Mbps!" << std::endl;
-        vout << "CANdle at " << this->usb->getSerialDeviceName() << ", ID: " << this->getUsbDeviceId() <<" ready." << std::endl;
+        vout << "CANdle at " << this->usb->getSerialDeviceName() << ", ID: 0x" << std::hex << this->getUsbDeviceId() << std::dec <<" ready." << std::endl;
         Candle::instances.push_back(this);
     }
     Candle::~Candle()
@@ -130,9 +130,11 @@ loopdone:
                 }
         return false;
     }
-    std::vector<uint16_t> Candle::ping()
+    std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
     {
-        vout << "Starting pinging drives..." << std::endl;
+        if (!this->configCandleBaudrate(baudrate))
+            return std::vector<uint16_t>();
+        vout << "Starting pinging drives at baudrate: " << baudrate << "M" << std::endl;
         char tx[128];
         tx[0] = USB_FRAME_PING_START;
         tx[1] = 0x00;
@@ -170,6 +172,10 @@ loopdone:
             }
         }
         return ids;
+    }
+    std::vector<uint16_t> Candle::ping()
+    {
+        return ping(mab::CANdleBaudrate_E::CAN_BAUD_1M);
     }
     bool Candle::sengGenericFDCanFrame(uint16_t canId, int msgLen, const char*txBuffer, char*rxBuffer, int timeoutMs)
     {

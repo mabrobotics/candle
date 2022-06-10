@@ -93,10 +93,16 @@ namespace mab
         void setVebose(bool enable);
         
         /**
-        @brief Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80;
+        @brief Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80; Pings all available baudrate settings.
         @return the vector FDCAN IDs of drives that were found. If no drives were found, the vector is empty
         */
         std::vector<uint16_t> ping();
+        /**
+        @brief Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80; Pings at specific abudrate
+        @param baudrate a baudrate to be pinged.
+        @return the vector FDCAN IDs of drives that were found. If no drives were found, the vector is empty
+        */
+        std::vector<uint16_t> ping(mab::CANdleBaudrate_E baudrate);
 
         /**
         @brief Sends a Generic FDCAN Frame to the IDs in range (10 - 2047), and checks for valid responses from Md80;
