@@ -17,7 +17,7 @@ struct termios tty;
 struct termios ti_prev;
 pthread_mutex_t devLock;
 
-// #define USB_VERBOSE
+#define USB_VERBOSE
 
 int open_device(std::string devName, std::string idVendor, std::string idProduct);
 bool checkDeviceAvailable(std::string devName, std::string idVendor, std::string idProduct);

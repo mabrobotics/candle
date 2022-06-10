@@ -72,6 +72,8 @@ namespace mab
         bool inUpdateMode();
         bool inConfigMode();
         unsigned long getUsbDeviceId();
+
+        void sendGetInfoFrame(mab::Md80& drive);
     public:
         /**
          * @brief A constructor of Candle class

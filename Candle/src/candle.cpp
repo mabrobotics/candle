@@ -125,6 +125,18 @@ loopdone:
         frame.canMsg[1] = 0x00;
         return frame;
     }
+    void Candle::sendGetInfoFrame(mab::Md80& drive)
+    {
+        GenericMd80Frame32 getInfoFrame = _packMd80Frame(drive.getId(), 2, Md80FrameId_E::FRAME_GET_INFO);
+        if(usb->transmit((char*)&getInfoFrame, sizeof(getInfoFrame), true, 100))
+        {
+            uint8_t cheaterBuffer[72];
+            memcpy(&cheaterBuffer[1], usb->rxBuffer, usb->bytesReceived);
+            *(uint16_t*)&cheaterBuffer[0] = drive.getId();
+            cheaterBuffer[2] = 16;  //Cheater buffer is a dirty trick to make USB_FRAME_MD80_GENERIC_FRAME response compatibile with __updateResponseData
+            drive.__updateResponseData((mab::StdMd80ResponseFrame_t*)cheaterBuffer);
+        }
+    }
     bool Candle::addMd80(uint16_t canId)
     {
 		if(inUpdateMode())
@@ -142,6 +154,7 @@ loopdone:
                 {
                     vout << "Added Md80." << statusOK << std::endl;
 					md80s.push_back(Md80(canId));
+                    sendGetInfoFrame(md80s.back());
                     return true;
                 }
         vout << "Failed to add Md80." << statusFAIL << std::endl;
