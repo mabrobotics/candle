@@ -26,8 +26,8 @@ namespace mab
         float positionTarget = 0.0f;
         float velocityTarget = 0.0f;
         float torqueSet = 0.0f;
-        float maxTorque = 1.8f;
-        float maxVelocity = 300.0f;
+        float maxTorque = 1.0f;
+        float maxVelocity = 100.0f;
         RegPid_t velocityController;
         RegPid_t positionController;
         RegImpedance_t impedanceController;

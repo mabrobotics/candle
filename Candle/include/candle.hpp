@@ -28,6 +28,13 @@ namespace mab
         CAN_BAUD_8M = 8,    /*!< FDCAN Baudrate of 8Mbps (8 000 000 bits per second) */
     };
 
+    enum class CANdleFastMode_E
+    {
+        NORMAL,
+        FAST1,
+        FAST2
+    };
+
     /*! \class Candle
         \brief Class for communicating with CANdle (USB-CAN converter) and Md80 drives.
 
@@ -45,7 +52,9 @@ namespace mab
         std::thread receiverThread;
         std::thread transmitterThread;
         CANdleMode_E mode = CANdleMode_E::CONFIG;
+        CANdleFastMode_E fastMode = CANdleFastMode_E::NORMAL;
 
+        int candleDeviceVersion = 10;
         const int MAX_DEVICES = 12;
         bool shouldStopReceiver;
         bool shouldStopTransmitter;
@@ -68,9 +77,10 @@ namespace mab
          * @brief A constructor of Candle class
          * @param canBaudrate Sets a baudrate that CANdle will use to talk to drives
          * @param printVerbose if true, additional printing will be enables. Usefull for debugging
+         * @param fastMode setups update rate NORMAL for 100Hz (max 12 drives), FAST1 for 250Hz (max 6 drives), FAST2 for 500Hz (max 3 drives)
          * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
         */
-        Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false);
+        Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false, mab::CANdleFastMode_E fastMode = mab::CANdleFastMode_E::NORMAL);
         /**
          * @brief A destructor of Candle class. Takes care of all started threads that need to be stopped before clean exit
         */
@@ -124,9 +134,10 @@ namespace mab
         /**
         @brief Changes FDCAN baudrate that CANdle uses to talk to Md80s.
         @param canBaudrate enum listing all available baudrates. CAN_BAUD_1M is equal to baudrate of 1 000 000 bits per second.
+        @param printVersionInfo(optional) checks CANdle firmware version
         @return true if baudrate was changed, false otherwise
         */
-        bool configCandleBaudrate(CANdleBaudrate_E canBaudrate);
+        bool configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersionInfo = false);
 
         /**
         @brief Changes FDCAN parameters of the Md80.

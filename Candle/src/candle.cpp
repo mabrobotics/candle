@@ -15,6 +15,8 @@ namespace mab
     mystreambuf nostreambuf;
     std::ostream nocout(&nostreambuf);
     #define vout ((this->printVerbose)? std::cout << "[CANDLE] " : nocout)
+    std::string statusOK = "  [OK]";
+    std::string statusFAIL = "  [FAILED]";
 
     uint64_t getTimestamp() 
     {
@@ -24,7 +26,7 @@ namespace mab
 
     std::vector<Candle*> Candle::instances = std::vector<Candle*>();
 
-    Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose)
+    Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose, mab::CANdleFastMode_E _fastMode)
     {
         vout << "CANdle library version: " << getVersion() << std::endl;
         
@@ -43,10 +45,12 @@ namespace mab
                     if(UsbDevice::getConnectedDeviceId(entry) != instance->getUsbDeviceId())
                     {
                         usb = new UsbDevice(entry, "MAB_Robotics", "MD_USB-TO-CAN");
-                        goto loopdone;
+                        goto loopdone;  //Only legit use of goto left in C++
                     }
                 }
             }
+            std::cout << "Failed to create CANdle object." << statusFAIL << std::endl;
+            return;
         }
 loopdone:
         std::string setSerialCommand = "setserial " + usb->getSerialDeviceName() + " low_latency";
@@ -54,9 +58,10 @@ loopdone:
             std:: cout << "Could not execute command '" << setSerialCommand <<"'. Communication in low-speed mode." << std::endl;
         this->reset();
         usleep(100000);
-        if (!configCandleBaudrate(canBaudrate))
+        if (!configCandleBaudrate(canBaudrate, true))
             vout << "Failed to set up CANdle baudrate @" << canBaudrate << "Mbps!" << std::endl;
         vout << "CANdle at " << this->usb->getSerialDeviceName() << ", ID: 0x" << std::hex << this->getUsbDeviceId() << std::dec <<" ready." << std::endl;
+        fastMode = _fastMode;
         Candle::instances.push_back(this);
     }
     Candle::~Candle()
@@ -88,7 +93,18 @@ loopdone:
         {
             transmitNewStdFrame();
             msgsSent++;
-            usleep(10000);
+            switch (fastMode)
+            {
+            case CANdleFastMode_E::FAST1:  
+                usleep(4000);
+                break;
+            case CANdleFastMode_E::FAST2:
+                usleep(2000);
+                break;
+            default:
+                usleep(10000);
+                break;
+            }
         }
     }
     void Candle::setVebose(bool enable)
@@ -116,7 +132,7 @@ loopdone:
         for(auto &d : md80s)
             if(d.getId() == canId)
             {
-                vout << "Md80 with ID: " << canId << " is already on the update list." << std::endl;
+                vout << "Md80 with ID: " << canId << " is already on the update list." << statusOK << std::endl;
                 return true;
             }
         AddMd80Frame_t add = {USB_FRAME_MD80_ADD, canId};
@@ -124,10 +140,11 @@ loopdone:
             if(usb->rxBuffer[0] == USB_FRAME_MD80_ADD)
                 if(usb->rxBuffer[1] == true)
                 {
-                    vout << "Added Md80." << std::endl;
+                    vout << "Added Md80." << statusOK << std::endl;
 					md80s.push_back(Md80(canId));
                     return true;
                 }
+        vout << "Failed to add Md80." << statusFAIL << std::endl;
         return false;
     }
     std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
@@ -165,7 +182,7 @@ loopdone:
                 if(ids[i] > 2047)
                 {
                     vout << "Error! This ID is invalid! Probably two or more drives share same ID." <<
-                        "Communication will most likely be broken until IDs are unique!" << std::endl;
+                        "Communication will most likely be broken until IDs are unique!" << statusFAIL << std::endl;
                     std::vector<uint16_t>empty;
                     return empty;
                 }
@@ -221,13 +238,13 @@ loopdone:
         if (usb->transmit(tx, len, true, 100))
             if(usb->rxBuffer[1] == 1)
             {
-                vout << "CAN config change successfull!" << std::endl;
+                vout << "CAN config change successfull!" << statusOK << std::endl;
                 vout << "Drive ID = " << std::to_string(canId) << " was changed to ID = " << std::to_string(newId) << std::endl;
                 vout << "It's baudrate is now " << std::to_string(newBaudrateMbps) << "Mbps" << std::endl;
                 vout << "It's CAN timeout (watchdog) is now " << (newTimeout == 0 ? "Disabled" : std::to_string(newTimeout) + "ms")  << std::endl;
                 return true;
             }
-                vout << "CAN config change failed!" << std::endl;
+                vout << "CAN config change failed!" << statusFAIL << std::endl;
         return false;
     }
     bool Candle::configMd80Save(uint16_t canId)
@@ -239,10 +256,10 @@ loopdone:
         if(usb->transmit(tx, len, true, 500))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Saving in flash successfull at ID = " << canId << std::endl;
+                vout << "Saving in flash successfull at ID = " << canId << statusOK << std::endl;
                 return true;
             }
-        vout << "Saving in flash failed at ID = " << canId << std::endl;
+        vout << "Saving in flash failed at ID = " << canId << statusFAIL << std::endl;
         return false;
     }
     bool Candle::configMd80Blink(uint16_t canId)
@@ -254,10 +271,10 @@ loopdone:
         if(usb->transmit(tx, len, true, 500))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "LEDs blining at ID = " << canId << std::endl;
+                vout << "LEDs blining at ID = " << canId << statusOK << std::endl;
                 return true;
             }
-        vout << "Blinking failed at ID = " << canId << std::endl;
+        vout << "Blinking failed at ID = " << canId << statusFAIL << std::endl;
         return false;
     }
 
@@ -270,10 +287,10 @@ loopdone:
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Setting new zero position successfull at ID = " << canId << std::endl;
+                vout << "Setting new zero position successfull at ID = " << canId << statusOK << std::endl;
                 return true;
             }
-        vout << "Setting new zero position failed at ID = " << canId << std::endl;
+        vout << "Setting new zero position failed at ID = " << canId << statusFAIL << std::endl;
         return false;
     }
     bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
@@ -286,21 +303,30 @@ loopdone:
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[0] == USB_FRAME_MD80_GENERIC_FRAME && usb->rxBuffer[1] == true)
             {
-                vout << "Setting new current limit successfull at ID = " << canId << std::endl;
+                vout << "Setting new current limit successfull at ID = " << canId << statusOK << std::endl;
                 return true;
             }
-        vout << "Setting new current limit failed at ID = " << canId << std::endl;
+        vout << "Setting new current limit failed at ID = " << canId << statusFAIL << std::endl;
         return false;
     }
 
-    bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate)
+    bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersionInfo)
     {
         char tx[10];
         tx[0] = USB_FARME_CANDLE_CONFIG_BAUDRATE;
         tx[1] = (uint8_t)canBaudrate;
         if(usb->transmit(tx, 2, true, 50))
             if(usb->rxBuffer[0] == USB_FARME_CANDLE_CONFIG_BAUDRATE && usb->rxBuffer[1] == true)
+            {
+                candleDeviceVersion = usb->rxBuffer[2];
+                if(printVersionInfo)
+                {
+                    vout << "Device firmware version: " << candleDeviceVersion / 10 << "." <<candleDeviceVersion % 10 << std::endl;
+                    if(candleDeviceVersion < 14)
+                    std::cout << "Your CANdle firmware seems to be out-dated. Contact MAB: support@mabrobotics.pl , for intructions how to update." << std::endl;
+                }
                 return true;
+            }
         return false;
     }
     Md80& Candle::getMd80FromList(uint16_t id)
@@ -335,11 +361,11 @@ loopdone:
             if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Setting control mode successfull at ID = " << canId << std::endl;
+                vout << "Setting control mode successfull at ID = " << canId << statusOK << std::endl;
                 drive.__setControlMode(mode);
                 return true;
             }
-            vout << "Setting control mode failed at ID = " << canId << std::endl;
+            vout << "Setting control mode failed at ID = " << canId << statusFAIL << std::endl;
             return false;
         }
         catch (const char*msg)
@@ -361,15 +387,15 @@ loopdone:
             if (usb->rxBuffer[1] == true)
             {   
                 if(enable)
-                    vout << "Enabling successfull at ID = " << canId << std::endl;
+                    vout << "Enabling successfull at ID = " << canId << statusOK << std::endl;
                 else
                 {
-                    vout << "Disabling successfull at ID = " << canId << std::endl;
+                    vout << "Disabling successfull at ID = " << canId << statusOK << std::endl;
                     this->getMd80FromList(canId).__updateRegulatorsAdjusted(false);  //Drive will operate at default params
                 }
                 return true;
             }
-            vout << "Enabling/Disabling failed at ID = " << canId << std::endl;
+            vout << "Enabling/Disabling failed at ID = " << canId << statusFAIL << std::endl;
             return false;
         }
         catch(const char*msg)
@@ -382,7 +408,7 @@ loopdone:
     {
         if(mode == CANdleMode_E::UPDATE)
         {
-            vout << "Cannot run 'begin', already in update mode." << std::endl;
+            vout << "Cannot run 'begin', already in update mode." << statusFAIL << std::endl;
             return false;
         }
         char tx[128];
@@ -390,7 +416,7 @@ loopdone:
         tx[1] = 0x00;
         if(usb->transmit(tx, 2, true, 10))
         {
-            vout << "Begginig auto update loop mode" << std::endl;
+            vout << "Begginig auto update loop mode" << statusOK << std::endl;
             mode = CANdleMode_E::UPDATE;
             shouldStopTransmitter = false;
             shouldStopReceiver = false;
@@ -400,7 +426,7 @@ loopdone:
             receiverThread = std::thread(&Candle::receive, this);
             return true;
         }
-        vout << "Failed to begin auto update loop mode" << std::endl;
+        vout << "Failed to begin auto update loop mode" << statusFAIL << std::endl;
         return false;
     }
     bool Candle::end()
@@ -417,7 +443,7 @@ loopdone:
         tx[1] = 0x00;
         if(usb->transmit(tx, 2, true, 10))
             mode = CANdleMode_E::CONFIG;
-        vout << "Ending auto update loop mode" << std::endl;
+        vout << "Ending auto update loop mode" << statusOK << std::endl;
 
         return true;
     }
@@ -427,11 +453,8 @@ loopdone:
         tx[0] = USB_FRAME_RESET;
         tx[1] = 0x00;
         if(usb->transmit(tx, 2, true, 100))
-        {
-            vout << "Reset successfull!" << std::endl;
             return true;
-        }
-        vout << "Reset failed!" << std::endl;
+
         return false;
     }
 	bool Candle::inUpdateMode()
@@ -469,10 +492,10 @@ loopdone:
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Starting calibration at ID = " << canId << std::endl;
+                vout << "Starting calibration at ID = " << canId << statusOK << std::endl;
                 return true;
             }
-        vout << "Starting calibration failed at ID = " << canId << std::endl;
+        vout << "Starting calibration failed at ID = " << canId << statusOK << std::endl;
         return false;
     }
     bool Candle::setupMd80Diagnostic(uint16_t canId)
