@@ -19,13 +19,17 @@ pthread_mutex_t devLock;
 
 // #define USB_VERBOSE
 
-std::string open_device(int*fd);
+int open_device(std::string devName, std::string idVendor, std::string idProduct);
+bool checkDeviceAvailable(std::string devName, std::string idVendor, std::string idProduct);
+std::string getDeviceShortId(std::string devName);
+unsigned long hash(const char *str);
 
-UsbDevice::UsbDevice()
+UsbDevice::UsbDevice(std::string deviceName, std::string idVendor, std::string idProduct)
 {
-    int device_descriptor;
+    serialDeviceName = deviceName;
+    int device_descriptor = open_device(serialDeviceName, idVendor, idProduct);
+    serialDeviceId = getConnectedDeviceId(serialDeviceName);
 
-    serialDeviceName = open_device(&device_descriptor);
     if (device_descriptor < 0) 
     {
         std::cout << "[USB] Device not found! Try re-plugging the device!" << std::endl;
@@ -129,6 +133,22 @@ UsbDevice::~UsbDevice()
     close(fd);
 }
 
+std::vector<std::string> UsbDevice::getConnectedACMDevices(std::string idVendor, std::string idProduct)
+{
+    std::vector<std::string> deviceList;
+    for(int i = 0; i < 10; i++)
+    {
+        std::string devName = "/dev/ttyACM" + std::to_string(i);
+        if(checkDeviceAvailable(devName, idVendor, idProduct))
+            deviceList.emplace_back(devName);
+    }
+    return deviceList;
+}
+unsigned long UsbDevice::getConnectedDeviceId(std::string devName)
+{
+    std::string shortId = getDeviceShortId(devName);
+    return hash(shortId.c_str());
+}
 
 #include <string>
 #include <iostream>
@@ -136,47 +156,81 @@ UsbDevice::~UsbDevice()
 #include <sys/stat.h>
 #include <memory>
 #include <sstream>
-std::string exec(const char* cmd) {
+#include <vector>
+
+std::string exec(const char* cmd) 
+{
     std::array<char, 128> buffer;
     std::string result;
     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) {
+    if (!pipe)
         throw std::runtime_error("popen() failed!");
-    }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) 
         result += buffer.data();
-    }
     return result;
 }
-
-std::string open_device(int *fd)
+unsigned long hash(const char *str)
 {
-    std::string baseDeviceName = "/dev/ttyACM";
-    for(int i = 0; i < 10; i++)
+    unsigned long hash = 5381;
+    int c;
+
+    while (c = *str++)
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+
+    return hash;
+}
+
+
+std::string getDeviceShortId(std::string devName)
+{
+    std::string cmdOutput = exec(std::string("udevadm info " + devName).c_str());
+    std::stringstream result(cmdOutput);
+    std::string line;
+    while(getline(result, line))
     {
-        //loop all ttyACMx devices
-        std::string devName = baseDeviceName + std::to_string(i);
-        std::string cmdOutput = exec(std::string("udevadm info " + devName).c_str());
-
-        if (cmdOutput.find("Unknown") != std::string::npos) 
-            continue;   //no device of name /dev/ttyACMx
-
-        std::stringstream result(cmdOutput);
-        std::string line;
-        bool vendorOk = false, productOk = false;
-        while(getline(result, line))
+        if(line.find("ID_SERIAL_SHORT") != std::string::npos)
         {
-            if(line.find("MAB_Robotics") != std::string::npos)
-                vendorOk = true;
-            if(line.find("MD_USB-TO-CAN") != std::string::npos)
-                productOk = true;
+            std::string idShort;
+            std::stringstream lineStream(line);
+            std::string word;
+            std::vector<std::string> wordList;
+            while(std::getline(lineStream, word, '='))
+                wordList.push_back(word);
+            idShort = wordList[wordList.size() - 1];
+            return idShort;
         }
-        if(!vendorOk || !productOk)
-            continue;
-        
-        *fd = open(devName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
-        return devName;
     }
-    *fd = -1;
     return "";
+}
+
+bool checkDeviceAvailable(std::string devName, std::string idVendor, std::string idProduct)
+{
+    std::string cmd = std::string("udevadm info " ) + devName + std::string(" 2>/dev/null");
+    std::string cmdOutput = exec(cmd.c_str());
+
+    if (cmdOutput.size() < 5) 
+        return false;   //no device of name /dev/ttyACMx
+
+    std::stringstream result(cmdOutput);
+    std::string line;
+    bool vendorOk = false, productOk = false;
+    while(getline(result, line))
+    {
+        if(line.find(idVendor) != std::string::npos)
+            vendorOk = true;
+        if(line.find(idProduct) != std::string::npos)
+            productOk = true;
+    }
+    if(!vendorOk || !productOk)
+        return false;
+    
+    return true;
+}
+
+int open_device(std::string devName, std::string idVendor, std::string idProduct)
+{
+    if(checkDeviceAvailable(devName, idVendor, idProduct))
+        return open(devName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+
+    return -1;
 }

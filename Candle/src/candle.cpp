@@ -1,4 +1,5 @@
 #include "candle.hpp"
+#include "candle_protocol.hpp"
 
 #include <cstring>
 #include <vector>
@@ -6,8 +7,7 @@
 #include <cstdio>
 #include <iostream>
 #include <unistd.h>
-
-#include "candle_protocol.hpp"
+#include <vector>
 
 namespace mab
 {
@@ -22,13 +22,33 @@ namespace mab
         return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
     }
 
+    std::vector<Candle*> Candle::instances = std::vector<Candle*>();
+
     Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose)
     {
         vout << "CANdle library version: " << getVersion() << std::endl;
-        vout << "Creating CANdle object." << std::endl;
         
         printVerbose = _printVerbose;
-        usb = new UsbDevice();
+        auto listOfCANdle = UsbDevice::getConnectedACMDevices("MAB_Robotics", "MD_USB-TO-CAN");
+        if(listOfCANdle.size() == 0)
+            vout << "No CANdle found!" << std::endl;
+        if(instances.size() == 0)
+            usb = new UsbDevice(listOfCANdle[0], "MAB_Robotics", "MD_USB-TO-CAN");
+        else
+        {
+            for(auto& entry : listOfCANdle)
+            {
+                for(auto instance : instances)
+                {
+                    if(UsbDevice::getConnectedDeviceId(entry) != instance->getUsbDeviceId())
+                    {
+                        usb = new UsbDevice(entry, "MAB_Robotics", "MD_USB-TO-CAN");
+                        goto loopdone;
+                    }
+                }
+            }
+        }
+loopdone:
         std::string setSerialCommand = "setserial " + usb->getSerialDeviceName() + " low_latency";
         if (system(setSerialCommand.c_str()) != 0)
             std:: cout << "Could not execute command '" << setSerialCommand <<"'. Communication in low-speed mode." << std::endl;
@@ -36,7 +56,8 @@ namespace mab
         usleep(100000);
         if (!configCandleBaudrate(canBaudrate))
             vout << "Failed to set up CANdle baudrate @" << canBaudrate << "Mbps!" << std::endl;
-        vout << "CANdle ready." << std::endl;
+        vout << "CANdle at " << this->usb->getSerialDeviceName() << ", ID: " << this->getUsbDeviceId() <<" ready." << std::endl;
+        Candle::instances.push_back(this);
     }
     Candle::~Candle()
     {
@@ -73,6 +94,10 @@ namespace mab
     void Candle::setVebose(bool enable)
     {
         printVerbose = enable;
+    }
+    unsigned long Candle::getUsbDeviceId()
+    {
+        return usb->getId();
     }
     GenericMd80Frame32 _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameId)
     {

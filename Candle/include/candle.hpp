@@ -39,7 +39,8 @@ namespace mab
     class Candle
     {
     private:
-        const std::string version = "v2.2";
+        static std::vector<Candle*> instances;
+        const std::string version = "v2.3";
         UsbDevice*usb;
         std::thread receiverThread;
         std::thread transmitterThread;
@@ -61,6 +62,7 @@ namespace mab
 
         bool inUpdateMode();
         bool inConfigMode();
+        unsigned long getUsbDeviceId();
     public:
         /**
          * @brief A constructor of Candle class
