@@ -120,3 +120,6 @@ faster every ~2 seconds.
 Shows how Position PID mode works. An example will move the drive in similar trajectory as Example 4 and 5, but using
 a Position PID regulator. You can see how it is different from Impedance mode and how much more parameters can be
 customized.
+
+# Example 9
+Showcases usage of multiple candles on the same computer.

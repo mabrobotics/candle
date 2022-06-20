@@ -43,6 +43,9 @@ if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
 
     add_executable(example8 examples/example8.cpp)
     target_link_libraries(example8 candle)
+
+    add_executable(example9 examples/example9.cpp)
+    target_link_libraries(example9 candle)
 endif()
 
 if(${LIB_TYPE} MATCHES "SHARED")
