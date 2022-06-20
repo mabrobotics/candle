@@ -45,7 +45,7 @@ namespace mab
         std::thread transmitterThread;
         CANdleMode_E mode = CANdleMode_E::CONFIG;
 
-        const int MAX_DEVICES = 12;
+        const int maxDevices = 12;
         bool shouldStopReceiver;
         bool shouldStopTransmitter;
 

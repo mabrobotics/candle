@@ -81,7 +81,6 @@ namespace mab
     }
     void Md80::__updateResponseData(StdMd80ResponseFrame_t*_responseFrame)
     {
-        std::cout << "ID: " << canId << " vs Response" << _responseFrame->canId << std::endl;
         if(_responseFrame->canId != canId || _responseFrame->fromMd80.data[0] != Md80FrameId_E::RESPONSE_DEFAULT)
             return;
         errorVector = *(uint16_t*)&_responseFrame->fromMd80.data[1];

@@ -62,6 +62,15 @@ loopdone:
             vout << "Failed to set up CANdle baudrate @" << canBaudrate << "Mbps!" << std::endl;
         vout << "CANdle at " << this->usb->getSerialDeviceName() << ", ID: 0x" << std::hex << this->getUsbDeviceId() << std::dec <<" ready." << std::endl;
         fastMode = _fastMode;
+        switch (fastMode)
+        {
+        case CANdleFastMode_E::FAST1:
+            maxDevices = 6;    break;
+        case CANdleFastMode_E::FAST2:
+            maxDevices = 3;    break;
+        default:
+            maxDevices = 12;    break;
+        }
         Candle::instances.push_back(this);
     }
     Candle::~Candle()
@@ -73,6 +82,11 @@ loopdone:
     {
         return version;
     }
+    int Candle::getActualCommunicationFrequency()
+    {
+        return (int)this->usbCommsFreq;
+    }
+
     void Candle::receive()
     {
         while(!shouldStopReceiver)
@@ -89,17 +103,25 @@ loopdone:
     }
     void Candle::transmit()
     {
+        int txCounter = 0;
+        uint64_t freqCheckStart = getTimestamp();
         while(!shouldStopTransmitter)
         {
+            if(++txCounter == 250)
+            {
+                this->usbCommsFreq = 250.0 / (float)(getTimestamp() - freqCheckStart) * 1000.0f;
+                freqCheckStart = getTimestamp();
+                txCounter = 0;
+            }
             transmitNewStdFrame();
             msgsSent++;
             switch (fastMode)
             {
             case CANdleFastMode_E::FAST1:  
-                usleep(4000);
+                usleep(1990*2);
                 break;
             case CANdleFastMode_E::FAST2:
-                usleep(2000);
+                usleep(1950);
                 break;
             default:
                 usleep(10000);
@@ -147,6 +169,11 @@ loopdone:
                 vout << "Md80 with ID: " << canId << " is already on the update list." << statusOK << std::endl;
                 return true;
             }
+        if((int)md80s.size() >= maxDevices)
+        {
+            vout << "Cannot add more drives in current FAST_MODE. Max devices in current mode: " << maxDevices << statusFAIL << std::endl;
+            return false;
+        }
         AddMd80Frame_t add = {USB_FRAME_MD80_ADD, canId};
         if(usb->transmit((char*)&add, sizeof(AddMd80Frame_t), true))
             if(usb->rxBuffer[0] == USB_FRAME_MD80_ADD)
@@ -172,7 +199,7 @@ loopdone:
         if(usb->transmit(tx, 2, true, 2500))    //Scanning 2047 FDCAN ids, takes ~2100ms, thus wait for 2.5 sec
         {
             uint16_t*idsPointer = (uint16_t*)&usb->rxBuffer[1];
-            for(int i = 0; i < MAX_DEVICES; i++)
+            for(int i = 0; i < 12; i++)
             {
                 uint16_t id = idsPointer[i];
                 if(id == 0x00)

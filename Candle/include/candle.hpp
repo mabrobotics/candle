@@ -55,12 +55,13 @@ namespace mab
         CANdleFastMode_E fastMode = CANdleFastMode_E::NORMAL;
 
         int candleDeviceVersion = 10;
-        const int MAX_DEVICES = 12;
+        int maxDevices = 12;
         bool shouldStopReceiver;
         bool shouldStopTransmitter;
 
         int msgsReceived = 0;
         int msgsSent = 0;
+        float usbCommsFreq = 0.0f;
 
         bool printVerbose = true;
 
@@ -71,7 +72,6 @@ namespace mab
 
         bool inUpdateMode();
         bool inConfigMode();
-        unsigned long getUsbDeviceId();
 
         void sendGetInfoFrame(mab::Md80& drive);
     public:
@@ -94,6 +94,12 @@ namespace mab
         const std::string getVersion();
 
         /**
+         * @brief Getter for USB device ID. Can be used to differentiate between multiple CANdle's connected to one computer.
+         * @return unique 64-bit identified
+        */
+        unsigned long int getUsbDeviceId();
+
+        /**
          * @brief A vector holding all md80 instances that were succesfully added via `addMd80` method. This vector
          * can be used to modify regulator and control parameters of the md80 drives.
          */
@@ -103,9 +109,15 @@ namespace mab
         @brief Enables/disables extended printing.
         */
         void setVebose(bool enable);
+
+        /**
+         * @brief Returns actual USB communication rate with CANdle. This is calculated by measuring how much time was needed to send 250 messages.
+         * @return average communication frequency in Hertz
+        */
+        int getActualCommunicationFrequency();
         
         /**
-        @brief Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80; Pings all available baudrate settings.
+        @brief Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80 at 1M baudrate.
         @return the vector FDCAN IDs of drives that were found. If no drives were found, the vector is empty
         */
         std::vector<uint16_t> ping();
