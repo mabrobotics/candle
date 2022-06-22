@@ -199,6 +199,7 @@ loopdone:
                     mab::Md80& newDrive = md80s.back();
                     sendGetInfoFrame(newDrive);
                     sendMotionCommand(newDrive, newDrive.getPosition(), 0.0f, 0.0f);
+                    newDrive.setTargetPosition(newDrive.getPosition());
                     return true;
                 }
         vout << "Failed to add Md80." << statusFAIL << std::endl;
