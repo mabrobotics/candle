@@ -159,6 +159,21 @@ loopdone:
             drive.__updateResponseData((mab::StdMd80ResponseFrame_t*)cheaterBuffer);
         }
     }
+    void Candle::sendMotionCommand(mab::Md80& drive, float pos, float vel, float torque)
+    {
+        GenericMd80Frame32 motionCommandFrame = _packMd80Frame(drive.getId(), 16, Md80FrameId_E::FRAME_SET_MOTION_TARGETS);
+        *(float*)&motionCommandFrame.canMsg[2] = vel;
+        *(float*)&motionCommandFrame.canMsg[6] = pos;
+        *(float*)&motionCommandFrame.canMsg[10] = torque;
+        if(usb->transmit((char*)&motionCommandFrame, sizeof(motionCommandFrame), true, 100))
+        {
+            uint8_t cheaterBuffer[72];
+            memcpy(&cheaterBuffer[1], usb->rxBuffer, usb->bytesReceived);
+            *(uint16_t*)&cheaterBuffer[0] = drive.getId();
+            cheaterBuffer[2] = 16;  //Cheater buffer is a dirty trick to make USB_FRAME_MD80_GENERIC_FRAME response compatibile with __updateResponseData
+            drive.__updateResponseData((mab::StdMd80ResponseFrame_t*)cheaterBuffer);
+        }
+    }
     bool Candle::addMd80(uint16_t canId)
     {
 		if(inUpdateMode())
@@ -181,7 +196,9 @@ loopdone:
                 {
                     vout << "Added Md80." << statusOK << std::endl;
 					md80s.push_back(Md80(canId));
-                    sendGetInfoFrame(md80s.back());
+                    mab::Md80& newDrive = md80s.back();
+                    sendGetInfoFrame(newDrive);
+                    sendMotionCommand(newDrive, newDrive.getPosition(), 0.0f, 0.0f);
                     return true;
                 }
         vout << "Failed to add Md80." << statusFAIL << std::endl;

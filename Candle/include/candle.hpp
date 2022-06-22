@@ -47,7 +47,7 @@ namespace mab
     {
     private:
         static std::vector<Candle*> instances;
-        const std::string version = "v2.3";
+        const std::string version = "v2.3_dev";
         UsbDevice*usb;
         std::thread receiverThread;
         std::thread transmitterThread;
@@ -74,6 +74,7 @@ namespace mab
         bool inConfigMode();
 
         void sendGetInfoFrame(mab::Md80& drive);
+        void sendMotionCommand(mab::Md80& drive, float pos, float vel, float torque);
     public:
         /**
          * @brief A constructor of Candle class
