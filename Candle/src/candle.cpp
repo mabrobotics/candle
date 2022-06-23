@@ -143,6 +143,7 @@ loopdone:
         frame.frameId = USB_FRAME_MD80_GENERIC_FRAME;
         frame.driveCanId = canId;
         frame.canMsgLen = msgLen;
+        frame.timeoutMs = 10;
         frame.canMsg[0] = canFrameId;
         frame.canMsg[1] = 0x00;
         return frame;
@@ -442,17 +443,20 @@ loopdone:
             int len = sizeof(frame);
             memcpy(tx, &frame, len);
             if(usb->transmit(tx, len, true, 50))
-            if (usb->rxBuffer[1] == true)
-            {   
-                if(enable)
-                    vout << "Enabling successfull at ID = " << canId << statusOK << std::endl;
-                else
-                {
-                    vout << "Disabling successfull at ID = " << canId << statusOK << std::endl;
-                    this->getMd80FromList(canId).__updateRegulatorsAdjusted(false);  //Drive will operate at default params
+                if (usb->rxBuffer[1] == true)
+                {   
+                    if(enable)
+                        vout << "Enabling successfull at ID = " << canId << statusOK << std::endl;
+                    else
+                    {
+                        vout << "Disabling successfull at ID = " << canId << statusOK << std::endl;
+                        std::cout << "Drives count " << this->md80s.size() << std::endl;
+                        for(int i = 0; i < this->md80s.size(); i++)
+                            std::cout << md80s[i].getId() << std::endl;
+                        this->getMd80FromList(canId).__updateRegulatorsAdjusted(false);  //Drive will operate at default params
+                    }
+                    return true;
                 }
-                return true;
-            }
             vout << "Enabling/Disabling failed at ID = " << canId << statusFAIL << std::endl;
             return false;
         }
@@ -495,15 +499,20 @@ loopdone:
         shouldStopReceiver = true;
         transmitterThread.join();
         receiverThread.join();
-        
+
         char tx[128];
         tx[0] = USB_FRAME_END;
         tx[1] = 0x00;
-        if(usb->transmit(tx, 2, true, 10))
-            mode = CANdleMode_E::CONFIG;
-        vout << "Ending auto update loop mode" << statusOK << std::endl;
+        if(usb->transmit(tx, 2, true, 1))
+        {
+            //first USB_FRAME_END response may contain some garbage from UPDATE frames send, but not parsed by lib - send again to clear this up
+            if(usb->transmit(tx,2, true, 10))
+                if(usb->rxBuffer[0] == USB_FRAME_END && usb->rxBuffer[1] == 1)
+                    mode = CANdleMode_E::CONFIG;
+        }
+        vout << "Ending auto update loop mode" << (mode == CANdleMode_E::CONFIG ? statusOK : statusFAIL) << std::endl;
 
-        return true;
+        return mode == CANdleMode_E::CONFIG ? true : false;
     }
     bool Candle::reset()
     {

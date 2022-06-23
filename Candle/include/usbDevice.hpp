@@ -13,7 +13,7 @@ public:
     bool receive(int timeout = 100);
     unsigned long getId()   {return serialDeviceId;}
 
-    static const int rxBufferSize = 512;
+    static const int rxBufferSize = 1024;
     char rxBuffer[rxBufferSize];
     int bytesReceived;
 
