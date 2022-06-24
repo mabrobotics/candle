@@ -451,7 +451,7 @@ loopdone:
                     {
                         vout << "Disabling successfull at ID = " << canId << statusOK << std::endl;
                         std::cout << "Drives count " << this->md80s.size() << std::endl;
-                        for(int i = 0; i < this->md80s.size(); i++)
+                        for(int i = 0; i < (int)this->md80s.size(); i++)
                             std::cout << md80s[i].getId() << std::endl;
                         this->getMd80FromList(canId).__updateRegulatorsAdjusted(false);  //Drive will operate at default params
                     }

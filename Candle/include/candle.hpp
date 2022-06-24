@@ -47,7 +47,7 @@ namespace mab
     {
     private:
         static std::vector<Candle*> instances;
-        const std::string version = "v2.3_dev";
+        const std::string version = "v2.3";
         UsbDevice*usb;
         std::thread receiverThread;
         std::thread transmitterThread;

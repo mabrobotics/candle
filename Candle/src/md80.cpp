@@ -84,6 +84,7 @@ namespace mab
         if(_responseFrame->canId != canId || _responseFrame->fromMd80.data[0] != Md80FrameId_E::RESPONSE_DEFAULT)
             return;
         errorVector = *(uint16_t*)&_responseFrame->fromMd80.data[1];
+        temperature = _responseFrame->fromMd80.data[3];
         position = *(float*)&_responseFrame->fromMd80.data[4];
         velocity = *(float*)&_responseFrame->fromMd80.data[8];
         torque = *(float*)&_responseFrame->fromMd80.data[12];
