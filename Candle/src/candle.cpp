@@ -497,19 +497,20 @@ loopdone:
             return false;
         shouldStopTransmitter = true;
         shouldStopReceiver = true;
-        transmitterThread.join();
-        receiverThread.join();
+        if(transmitterThread.joinable())
+            transmitterThread.join();
+        if(receiverThread.joinable())
+            receiverThread.join();
 
         char tx[128];
         tx[0] = USB_FRAME_END;
         tx[1] = 0x00;
-        if(usb->transmit(tx, 2, true, 1))
-        {
-            //first USB_FRAME_END response may contain some garbage from UPDATE frames send, but not parsed by lib - send again to clear this up
-            if(usb->transmit(tx,2, true, 10))
-                if(usb->rxBuffer[0] == USB_FRAME_END && usb->rxBuffer[1] == 1)
-                    mode = CANdleMode_E::CONFIG;
-        }
+        usb->transmit(tx,2, true, 10);  //Stops update but produces garbage output
+        
+        if(usb->transmit(tx,2, true, 10))
+            if(usb->rxBuffer[0] == USB_FRAME_END && usb->rxBuffer[1] == 1)
+                mode = CANdleMode_E::CONFIG;
+                
         vout << "Ending auto update loop mode" << (mode == CANdleMode_E::CONFIG ? statusOK : statusFAIL) << std::endl;
 
         return mode == CANdleMode_E::CONFIG ? true : false;
