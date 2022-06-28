@@ -495,12 +495,14 @@ loopdone:
     {
         if(mode == CANdleMode_E::CONFIG)
             return false;
-        shouldStopTransmitter = true;
+            
         shouldStopReceiver = true;
-        if(transmitterThread.joinable())
-            transmitterThread.join();
         if(receiverThread.joinable())
             receiverThread.join();
+
+        shouldStopTransmitter = true;
+        if(transmitterThread.joinable())
+            transmitterThread.join(); 
 
         char tx[128];
         tx[0] = USB_FRAME_END;
