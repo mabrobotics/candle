@@ -346,12 +346,14 @@ loopdone:
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
+                /* set target position to 0.0f to avoid jerk at startup */
+                Md80&drive = getMd80FromList(canId);
+                sendMotionCommand(drive, 0.0f, 0.0f, 0.0f);
+                drive.setTargetPosition(0.0f);
                 vout << "Setting new zero position successful at ID = " << canId << statusOK << std::endl;
                 return true;
             }
         vout << "Setting new zero position failed at ID = " << canId << statusFAIL << std::endl;
-        /* set target position to 0.0f to avoid jerk at startup */
-        Md80(canId).setTargetPosition(0.0f);
         return false;
     }
     bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
