@@ -28,6 +28,13 @@ namespace mab
         CAN_BAUD_8M = 8,    /*!< FDCAN Baudrate of 8Mbps (8 000 000 bits per second) */
     };
 
+    enum class CANdleFastMode_E
+    {
+        NORMAL,
+        FAST1,
+        FAST2
+    };
+
     /*! \class Candle
         \brief Class for communicating with CANdle (USB-CAN converter) and Md80 drives.
 
@@ -39,18 +46,22 @@ namespace mab
     class Candle
     {
     private:
-        const std::string version = "v2.1";
+        static std::vector<Candle*> instances;
+        const std::string version = "v2.3";
         UsbDevice*usb;
         std::thread receiverThread;
         std::thread transmitterThread;
         CANdleMode_E mode = CANdleMode_E::CONFIG;
+        CANdleFastMode_E fastMode = CANdleFastMode_E::NORMAL;
 
-        const int maxDevices = 12;
+        int candleDeviceVersion = 10;
+        int maxDevices = 12;
         bool shouldStopReceiver;
         bool shouldStopTransmitter;
 
         int msgsReceived = 0;
         int msgsSent = 0;
+        float usbCommsFreq = 0.0f;
 
         bool printVerbose = true;
 
@@ -61,14 +72,18 @@ namespace mab
 
         bool inUpdateMode();
         bool inConfigMode();
+
+        void sendGetInfoFrame(mab::Md80& drive);
+        void sendMotionCommand(mab::Md80& drive, float pos, float vel, float torque);
     public:
         /**
          * @brief A constructor of Candle class
          * @param canBaudrate Sets a baudrate that CANdle will use to talk to drives
          * @param printVerbose if true, additional printing will be enables. Usefull for debugging
+         * @param fastMode setups update rate NORMAL for 100Hz (max 12 drives), FAST1 for 250Hz (max 6 drives), FAST2 for 500Hz (max 3 drives)
          * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
         */
-        Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false);
+        Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false, mab::CANdleFastMode_E fastMode = mab::CANdleFastMode_E::NORMAL);
         /**
          * @brief A destructor of Candle class. Takes care of all started threads that need to be stopped before clean exit
         */
@@ -80,6 +95,12 @@ namespace mab
         const std::string getVersion();
 
         /**
+         * @brief Getter for USB device ID. Can be used to differentiate between multiple CANdle's connected to one computer.
+         * @return unique 64-bit identified
+        */
+        unsigned long int getUsbDeviceId();
+
+        /**
          * @brief A vector holding all md80 instances that were succesfully added via `addMd80` method. This vector
          * can be used to modify regulator and control parameters of the md80 drives.
          */
@@ -89,12 +110,24 @@ namespace mab
         @brief Enables/disables extended printing.
         */
         void setVebose(bool enable);
+
+        /**
+         * @brief Returns actual USB communication rate with CANdle. This is calculated by measuring how much time was needed to send 250 messages.
+         * @return average communication frequency in Hertz
+        */
+        int getActualCommunicationFrequency();
         
         /**
-        @brief Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80;
+        @brief Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80 at 1M baudrate.
         @return the vector FDCAN IDs of drives that were found. If no drives were found, the vector is empty
         */
         std::vector<uint16_t> ping();
+        /**
+        @brief Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80; Pings at specific abudrate
+        @param baudrate a baudrate to be pinged.
+        @return the vector FDCAN IDs of drives that were found. If no drives were found, the vector is empty
+        */
+        std::vector<uint16_t> ping(mab::CANdleBaudrate_E baudrate);
 
         /**
         @brief Sends a Generic FDCAN Frame to the IDs in range (10 - 2047), and checks for valid responses from Md80;
@@ -116,9 +149,10 @@ namespace mab
         /**
         @brief Changes FDCAN baudrate that CANdle uses to talk to Md80s.
         @param canBaudrate enum listing all available baudrates. CAN_BAUD_1M is equal to baudrate of 1 000 000 bits per second.
+        @param printVersionInfo(optional) checks CANdle firmware version
         @return true if baudrate was changed, false otherwise
         */
-        bool configCandleBaudrate(CANdleBaudrate_E canBaudrate);
+        bool configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersionInfo = false);
 
         /**
         @brief Changes FDCAN parameters of the Md80.
@@ -228,7 +262,7 @@ namespace mab
         @param canId ID of the drive
         @return true if the calibration started succesfully, false otherwise
         */
-        bool setupMd80Calibration(uint16_t canId);
+        bool setupMd80Calibration(uint16_t canId, uint16_t torqueBandwidth);
         /**
         @brief Prints diagnostic message from md80.
         @param canId ID of the drive

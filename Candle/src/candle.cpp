@@ -495,7 +495,7 @@ loopdone:
     {
         if(mode == CANdleMode_E::CONFIG)
             return false;
-            
+
         shouldStopReceiver = true;
         if(receiverThread.joinable())
             receiverThread.join();
@@ -553,10 +553,12 @@ loopdone:
         usb->transmit(tx, length, false);
     }
 
-    bool Candle::setupMd80Calibration(uint16_t canId)
+    bool Candle::setupMd80Calibration(uint16_t canId, uint16_t torqueBandwidth)
     {
-        GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CALIBRATION);
+        GenericMd80Frame32 frame = _packMd80Frame(canId, 4, Md80FrameId_E::FRAME_CALIBRATION);
         char tx[64];
+        frame.canMsg[2] = (uint8_t)(torqueBandwidth & 0xff);
+        frame.canMsg[3] = (uint8_t)(torqueBandwidth >> 8);
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
         if(usb->transmit(tx, len, true, 50))
@@ -565,7 +567,7 @@ loopdone:
                 vout << "Starting calibration at ID = " << canId << statusOK << std::endl;
                 return true;
             }
-        vout << "Starting calibration failed at ID = " << canId << statusOK << std::endl;
+        vout << "Starting calibration failed at ID = " << canId << statusFAIL << std::endl;
         return false;
     }
     bool Candle::setupMd80Diagnostic(uint16_t canId)

@@ -262,7 +262,7 @@ namespace mab
         @param canId ID of the drive
         @return true if the calibration started succesfully, false otherwise
         */
-        bool setupMd80Calibration(uint16_t canId);
+        bool setupMd80Calibration(uint16_t canId, uint16_t torqueBandwidth);
         /**
         @brief Prints diagnostic message from md80.
         @param canId ID of the drive
