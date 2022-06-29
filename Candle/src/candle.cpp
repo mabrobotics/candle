@@ -297,7 +297,7 @@ loopdone:
         if (usb->transmit(tx, len, true, 100))
             if(usb->rxBuffer[1] == 1)
             {
-                vout << "CAN config change successfull!" << statusOK << std::endl;
+                vout << "CAN config change successful!" << statusOK << std::endl;
                 vout << "Drive ID = " << std::to_string(canId) << " was changed to ID = " << std::to_string(newId) << std::endl;
                 vout << "It's baudrate is now " << std::to_string(newBaudrateMbps) << "Mbps" << std::endl;
                 vout << "It's CAN timeout (watchdog) is now " << (newTimeout == 0 ? "Disabled" : std::to_string(newTimeout) + "ms")  << std::endl;
@@ -315,7 +315,7 @@ loopdone:
         if(usb->transmit(tx, len, true, 500))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Saving in flash successfull at ID = " << canId << statusOK << std::endl;
+                vout << "Saving in flash successful at ID = " << canId << statusOK << std::endl;
                 return true;
             }
         vout << "Saving in flash failed at ID = " << canId << statusFAIL << std::endl;
@@ -346,10 +346,12 @@ loopdone:
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Setting new zero position successfull at ID = " << canId << statusOK << std::endl;
+                vout << "Setting new zero position successful at ID = " << canId << statusOK << std::endl;
                 return true;
             }
         vout << "Setting new zero position failed at ID = " << canId << statusFAIL << std::endl;
+        /* set target position to 0.0f to avoid jerk at startup */
+        Md80(canId).setTargetPosition(0.0f);
         return false;
     }
     bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
@@ -362,7 +364,7 @@ loopdone:
         if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[0] == USB_FRAME_MD80_GENERIC_FRAME && usb->rxBuffer[1] == true)
             {
-                vout << "Setting new current limit successfull at ID = " << canId << statusOK << std::endl;
+                vout << "Setting new current limit successful at ID = " << canId << statusOK << std::endl;
                 return true;
             }
         vout << "Setting new current limit failed at ID = " << canId << statusFAIL << std::endl;
@@ -420,7 +422,7 @@ loopdone:
             if(usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
-                vout << "Setting control mode successfull at ID = " << canId << statusOK << std::endl;
+                vout << "Setting control mode successful at ID = " << canId << statusOK << std::endl;
                 drive.__setControlMode(mode);
                 return true;
             }
@@ -446,13 +448,10 @@ loopdone:
                 if (usb->rxBuffer[1] == true)
                 {   
                     if(enable)
-                        vout << "Enabling successfull at ID = " << canId << statusOK << std::endl;
+                        vout << "Enabling successful at ID = " << canId << statusOK << std::endl;
                     else
                     {
-                        vout << "Disabling successfull at ID = " << canId << statusOK << std::endl;
-                        std::cout << "Drives count " << this->md80s.size() << std::endl;
-                        for(int i = 0; i < (int)this->md80s.size(); i++)
-                            std::cout << md80s[i].getId() << std::endl;
+                        vout << "Disabling successful at ID = " << canId << statusOK << std::endl;
                         this->getMd80FromList(canId).__updateRegulatorsAdjusted(false);  //Drive will operate at default params
                     }
                     return true;
@@ -478,7 +477,7 @@ loopdone:
         tx[1] = 0x00;
         if(usb->transmit(tx, 2, true, 10))
         {
-            vout << "Begginig auto update loop mode" << statusOK << std::endl;
+            vout << "Beginnig auto update loop mode" << statusOK << std::endl;
             mode = CANdleMode_E::UPDATE;
             shouldStopTransmitter = false;
             shouldStopReceiver = false;
