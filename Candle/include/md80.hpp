@@ -20,14 +20,15 @@ namespace mab
         float position = 0.0f;
         float velocity = 0.0f;
         float torque = 0.0f;
+        uint8_t temperature = 0;
         uint16_t errorVector = 0;
 
         Md80Mode_E controlMode = Md80Mode_E::IDLE;
         float positionTarget = 0.0f;
         float velocityTarget = 0.0f;
         float torqueSet = 0.0f;
-        float maxTorque = 1.8f;
-        float maxVelocity = 300.0f;
+        float maxTorque = 1.0f;
+        float maxVelocity = 100.0f;
         RegPid_t velocityController;
         RegPid_t positionController;
         RegImpedance_t impedanceController;
@@ -126,16 +127,21 @@ namespace mab
          * @return float angular position in radians
          */
         float getPosition() {return position;};
-            /**
+        /**
          * @brief Get the Velocity of md80
          * @return float angular velocity in rad/s (radians per second)
          */
         float getVelocity() {return velocity;};
-            /**
+        /**
          * @brief Get the Torque of md80
          * @return float torque in Nm (Newton-meters)
          */
         float getTorque()   {return torque;};
+        /**
+         * @brief Get the Error Vector of the md80
+         * @return uint16_t vector with per-bit coded errors. Refer to documentation for meaning of error codes.
+         */
+        uint16_t getTemperature()               {return temperature; };
 
         /**
          * @brief For internal use by CANdle only.
