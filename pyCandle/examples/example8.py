@@ -1,4 +1,4 @@
-import build.pyCandle as pyCandle
+import mab.pyCandle as pyCandle
 import time
 import math
 import sys  
@@ -23,7 +23,7 @@ candle.controlMd80Enable(ids[0], True)    # Enable the drive
 
 #  We will run both Position PID and Velocity PID at default settings. If you wish you can play with the parameters
 #  Using the methods below:
-#  candle.md80s[0].setPositionController(20.0, 0.2, 0.0, 15.0)
+#  candle.md80s[0].setPositionControllerParams(20.0, 0.2, 0.0, 15.0)
 #  candle.md80s[0].setVelocityControllerParams(0.0, 0.1, 0.0, 1.5)
 #  candle.md80s[0].setMaxVelocity(50.0)
 #  candle.md80s[0].setMaxTorque(0.5)

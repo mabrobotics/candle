@@ -17,6 +17,12 @@ PYBIND11_MODULE(pyCandle, m) {
       .value("CAN_BAUD_5M", mab::CAN_BAUD_5M)
       .value("CAN_BAUD_8M", mab::CAN_BAUD_8M)
       .export_values();
+  
+  py::enum_<mab::CANdleFastMode_E>(m, "CANdleFastMode_E")
+    .value("NORMAL", mab::CANdleFastMode_E::NORMAL)
+    .value("FAST1", mab::CANdleFastMode_E::FAST1)
+    .value("FAST2", mab::CANdleFastMode_E::FAST2)
+    .export_values();
 
   py::enum_<mab::Md80Mode_E>(m, "Md80Mode_E")
     .value("IDLE", mab::IDLE)
@@ -45,15 +51,20 @@ PYBIND11_MODULE(pyCandle, m) {
     .def("getPosition",&mab::Md80::getPosition)
     .def("getVelocity",&mab::Md80::getVelocity)
     .def("getTorque",&mab::Md80::getTorque)
+    .def("getTemperature",&mab::Md80::getTemperature)
   ;
   
 
   py::class_<mab::Candle>(m, "Candle")
     .def(py::init<mab::CANdleBaudrate_E, bool>())
+    .def(py::init<mab::CANdleBaudrate_E, bool, mab::CANdleFastMode_E>())
     .def_readwrite("md80s", &mab::Candle::md80s)
     .def("setVebose",&mab::Candle::setVebose)
     .def("getVersion", &mab::Candle::getVersion)
-    .def("ping",&mab::Candle::ping)
+    .def("getUsbDeviceId", &mab::Candle::getUsbDeviceId)
+    .def("ping",py::overload_cast<>(&mab::Candle::ping))
+    .def("ping",py::overload_cast<mab::CANdleBaudrate_E>(&mab::Candle::ping))    
+    .def("getActualCommunicationFrequency",&mab::Candle::getActualCommunicationFrequency)
     .def("sengGenericFDCanFrame", &mab::Candle::sengGenericFDCanFrame)
     .def("addMd80", &mab::Candle::addMd80)
     .def("configCandleBaudrate", &mab::Candle::configCandleBaudrate)
@@ -70,5 +81,8 @@ PYBIND11_MODULE(pyCandle, m) {
     .def("getMd80FromList", &mab::Candle::getMd80FromList)
     .def("begin", &mab::Candle::begin)
     .def("end", &mab::Candle::end)
+    .def("reset", &mab::Candle::reset)
+    .def("setupMd80Calibration", &mab::Candle::setupMd80Calibration)
+    .def("setupMd80Diagnostic", &mab::Candle::setupMd80Diagnostic)
     ;
 }
