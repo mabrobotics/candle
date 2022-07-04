@@ -28,9 +28,8 @@ namespace mab
 
     Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose, mab::CANdleFastMode_E _fastMode)
     {
-        vout << "CANdle library version: " << getVersion() << std::endl;
-        
         printVerbose = _printVerbose;
+        vout << "CANdle library version: " << getVersion() << std::endl;
         auto listOfCANdle = UsbDevice::getConnectedACMDevices("MAB_Robotics", "MD_USB-TO-CAN");
         if(listOfCANdle.size() == 0)
             vout << "No CANdle found!" << std::endl;
@@ -40,16 +39,20 @@ namespace mab
         {
             for(auto& entry : listOfCANdle)
             {
+                unsigned int newIdCount = 0;
                 for(auto instance : instances)
                 {
-                    if(UsbDevice::getConnectedDeviceId(entry) != instance->getUsbDeviceId())
-                    {
-                        usb = new UsbDevice(entry, "MAB_Robotics", "MD_USB-TO-CAN");
-                        goto loopdone;  //Only legit use of goto left in C++
-                    }
+                    if(UsbDevice::getConnectedDeviceId(entry) != instance->getUsbDeviceId())newIdCount++;
+                }
+                /* only if all instances were different from the current one -> create new device */
+                if(newIdCount == instances.size())
+                {
+                    usb = new UsbDevice(entry, "MAB_Robotics", "MD_USB-TO-CAN");
+                    goto loopdone;  //Only legit use of goto left in C++
                 }
             }
-            std::cout << "Failed to create CANdle object." << statusFAIL << std::endl;
+            vout << "Failed to create CANdle object." << statusFAIL << std::endl;
+            throw "Failed to create CANdle object";
             return;
         }
 loopdone:
