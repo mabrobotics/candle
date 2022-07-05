@@ -46,6 +46,12 @@ namespace mab
     class Candle
     {
     private:
+        enum class CANdleMaxDevices_E
+        {
+            MAX_DEV_NORMAL = 12,
+            MAX_DEV_FAST1 = 6,
+            MAX_DEV_FAST2 = 3
+        };
         static std::vector<Candle*> instances;
         const std::string version = "v2.3";
         UsbDevice*usb;
@@ -81,13 +87,18 @@ namespace mab
          * @param canBaudrate Sets a baudrate that CANdle will use to talk to drives
          * @param printVerbose if true, additional printing will be enables. Usefull for debugging
          * @param fastMode setups update rate NORMAL for 100Hz (max 12 drives), FAST1 for 250Hz (max 6 drives), FAST2 for 500Hz (max 3 drives)
+         * @param printFailure if false the constructor will not display terminal messages when something fails
          * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
         */
-        Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false, mab::CANdleFastMode_E fastMode = mab::CANdleFastMode_E::NORMAL);
+        Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false, mab::CANdleFastMode_E fastMode = mab::CANdleFastMode_E::NORMAL, bool printFailure = true);
         /**
          * @brief A destructor of Candle class. Takes care of all started threads that need to be stopped before clean exit
         */
         ~Candle();
+        /**
+         * @brief Updates the current communication speed mode, based on the number of md80s
+        */
+        void updateModeBasedOnMd80List();
         /**
          * @brief Getter for version number
          * @return std::string with version in format "vMAJOR.MINOR"
@@ -143,9 +154,10 @@ namespace mab
         /**
         @brief Adds Md80 to auto update vector.
         @param canId FDCAN ID of the drive to be added
+        @param printFailure when false the function will not display fail messages
         @return true if drive has been found and was added, false otherwise
         */
-        bool addMd80(uint16_t canId);
+        bool addMd80(uint16_t canId, bool printFailure = true);
         /**
         @brief Changes FDCAN baudrate that CANdle uses to talk to Md80s.
         @param canBaudrate enum listing all available baudrates. CAN_BAUD_1M is equal to baudrate of 1 000 000 bits per second.

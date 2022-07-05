@@ -26,10 +26,8 @@ namespace mab
 
     std::vector<Candle*> Candle::instances = std::vector<Candle*>();
 
-    Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose, mab::CANdleFastMode_E _fastMode)
+    Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose, mab::CANdleFastMode_E _fastMode, bool printFailure)
     {
-        vout << "CANdle library version: " << getVersion() << std::endl;
-        
         printVerbose = _printVerbose;
         auto listOfCANdle = UsbDevice::getConnectedACMDevices("MAB_Robotics", "MD_USB-TO-CAN");
         if(listOfCANdle.size() == 0)
@@ -40,19 +38,26 @@ namespace mab
         {
             for(auto& entry : listOfCANdle)
             {
+                unsigned int newIdCount = 0;
                 for(auto instance : instances)
                 {
                     if(UsbDevice::getConnectedDeviceId(entry) != instance->getUsbDeviceId())
-                    {
-                        usb = new UsbDevice(entry, "MAB_Robotics", "MD_USB-TO-CAN");
-                        goto loopdone;  //Only legit use of goto left in C++
-                    }
+                        newIdCount++;
+                }
+                /* only if all instances were different from the current one -> create new device */
+                if(newIdCount == instances.size())
+                {
+                    usb = new UsbDevice(entry, "MAB_Robotics", "MD_USB-TO-CAN");
+                    goto loopdone;  //Only legit use of goto left in C++
                 }
             }
-            std::cout << "Failed to create CANdle object." << statusFAIL << std::endl;
+            if(printFailure)
+                vout << "Failed to create CANdle object." << statusFAIL << std::endl;
+            throw "Failed to create CANdle object";
             return;
         }
 loopdone:
+        vout << "CANdle library version: " << getVersion() << std::endl;
         std::string setSerialCommand = "setserial " + usb->getSerialDeviceName() + " low_latency";
         if (system(setSerialCommand.c_str()) != 0)
             std:: cout << "Could not execute command '" << setSerialCommand <<"'. Communication in low-speed mode." << std::endl;
@@ -65,11 +70,11 @@ loopdone:
         switch (fastMode)
         {
         case CANdleFastMode_E::FAST1:
-            maxDevices = 6;    break;
+            maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_FAST1;    break;
         case CANdleFastMode_E::FAST2:
-            maxDevices = 3;    break;
+            maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_FAST2;    break;
         default:
-            maxDevices = 12;    break;
+            maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_NORMAL;    break;
         }
         Candle::instances.push_back(this);
     }
@@ -77,6 +82,24 @@ loopdone:
     {
         if(this->inUpdateMode())
             this->end();
+    }
+    void Candle::updateModeBasedOnMd80List()
+    {
+        if(md80s.size()<=(int)CANdleMaxDevices_E::MAX_DEV_FAST2)
+        {
+            fastMode = CANdleFastMode_E::FAST2;
+            vout<<"Set current speed mode to FAST2"<<std::endl;
+        }
+        else if(md80s.size()<=(int)CANdleMaxDevices_E::MAX_DEV_FAST1)
+        {
+            fastMode = CANdleFastMode_E::FAST1;
+            vout<<"Set current speed mode to FAST1"<<std::endl;
+        }
+        else if(md80s.size()<=(int)CANdleMaxDevices_E::MAX_DEV_NORMAL)
+        {
+            fastMode = CANdleFastMode_E::NORMAL;
+            vout<<"Set current speed mode to NORMAL"<<std::endl;
+        }
     }
     const std::string Candle::getVersion()
     {
@@ -175,7 +198,7 @@ loopdone:
             drive.__updateResponseData((mab::StdMd80ResponseFrame_t*)cheaterBuffer);
         }
     }
-    bool Candle::addMd80(uint16_t canId)
+    bool Candle::addMd80(uint16_t canId, bool printFailure)
     {
 		if(inUpdateMode())
 			return false;
@@ -203,7 +226,7 @@ loopdone:
                     newDrive.setTargetPosition(newDrive.getPosition());
                     return true;
                 }
-        vout << "Failed to add Md80." << statusFAIL << std::endl;
+        if(printFailure)vout << "Failed to add Md80." << statusFAIL << std::endl;
         return false;
     }
     std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
@@ -384,7 +407,7 @@ loopdone:
                 candleDeviceVersion = usb->rxBuffer[2];
                 if(printVersionInfo)
                 {
-                    vout << "Device firmware version: " << candleDeviceVersion / 10 << "." <<candleDeviceVersion % 10 << std::endl;
+                    vout << "Device firmware version: v" << candleDeviceVersion / 10 << "." <<candleDeviceVersion % 10 << std::endl;
                     if(candleDeviceVersion < 14)
                     std::cout << "Your CANdle firmware seems to be out-dated. Contact MAB: support@mabrobotics.pl , for intructions how to update." << std::endl;
                 }
