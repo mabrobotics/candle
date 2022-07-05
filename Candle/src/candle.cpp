@@ -41,7 +41,8 @@ namespace mab
                 unsigned int newIdCount = 0;
                 for(auto instance : instances)
                 {
-                    if(UsbDevice::getConnectedDeviceId(entry) != instance->getUsbDeviceId())newIdCount++;
+                    if(UsbDevice::getConnectedDeviceId(entry) != instance->getUsbDeviceId())
+                        newIdCount++;
                 }
                 /* only if all instances were different from the current one -> create new device */
                 if(newIdCount == instances.size())
@@ -50,7 +51,8 @@ namespace mab
                     goto loopdone;  //Only legit use of goto left in C++
                 }
             }
-            if(printFailure)vout << "Failed to create CANdle object." << statusFAIL << std::endl;
+            if(printFailure)
+                vout << "Failed to create CANdle object." << statusFAIL << std::endl;
             throw "Failed to create CANdle object";
             return;
         }
