@@ -3,11 +3,23 @@
 #include "usbDevice.hpp"
 #include "mab_types.hpp"
 #include "md80.hpp"
+#include "bus.hpp"
 
 #include <string>
 #include <thread>
 #include <vector>
 #include <iostream>
+
+/* PC supports only USB bus */
+#define PC          0
+/* RPI supports all busses - USB/SPI/UART */
+#define RPI         1
+/* ARDUINO supports only SPI and UART busses */
+#define ARDUINO     2
+
+/* SELECT THE PLATFORM HERE */
+#define PLATFORM    1
+
 namespace mab
 {
     enum CANdleMode_E
@@ -54,11 +66,12 @@ namespace mab
         };
         static std::vector<Candle*> instances;
         const std::string version = "v2.3";
-        UsbDevice*usb;
         std::thread receiverThread;
         std::thread transmitterThread;
         CANdleMode_E mode = CANdleMode_E::CONFIG;
         CANdleFastMode_E fastMode = CANdleFastMode_E::NORMAL;
+
+        Bus* bus;
 
         int candleDeviceVersion = 10;
         int maxDevices = 12;
@@ -90,7 +103,7 @@ namespace mab
          * @param printFailure if false the constructor will not display terminal messages when something fails
          * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
         */
-        Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false, mab::CANdleFastMode_E fastMode = mab::CANdleFastMode_E::NORMAL, bool printFailure = true);
+        Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false, mab::CANdleFastMode_E fastMode = mab::CANdleFastMode_E::NORMAL, bool printFailure = true, mab::BusType_E busType = mab::BusType_E::USB);
         /**
          * @brief A destructor of Candle class. Takes care of all started threads that need to be stopped before clean exit
         */

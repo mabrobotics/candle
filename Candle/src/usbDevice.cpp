@@ -15,7 +15,6 @@
 
 struct termios tty;
 struct termios ti_prev;
-pthread_mutex_t devLock;
 
 // #define USB_VERBOSE
 
@@ -24,7 +23,7 @@ bool checkDeviceAvailable(std::string devName, std::string idVendor, std::string
 std::string getDeviceShortId(std::string devName);
 unsigned long hash(const char *str);
 
-UsbDevice::UsbDevice(std::string deviceName, std::string idVendor, std::string idProduct)
+UsbDevice::UsbDevice(std::string deviceName, std::string idVendor, std::string idProduct, char* rxBufferPtr, const int rxBufferSize_)
 {
     serialDeviceName = deviceName;
     int device_descriptor = open_device(serialDeviceName, idVendor, idProduct);
@@ -61,7 +60,9 @@ UsbDevice::UsbDevice(std::string deviceName, std::string idVendor, std::string i
     
     this->fd = device_descriptor;
     gotResponse = false;
-    waitingForResponse = false;
+
+    rxBuffer = rxBufferPtr;
+    rxBufferSize = rxBufferSize_;
 }
 bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeout)
 {

@@ -1,4 +1,25 @@
 cmake_minimum_required(VERSION 3.5)
+
+if(NOT DEFINED ARCH)
+    set(ARCH "native")
+    execute_process(COMMAND dpkg --print-architecture OUTPUT_VARIABLE ARCH)
+    string(REGEX REPLACE "\n$" "" ARCH "${ARCH}")
+endif()
+
+if( "${ARCH}" STREQUAL "armhf")
+    message("Compiling for armhf")
+    set(CMAKE_CXX_COMPILER arm-linux-gnueabihf-g++)
+    set(CMAKE_C_COMPILER arm-linux-gnueabihf-gcc)
+elseif ( "${ARCH}" STREQUAL "aarm64")
+    message("Compiling for aarm64")
+    set(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)
+    set(CMAKE_C_COMPILER aarch64-linux-gnu-gcc)
+else ()
+    message("Compiling for native architecture")
+    set(CMAKE_CXX_COMPILER g++)
+    set(CMAKE_C_COMPILER gcc)
+endif()
+
 set (CMAKE_CXX_STANDARD 20)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_BUILD_TYPE Release)
@@ -46,6 +67,9 @@ if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
 
     add_executable(example9 examples/example9.cpp)
     target_link_libraries(example9 candle)
+    
+    add_executable(example10 examples/example10.cpp)
+    target_link_libraries(example10 candle)
 endif()
 
 if(${LIB_TYPE} MATCHES "SHARED")
