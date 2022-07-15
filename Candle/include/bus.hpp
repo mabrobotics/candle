@@ -1,8 +1,9 @@
 #pragma once
 
 #include "usbDevice.hpp"
-#include "mab_types.hpp"
 #include "spiDevice.hpp"
+#include "uartDevice.hpp"
+#include "mab_types.hpp"
 
 namespace mab
 {
@@ -25,6 +26,7 @@ namespace mab
         public:
         UsbDevice* usb;
         SpiDevice* spi;
+        UartDevice* uart;
         
         Bus();
         Bus(mab::BusType_E type);

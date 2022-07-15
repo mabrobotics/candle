@@ -70,6 +70,9 @@ if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
     
     add_executable(example10 examples/example10.cpp)
     target_link_libraries(example10 candle)
+
+    add_executable(example11 examples/example11.cpp)
+    target_link_libraries(example11 candle)
 endif()
 
 if(${LIB_TYPE} MATCHES "SHARED")

@@ -38,9 +38,11 @@ namespace mab
             }
             case BusType_E::UART:
             {
+                return uart->transmit(buffer,len,waitForResponse,timeout);
                 break;
             }
         }
+        return false;
     }
 
     bool Bus::receive(int timeoutMs, int responseLen)
@@ -59,14 +61,15 @@ namespace mab
             }
             case BusType_E::UART:
             {
+                return uart->receive(timeoutMs);
                 break;
             }
         }
+        return false;
     }
 
     int Bus::getBytesReceived()
     {
-        
         switch(busType)
         {
             case BusType_E::USB:
@@ -81,8 +84,10 @@ namespace mab
             }
             case BusType_E::UART:
             {
+                return uart->getBytesReceived();
                 break;
             }
         }
+        return 0;
     }
 }

@@ -84,6 +84,10 @@ namespace mab
         {
             bus->spi = new SpiDevice(bus->getRxBuffer(),bus->getRxBufferSize());
         }
+        else if(bus->getType() == mab::BusType_E::UART)
+        {
+            bus->uart = new UartDevice(bus->getRxBuffer(),bus->getRxBufferSize());
+        }
 #endif
 
         this->reset();
@@ -146,6 +150,7 @@ namespace mab
         {
             if(bus->receive(100,36*md80s.size()+1))
             {
+                std::cout<<"received"<<std::endl;
                 if(*bus->getRxBuffer() == USB_FRAME_UPDATE)
                 {
                     for(int i = 0; i < (int)md80s.size(); i++)
@@ -168,6 +173,7 @@ namespace mab
             }
             transmitNewStdFrame();
             msgsSent++;
+            std::cout<<"transmitted"<<std::endl;
             switch (fastMode)
             {
             case CANdleFastMode_E::FAST1:  

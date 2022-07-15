@@ -1,6 +1,7 @@
 #pragma once
 
 #include "usbDevice.hpp"
+#include "uartDevice.hpp"
 #include "mab_types.hpp"
 #include "md80.hpp"
 
