@@ -5,10 +5,10 @@
 int main()
 {
     //Create CANdle object and set FDCAN baudrate to 1Mbps
-    mab::Candle candle(mab::CAN_BAUD_1M, true, mab::CANdleFastMode_E::FAST2, true, mab::BusType_E::UART);
+    mab::Candle candle(mab::CAN_BAUD_8M, true, mab::CANdleFastMode_E::FAST2, true, mab::BusType_E::SPI);
 
     //Ping FDCAN bus in search of drives
-    auto ids = candle.ping();
+    auto ids = candle.ping(mab::CAN_BAUD_8M);
 
     if(ids.size() == 0) //If no drives found -> quit
         return EXIT_FAILURE;
@@ -37,6 +37,8 @@ int main()
         //a nice synchronized movement.
         for(auto &md : candle.md80s)
             md.setTargetPosition(sin(t) * 2.0f);
+        
+        std::cout<<candle.md80s[0].getPosition() << std::endl;
 
         t+=dt;
         usleep(10000);

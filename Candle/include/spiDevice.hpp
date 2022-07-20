@@ -19,13 +19,13 @@ public:
     
     bool transmit(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0);
     bool receive(int timeout = 100, int responseLen = 0);
-    bool receiveUpdate(int timeout, int responseLen);
+    bool transmitReceive(char* buffer, int commandLen, int responseLen);
     int getBytesReceived(){return bytesReceived;};
 
 private:
     /* SPI settings */
     const uint8_t bits = 8;
-    const uint32_t spiSpeed = 8000000;
+    const uint32_t spiSpeed = 20000000;
     const uint8_t mode = SPI_MODE_0;
     static const uint32_t maxResponseLen = 2000;
 

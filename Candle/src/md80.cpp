@@ -78,6 +78,8 @@ namespace mab
         default:
             break;
         }
+        /* send updated gains only when modified */
+        regulatorsAdjusted = false;
     }
     void Md80::__updateResponseData(StdMd80ResponseFrame_t*_responseFrame)
     {

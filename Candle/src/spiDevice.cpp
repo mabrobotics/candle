@@ -134,22 +134,17 @@ bool SpiDevice::receive(int timeout, int responseLen)
     return false;
 }
 
-
-bool SpiDevice::receiveUpdate(int timeout, int responseLen)
+bool SpiDevice::transmitReceive(char* buffer, int commandLen, int responseLen)
 {
-    (void)timeout;
     memset(rxBuffer, 0, rxBufferSize);
     rxLock.lock();
-    /* this small delay is essential to proper communication - TODO examine why */
-    usleep(1);
     bytesReceived = 0;
+    uint8_t txBuffer[maxResponseLen];
+    memcpy(txBuffer,buffer,commandLen);
 
-    uint8_t dummyTxa[maxResponseLen];
-    memset(&dummyTxa, 0, responseLen);
-
-    trx.tx_buf = (unsigned long)&dummyTxa;
+    trx.tx_buf = (unsigned long)txBuffer;
     trx.rx_buf = (unsigned long)rxBuffer;
-    trx.len = responseLen;
+    trx.len = responseLen > commandLen ? responseLen : commandLen;
 
     ioctl(fd, SPI_IOC_MESSAGE(1), &trx);
     bytesReceived = responseLen;

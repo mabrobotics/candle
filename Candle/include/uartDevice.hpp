@@ -16,8 +16,6 @@ class UartDevice
 {   
 
 public:
-    
-    
     UartDevice(char* rxBufferPtr, const int rxBufferSize_);
     ~UartDevice();
     bool transmit(char* buffer, int len, bool waitForConfirmation = false, int timeout = 100);
@@ -25,8 +23,7 @@ public:
     int getBytesReceived(){return bytesReceived;};
 
 private:
-
-    const uint32_t uartSpeed = 460800;
+    const uint32_t uartSpeed = B2000000;
 
     char* rxBuffer;
     int rxBufferSize;

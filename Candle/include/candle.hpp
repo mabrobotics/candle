@@ -14,11 +14,6 @@
 #define PC          0
 /* RPI supports all busses - USB/SPI/UART */
 #define RPI         1
-/* ARDUINO supports only SPI and UART busses */
-#define ARDUINO     2
-
-/* SELECT THE PLATFORM HERE */
-#define PLATFORM    1
 
 namespace mab
 {
@@ -77,6 +72,7 @@ namespace mab
         int maxDevices = 12;
         bool shouldStopReceiver;
         bool shouldStopTransmitter;
+        mab::CANdleBaudrate_E canBaudrate; 
 
         int msgsReceived = 0;
         int msgsSent = 0;

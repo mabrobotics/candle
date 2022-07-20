@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <vector>
 
+long long TX = 0;
 namespace mab
 {
     class mystreambuf: public std::streambuf {    };
@@ -31,10 +32,7 @@ namespace mab
 
 #if PLATFORM == PC
         if(busType == mab::BusType_E::SPI || busType == mab::BusType_E::UART)
-            #error "SPI or UART bus is not supported on a selected platform! Please see candle.hpp file."
-#elif PLATFORM == ARDUINO
-        if(busType == mab::BusType_E::USB)
-            #error "SPI or UART bus is not supported on a selected platform! Please see candle.hpp file."
+            throw "Current communication bus is not available on selected platform!"
 #endif
         
         bus = new Bus(busType);
@@ -44,7 +42,12 @@ namespace mab
         {
             auto listOfCANdle = UsbDevice::getConnectedACMDevices("MAB_Robotics", "MD_USB-TO-CAN");
             if(listOfCANdle.size() == 0)
+            {
                 vout << "No CANdle found!" << std::endl;
+                delete(bus);
+                throw "No Candle found!";
+                return;
+            }
             if(instances.size() == 0)
                 bus->usb = new UsbDevice(listOfCANdle[0], "MAB_Robotics", "MD_USB-TO-CAN", bus->getRxBuffer(),bus->getRxBufferSize());
             else
@@ -67,6 +70,7 @@ namespace mab
                 if(printFailure)
                 {
                     vout << "Failed to create CANdle object." << statusFAIL << std::endl;
+                    delete(bus);
                     throw "Failed to create CANdle object";
                     return;
                 }
@@ -150,7 +154,6 @@ namespace mab
         {
             if(bus->receive(100,36*md80s.size()+1))
             {
-                std::cout<<"received"<<std::endl;
                 if(*bus->getRxBuffer() == USB_FRAME_UPDATE)
                 {
                     for(int i = 0; i < (int)md80s.size(); i++)
@@ -172,18 +175,36 @@ namespace mab
                 txCounter = 0;
             }
             transmitNewStdFrame();
+            /* transmit thread is also the receive thread for SPI in update mode */
+            if(bus->getType() == mab::BusType_E::SPI && *bus->getRxBuffer() == USB_FRAME_UPDATE)
+            {
+                for(int i = 0; i < (int)md80s.size(); i++)
+                {
+                    md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t)));
+                    StdMd80ResponseFrame_t*_responseFrame = (StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t));
+                }
+            }
+
             msgsSent++;
-            std::cout<<"transmitted"<<std::endl;
             switch (fastMode)
             {
             case CANdleFastMode_E::FAST1:  
-                usleep(1990*2);
+                if(bus->getType() == mab::BusType_E::SPI)
+                    usleep(1);
+                else 
+                    usleep(1990*2);
                 break;
             case CANdleFastMode_E::FAST2:
-                usleep(1950);
+                if(bus->getType() == mab::BusType_E::SPI)
+                    usleep(1);
+                else 
+                    usleep(1950);
                 break;
             default:
-                usleep(10000);
+                if(bus->getType() == mab::BusType_E::SPI)
+                    usleep(1);
+                else 
+                    usleep(10000);
                 break;
             }
         }
@@ -434,6 +455,7 @@ namespace mab
 
     bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersionInfo)
     {
+        this->canBaudrate = canBaudrate;
         char tx[10];
         tx[0] = USB_FRAME_CANDLE_CONFIG_BAUDRATE;
         tx[1] = (uint8_t)canBaudrate;
@@ -545,7 +567,8 @@ namespace mab
             msgsSent = 0;
             msgsReceived = 0;
             transmitterThread = std::thread(&Candle::transmit, this);
-            receiverThread = std::thread(&Candle::receive, this);
+            if(bus->getType() != mab::BusType_E::SPI)
+                receiverThread = std::thread(&Candle::receive, this);
             return true;
         }
         vout << "Failed to begin auto update loop mode" << statusFAIL << std::endl;
@@ -556,9 +579,12 @@ namespace mab
         if(mode == CANdleMode_E::CONFIG)
             return false;
 
-        shouldStopReceiver = true;
-        if(receiverThread.joinable())
-            receiverThread.join();
+        if(bus->getType() != mab::BusType_E::SPI)
+        {
+            shouldStopReceiver = true;
+            if(receiverThread.joinable())
+                receiverThread.join();
+        }
 
         shouldStopTransmitter = true;
         if(transmitterThread.joinable())
@@ -610,7 +636,7 @@ namespace mab
         }
         
         int length = 1 + md80s.size() * sizeof(StdMd80CommandFrame_t);
-        bus->transfer(tx, length, false);
+        bus->transfer(tx, length, false, 100, 36*md80s.size()+1);
     }
 
     bool Candle::setupMd80Calibration(uint16_t canId, uint16_t torqueBandwidth)

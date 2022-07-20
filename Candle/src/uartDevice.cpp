@@ -24,6 +24,7 @@ UartDevice::UartDevice(char* rxBufferPtr, const int rxBufferSize_)
     }
     
     tty.c_cflag &= ~PARENB; // Clear parity bit, disabling parity (most common)
+    tty.c_cflag |= PARODD;  // Set parity to ODD
     tty.c_cflag &= ~CSTOPB; // Clear stop field, only one stop bit used in communication (most common)
     tty.c_cflag &= ~CSIZE; // Clear all bits that set the data size 
     tty.c_cflag |= CS8; // 8 bits per byte (most common)
@@ -46,8 +47,8 @@ UartDevice::UartDevice(char* rxBufferPtr, const int rxBufferSize_)
     tty.c_cc[VTIME] = 0;   
     tty.c_cc[VMIN] = 0;
 
-    cfsetispeed(&tty, B2000000);
-    cfsetospeed(&tty, B2000000);
+    cfsetispeed(&tty, uartSpeed);
+    cfsetospeed(&tty, uartSpeed);
 
     // Save tty settings, also checking for error
     if (tcsetattr(fd, TCSANOW, &tty) != 0) {
@@ -60,9 +61,11 @@ UartDevice::UartDevice(char* rxBufferPtr, const int rxBufferSize_)
     rxBuffer = rxBufferPtr;
     rxBufferSize = rxBufferSize_;
 
-    /* frame used to automatically detect baudrate on Slave device side */
-    char detectFrame = 0x55;
-    transmit(&detectFrame,1);    
+    /* frame used to automatically detect baudrate on Slave device side -> send twice so that it can be easily discarded on the Candle slave device */
+    char detectFrame[2] = {0x55,0x55};
+    transmit(detectFrame,2);
+    /* allow the frame to be detected by the slave, before a next one is sent (the receiver timeout is set to a rather high value to ensure stable communication)*/
+    usleep(20000);    
 }
 bool UartDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeout)
 {

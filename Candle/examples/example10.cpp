@@ -4,11 +4,17 @@
 
 int main()
 {
+    /* change the priority */
+    struct sched_param sp;
+    memset(&sp, 0, sizeof(sp));
+    sp.sched_priority = 99;
+    sched_setscheduler(0, SCHED_FIFO, &sp);
+
     //Create CANdle object and set FDCAN baudrate to 1Mbps
-    mab::Candle candle(mab::CAN_BAUD_1M, true, mab::CANdleFastMode_E::FAST2, true, mab::BusType_E::SPI);
+    mab::Candle candle(mab::CAN_BAUD_8M, true, mab::CANdleFastMode_E::FAST2, true, mab::BusType_E::UART);
 
     //Ping FDCAN bus in search of drives
-    auto ids = candle.ping();
+    auto ids = candle.ping(mab::CAN_BAUD_8M);
 
     if(ids.size() == 0) //If no drives found -> quit
         return EXIT_FAILURE;
@@ -26,20 +32,22 @@ int main()
     }
 
     float t = 0.0f;
-    float dt = 0.04f;
+    float dt = 0.004f;
     
     //Begin update loop (it starts in the background)
     candle.begin();
 
-    for(int i = 0; i < 1000; i++)
+    for(int i = 0; i < 10000; i++)
     {
         //Once again we loop over all drives, this time setting thier position target. All drives should now perform
         //a nice synchronized movement.
         for(auto &md : candle.md80s)
             md.setTargetPosition(sin(t) * 2.0f);
+        
+        std::cout<<candle.md80s[0].getPosition() << std::endl;
 
         t+=dt;
-        usleep(10000);
+        usleep(1000);
     }
 
     //Close the update loop
