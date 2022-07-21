@@ -38,26 +38,26 @@ namespace mab
         return (char*)&rxBuffer[index];
     }   
 
-    bool Bus::transfer(char* buffer, int len, bool waitForResponse, int timeout, int responseLen)
+    bool Bus::transfer(char* buffer, int commandLen, bool waitForResponse, int timeout, int responseLen)
     {
         switch(busType)
         {
             case BusType_E::USB:
             {
-                return usb->transmit(buffer,len,waitForResponse,timeout);
+                return usb->transmit(buffer,commandLen,waitForResponse,timeout);
                 break;
             }
             case BusType_E::SPI:
             {
                 if(buffer[0] == USB_FRAME_UPDATE)
-                    return spi->transmitReceive(buffer,len,responseLen);
+                    return spi->transmitReceive(buffer,commandLen,responseLen);
                 else
-                    return spi->transmit(buffer,len,waitForResponse,timeout,responseLen);
+                    return spi->transmit(buffer,commandLen,waitForResponse,timeout,responseLen);
                 break;
             }
             case BusType_E::UART:
             {
-                return uart->transmit(buffer,len,waitForResponse,timeout);
+                return uart->transmit(buffer,commandLen,waitForResponse,timeout);
                 break;
             }
         }

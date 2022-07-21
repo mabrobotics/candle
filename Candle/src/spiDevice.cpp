@@ -2,7 +2,7 @@
 
 static const char* spiDev = "/dev/spidev0.0";
 
-// #define SPI_VERBOSE  1
+//  #define SPI_VERBOSE  
 
 SpiDevice::SpiDevice(char* rxBufferPtr, const int rxBufferSize_)
 {
@@ -38,19 +38,24 @@ SpiDevice::SpiDevice(char* rxBufferPtr, const int rxBufferSize_)
     /* set transfer parameters that are constant in each cycle */
     trx.bits_per_word = 8;
     trx.speed_hz = spiSpeed;
+
+    crc = new Crc();
 }
 
 SpiDevice::~SpiDevice()
 {
+    delete(crc);
     close(fd);
 }
 
-
-bool SpiDevice::transmit(char* buffer, int len, bool waitForResponse, int timeout, int responseLen)
+bool SpiDevice::transmit(char* buffer, int commandLen, bool waitForResponse, int timeout, int responseLen)
 {
+    /* CRC */
+    commandLen = crc->addCrcToBuf(buffer,commandLen);
+
     trx.tx_buf = (unsigned long)buffer;
     trx.rx_buf = (unsigned long)rxBuffer;
-    trx.len = len;
+    trx.len = commandLen;
 
     /* send */
     ioctl(fd, SPI_IOC_MESSAGE(1), &trx);
@@ -71,7 +76,6 @@ bool SpiDevice::transmit(char* buffer, int len, bool waitForResponse, int timeou
 
 bool SpiDevice::receive(int timeout, int responseLen)
 {
-
     memset(rxBuffer, 0, rxBufferSize);
     rxLock.lock();
     int delayUs = 10;
@@ -91,11 +95,11 @@ bool SpiDevice::receive(int timeout, int responseLen)
 
         ioctl(fd, SPI_IOC_MESSAGE(1), &trx);
         timeoutBusOutUs -= delayUs; //If not receiving wait for 100ms and return false
-
         /* if the received byte is non-zero, continue with a larger transfer for the rest (responseLen -1) */
         if(byteRx != 0 )firstByteReceived = true;
         if(firstByteReceived)
         {   
+            responseLen+=crc->getCrcLen();
             rxBuffer[bytesReceived++] = byteRx;
             uint8_t dummyTxa[maxResponseLen];
             memset(&dummyTxa, 0, responseLen);
@@ -105,15 +109,27 @@ bool SpiDevice::receive(int timeout, int responseLen)
             trx.len = responseLen - 1;
             /* send request */
             ioctl(fd, SPI_IOC_MESSAGE(1), &trx);
-            firstByteReceived += (responseLen - 1);
+            bytesReceived += (responseLen - 1);
             break;
         }
+
         if(firstByteReceived && bytesReceived == 0)
             usTimestamp += delayUs; //If receiving wait for 100us idle state on the bus
         else 
             timeoutBusOutUs -= delayUs; //If not receiving wait for 100ms and return false
         usleep(delayUs);        
     }
+
+    if(bytesReceived > crc->getCrcLen() && crc->checkCrcBuf(rxBuffer, bytesReceived) == false)
+    {
+        errorCnt++;
+        /* clear the command byte -> the frame will be rejected */
+        rxBuffer[0] = 0;
+        bytesReceived = 0;
+        std::cout<<"[SPI] ERROR CRC!"<<std::endl;
+    }
+    else 
+        bytesReceived-=crc->getCrcLen();
 
     rxLock.unlock();
 
@@ -136,18 +152,38 @@ bool SpiDevice::receive(int timeout, int responseLen)
 
 bool SpiDevice::transmitReceive(char* buffer, int commandLen, int responseLen)
 {
+    /* without this delay the communication hangs after a few frames, probably has something to do with threads
+    * it can actually be anywhere in this function and it will work. TODO: find out why */
+    usleep(1);
     memset(rxBuffer, 0, rxBufferSize);
     rxLock.lock();
     bytesReceived = 0;
-    uint8_t txBuffer[maxResponseLen];
+    char txBuffer[maxResponseLen];
     memcpy(txBuffer,buffer,commandLen);
+
+    /* CRC */
+    commandLen = crc->addCrcToBuf(txBuffer,commandLen);
+    /* modify the response len with CRC */
+    responseLen+=crc->getCrcLen();
 
     trx.tx_buf = (unsigned long)txBuffer;
     trx.rx_buf = (unsigned long)rxBuffer;
     trx.len = responseLen > commandLen ? responseLen : commandLen;
-
+    /* make the transfer */
     ioctl(fd, SPI_IOC_MESSAGE(1), &trx);
-    bytesReceived = responseLen;
+
+    /* check CRC */
+    if(crc->checkCrcBuf(rxBuffer,responseLen))
+        bytesReceived = responseLen-crc->getCrcLen();
+    else
+    {
+        errorCnt++;
+        /* clear the command byte -> the frame will be rejected */
+        rxBuffer[0] = 0;
+        bytesReceived = 0;
+        std::cout<<"[SPI] ERROR CRC!"<<std::endl;
+    }
+
     rxLock.unlock();
 
     #ifdef SPI_VERBOSE

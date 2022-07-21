@@ -9,7 +9,7 @@
 #include <iostream>
 #include <mutex>
 #include "mab_types.hpp"
-
+#include "crc.hpp"
 class SpiDevice
 {   
 
@@ -20,9 +20,12 @@ public:
     bool transmit(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0);
     bool receive(int timeout = 100, int responseLen = 0);
     bool transmitReceive(char* buffer, int commandLen, int responseLen);
-    int getBytesReceived(){return bytesReceived;};
+    int getBytesReceived(){return bytesReceived;}
+    uint32_t getErrorCnt(){return errorCnt;}
 
 private:
+    Crc* crc;
+    uint32_t errorCnt;
     /* SPI settings */
     const uint8_t bits = 8;
     const uint32_t spiSpeed = 20000000;

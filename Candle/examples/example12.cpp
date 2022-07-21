@@ -28,8 +28,8 @@ int main()
     // candle.md80s[0].setImpedanceControllerParams(0.0005,0.008);
     // candle.md80s[1].setImpedanceControllerParams(0.0005,0.008);
 
-    candle.md80s[0].setImpedanceControllerParams(1.0,0.03);
-    candle.md80s[1].setImpedanceControllerParams(1.0,0.03);
+    candle.md80s[0].setImpedanceControllerParams(1.0,0.02);
+    candle.md80s[1].setImpedanceControllerParams(2.0,0.02);
 
     float t = 0.0f;
     float dt = 0.04f;
@@ -67,7 +67,7 @@ int main()
         // candle.md80s[1].setTorque(-candle.md80s[0].getTorque());
         // candle.md80s[0].setTorque(-candle.md80s[1].getTorque());
 
-        std::cout<<pos_first<<"     "<<pos_second<<std::endl;
+        // std::cout<<pos_first<<"     "<<pos_second<<std::endl;
 
         usleep(100);
     }
