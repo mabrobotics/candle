@@ -29,7 +29,7 @@ namespace mab
     {
 #if PLATFORM == PC
         if(busType == mab::BusType_E::SPI || busType == mab::BusType_E::UART)
-            throw "Current communication bus is not available on selected platform!"
+            throw "Current communication bus is not available on selected platform!";
 #endif
         
         bus = new Bus(busType);

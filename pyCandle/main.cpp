@@ -36,6 +36,12 @@ PYBIND11_MODULE(pyCandle, m) {
     .value("CONFIG", mab::CONFIG)
     .value("UPDATE", mab::UPDATE)
     .export_values();
+
+  py::enum_<mab::BusType_E>(m, "BusType_E")
+    .value("USB", mab::BusType_E::USB)
+    .value("SPI", mab::BusType_E::SPI)
+    .value("UART", mab::BusType_E::UART)
+    .export_values();
     
   py::class_<mab::Md80>(m, "Md80")
     .def("setPositionControllerParams",&mab::Md80::setPositionControllerParams)
@@ -57,7 +63,7 @@ PYBIND11_MODULE(pyCandle, m) {
 
   py::class_<mab::Candle>(m, "Candle")
     .def(py::init<mab::CANdleBaudrate_E, bool>())
-    .def(py::init<mab::CANdleBaudrate_E, bool, mab::CANdleFastMode_E>())
+    .def(py::init<mab::CANdleBaudrate_E, bool, mab::CANdleFastMode_E, bool, mab::BusType_E>())
     .def_readwrite("md80s", &mab::Candle::md80s)
     .def("setVebose",&mab::Candle::setVebose)
     .def("getVersion", &mab::Candle::getVersion)
