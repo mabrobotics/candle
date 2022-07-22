@@ -29,7 +29,6 @@ namespace mab
 
     Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose, mab::CANdleFastMode_E _fastMode, bool printFailure, mab::BusType_E busType)
     {
-
 #if PLATFORM == PC
         if(busType == mab::BusType_E::SPI || busType == mab::BusType_E::UART)
             throw "Current communication bus is not available on selected platform!"
@@ -179,10 +178,7 @@ namespace mab
             if(bus->getType() == mab::BusType_E::SPI && *bus->getRxBuffer() == USB_FRAME_UPDATE)
             {
                 for(int i = 0; i < (int)md80s.size(); i++)
-                {
                     md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t)));
-                    StdMd80ResponseFrame_t*_responseFrame = (StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t));
-                }
             }
 
             msgsSent++;
@@ -190,19 +186,19 @@ namespace mab
             {
             case CANdleFastMode_E::FAST1:  
                 if(bus->getType() == mab::BusType_E::SPI)
-                    usleep(1);
+                    usleep(100);
                 else 
                     usleep(1990*2);
                 break;
             case CANdleFastMode_E::FAST2:
                 if(bus->getType() == mab::BusType_E::SPI)
-                    usleep(1);
+                    usleep(100);
                 else 
                     usleep(1950);
                 break;
             default:
                 if(bus->getType() == mab::BusType_E::SPI)
-                    usleep(1);
+                    usleep(100);
                 else 
                     usleep(10000);
                 break;
@@ -594,7 +590,6 @@ namespace mab
         tx[0] = USB_FRAME_END;
         tx[1] = 0x00;
         bus->transfer(tx,2, true, 10, 2);  //Stops update but produces garbage output
-        
         if(bus->transfer(tx,2, true, 10, 2))
             if(*bus->getRxBuffer(0) == USB_FRAME_END && *bus->getRxBuffer(1) == 1)
                 mode = CANdleMode_E::CONFIG;

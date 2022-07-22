@@ -44,6 +44,9 @@ uint32_t Crc::addCrcToBuf(char* buffer, uint32_t dataLength)
 
 bool Crc::checkCrcBuf(char* buffer, uint32_t dataLength)
 {
+    if(dataLength<=crcLen)
+        return false;
+
     uint32_t crcExp = calcCrc(buffer, dataLength - crcLen);
     /* compare to received CRC */
     if(*(uint32_t*)&buffer[dataLength - crcLen] == crcExp)

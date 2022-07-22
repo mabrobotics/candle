@@ -11,7 +11,7 @@ int main()
     sched_setscheduler(0, SCHED_FIFO, &sp);
 
     //Create CANdle object and set FDCAN baudrate to 1Mbps
-    mab::Candle candle(mab::CAN_BAUD_8M, true, mab::CANdleFastMode_E::FAST2, true, mab::BusType_E::UART);
+    mab::Candle candle(mab::CAN_BAUD_8M, true, mab::CANdleFastMode_E::NORMAL, true, mab::BusType_E::SPI);
 
     //Ping FDCAN bus in search of drives
     auto ids = candle.ping(mab::CAN_BAUD_8M);
