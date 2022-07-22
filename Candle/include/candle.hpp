@@ -60,7 +60,7 @@ namespace mab
             MAX_DEV_FAST2 = 3
         };
         static std::vector<Candle*> instances;
-        const std::string version = "v2.3";
+        const std::string version = "v3.0";
         std::thread receiverThread;
         std::thread transmitterThread;
         CANdleMode_E mode = CANdleMode_E::CONFIG;

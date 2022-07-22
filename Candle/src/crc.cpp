@@ -44,6 +44,7 @@ uint32_t Crc::addCrcToBuf(char* buffer, uint32_t dataLength)
 
 bool Crc::checkCrcBuf(char* buffer, uint32_t dataLength)
 {
+    /* not a valida data length */
     if(dataLength<=crcLen)
         return false;
 

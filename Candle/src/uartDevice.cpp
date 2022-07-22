@@ -43,8 +43,6 @@ UartDevice::UartDevice(char* rxBufferPtr, const int rxBufferSize_)
 
     tty.c_oflag &= ~OPOST; // Prevent special interpretation of output bytes (e.g. newline chars)
     tty.c_oflag &= ~ONLCR; // Prevent conversion of newline to carriage return/line feed
-    // tty.c_oflag &= ~OXTABS; // Prevent conversion of tabs to spaces (NOT PRESENT ON LINUX)
-    // tty.c_oflag &= ~ONOEOT; // Prevent removal of C-d chars (0x004) in output (NOT PRESENT ON LINUX)
 
     tty.c_cc[VTIME] = 0;   
     tty.c_cc[VMIN] = 0;
@@ -72,6 +70,13 @@ UartDevice::UartDevice(char* rxBufferPtr, const int rxBufferSize_)
     /* allow the frame to be detected by the slave, before a next one is sent (the receiver timeout is set to a rather high value to ensure stable communication)*/
     usleep(20000);  
 }
+
+UartDevice::~UartDevice()
+{
+    close(fd);
+    delete(crc);
+}
+
 bool UartDevice::transmit(char* buffer, int commandLen, bool _waitForResponse, int timeout)
 {   
     commandLen = crc->addCrcToBuf(buffer,commandLen);
@@ -93,6 +98,7 @@ bool UartDevice::transmit(char* buffer, int commandLen, bool _waitForResponse, i
     }
     return true;
 }
+
 bool UartDevice::receive(int timeoutMs)
 {    
     memset(rxBuffer, 0, rxBufferSize);
@@ -157,9 +163,4 @@ bool UartDevice::receive(int timeoutMs)
         return true;
     }
     return false;
-}
-UartDevice::~UartDevice()
-{
-    close(fd);
-    delete(crc);
 }

@@ -49,7 +49,7 @@ namespace mab
             }
             case BusType_E::SPI:
             {
-                if(buffer[0] == USB_FRAME_UPDATE)
+                if(buffer[0] == BUS_FRAME_UPDATE)
                     return spi->transmitReceive(buffer,commandLen,responseLen);
                 else
                     return spi->transmit(buffer,commandLen,waitForResponse,timeout,responseLen);
@@ -64,7 +64,7 @@ namespace mab
         return false;
     }
 
-    bool Bus::receive(int timeoutMs, int responseLen)
+    bool Bus::receive(int timeoutMs)
     {
         switch(busType)
         {
@@ -78,6 +78,8 @@ namespace mab
                 return uart->receive(timeoutMs);
                 break;
             }
+            default:
+                break;
         }
         return false;
     }

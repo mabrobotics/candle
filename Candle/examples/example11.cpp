@@ -10,7 +10,7 @@ int main()
     sp.sched_priority = 99;
     sched_setscheduler(0, SCHED_FIFO, &sp);
 
-    //Create CANdle object and set FDCAN baudrate to 1Mbps
+    //Create CANdle object and set FDCAN baudrate to 8Mbps
     mab::Candle candle(mab::CAN_BAUD_8M, true, mab::CANdleFastMode_E::NORMAL, true, mab::BusType_E::UART);
 
     //Ping FDCAN bus in search of drives

@@ -64,6 +64,7 @@ UsbDevice::UsbDevice(std::string deviceName, std::string idVendor, std::string i
     rxBuffer = rxBufferPtr;
     rxBufferSize = rxBufferSize_;
 }
+
 bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeout)
 {
     if (write(fd, buffer, len) == -1)
@@ -83,6 +84,7 @@ bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeo
     }
     return true;
 }
+
 bool UsbDevice::receive(int timeoutMs)
 {    
     memset(rxBuffer, 0, rxBufferSize);
@@ -127,6 +129,7 @@ bool UsbDevice::receive(int timeoutMs)
     }
     return false;
 }
+
 UsbDevice::~UsbDevice()
 {
     ti_prev.c_cflag &= ~HUPCL;        // This to release the RTS after close
@@ -145,6 +148,7 @@ std::vector<std::string> UsbDevice::getConnectedACMDevices(std::string idVendor,
     }
     return deviceList;
 }
+
 unsigned long UsbDevice::getConnectedDeviceId(std::string devName)
 {
     std::string shortId = getDeviceShortId(devName);
@@ -170,17 +174,17 @@ std::string exec(const char* cmd)
         result += buffer.data();
     return result;
 }
+
 unsigned long hash(const char *str)
 {
     unsigned long hash = 5381;
     int c;
 
-    while (c = *str++)
+    while ((c = *str++))
         hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
 
     return hash;
 }
-
 
 std::string getDeviceShortId(std::string devName)
 {

@@ -2,7 +2,8 @@
 
 static const char* spiDev = "/dev/spidev0.0";
 
-//  #define SPI_VERBOSE  
+// #define SPI_VERBOSE  
+// #define SPI_VERBOSE_ON_CRC_ERROR
 
 SpiDevice::SpiDevice(char* rxBufferPtr, const int rxBufferSize_)
 {
@@ -120,8 +121,16 @@ bool SpiDevice::receive(int timeout, int responseLen)
         usleep(delayUs);        
     }
 
-    if(bytesReceived > crc->getCrcLen() && crc->checkCrcBuf(rxBuffer, bytesReceived) == false)
+    if(crc->checkCrcBuf(rxBuffer, bytesReceived) == false)
     {
+    #ifdef SPI_VERBOSE_ON_CRC_ERROR
+        bytesReceived = responseLen;
+        std::cout << "Got " << std::dec << bytesReceived  << "bytes." <<std::endl;
+        std::cout << rxBuffer << std::endl;
+        for(int i = 0; i < bytesReceived; i++)
+        std::cout << std::hex << "0x" << (unsigned short)rxBuffer[i] << " ";
+        std::cout << std::dec << std::endl << "#######################################################" << std::endl; 
+    #endif
         errorCnt++;
         /* clear the command byte -> the frame will be rejected */
         rxBuffer[0] = 0;
@@ -177,6 +186,15 @@ bool SpiDevice::transmitReceive(char* buffer, int commandLen, int responseLen)
         bytesReceived = responseLen-crc->getCrcLen();
     else
     {
+    #ifdef SPI_VERBOSE_ON_CRC_ERROR
+        bytesReceived = responseLen;
+        std::cout << "Got " << std::dec << bytesReceived  << "bytes." <<std::endl;
+        std::cout << rxBuffer << std::endl;
+        for(int i = 0; i < bytesReceived; i++)
+        std::cout << std::hex << "0x" << (unsigned short)rxBuffer[i] << " ";
+        std::cout << std::dec << std::endl << "#######################################################" << std::endl; 
+    #endif
+
         errorCnt++;
         /* clear the command byte -> the frame will be rejected */
         rxBuffer[0] = 0;

@@ -123,3 +123,12 @@ customized.
 
 # Example 9
 Showcases usage of multiple candles on the same computer.
+
+# Example 10
+Simmilar to example 6, but based on the SPI bus available on single-board computers. Before running be sure all actuators are switched to 8M speed. 
+
+# Example 11
+Simmilar to example 6, but based on the UART bus available on single-board computers. Before running be sure all actuators are switched to 8M speed. 
+
+# Example 12
+Telepresence demo - two actuators that are "linked" using the communication bus. This example can be used to showcase the haptic applications of md80 drives. Based on SPI bus and 8M communication speed for the best possible performance. 

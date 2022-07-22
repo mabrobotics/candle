@@ -8,8 +8,6 @@
 #include <iostream>
 #include <unistd.h>
 #include <vector>
-
-long long TX = 0;
 namespace mab
 {
     class mystreambuf: public std::streambuf {    };
@@ -151,9 +149,9 @@ namespace mab
     {
         while(!shouldStopReceiver)
         {
-            if(bus->receive(100,36*md80s.size()+1))
+            if(bus->receive())
             {
-                if(*bus->getRxBuffer() == USB_FRAME_UPDATE)
+                if(*bus->getRxBuffer() == BUS_FRAME_UPDATE)
                 {
                     for(int i = 0; i < (int)md80s.size(); i++)
                         md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t)));
@@ -175,7 +173,7 @@ namespace mab
             }
             transmitNewStdFrame();
             /* transmit thread is also the receive thread for SPI in update mode */
-            if(bus->getType() == mab::BusType_E::SPI && *bus->getRxBuffer() == USB_FRAME_UPDATE)
+            if(bus->getType() == mab::BusType_E::SPI && *bus->getRxBuffer() == BUS_FRAME_UPDATE)
             {
                 for(int i = 0; i < (int)md80s.size(); i++)
                     md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t)));
@@ -216,7 +214,7 @@ namespace mab
     GenericMd80Frame32 _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameId)
     {
         GenericMd80Frame32 frame;
-        frame.frameId = USB_FRAME_MD80_GENERIC_FRAME;
+        frame.frameId = BUS_FRAME_MD80_GENERIC_FRAME;
         frame.driveCanId = canId;
         frame.canMsgLen = msgLen;
         frame.timeoutMs = 10;
@@ -232,7 +230,7 @@ namespace mab
             uint8_t cheaterBuffer[72];
             memcpy(&cheaterBuffer[1], bus->getRxBuffer(), bus->getBytesReceived());
             *(uint16_t*)&cheaterBuffer[0] = drive.getId();
-            cheaterBuffer[2] = 16;  //Cheater buffer is a dirty trick to make USB_FRAME_MD80_GENERIC_FRAME response compatibile with __updateResponseData
+            cheaterBuffer[2] = 16;  //Cheater buffer is a dirty trick to make BUS_FRAME_MD80_GENERIC_FRAME response compatibile with __updateResponseData
             drive.__updateResponseData((mab::StdMd80ResponseFrame_t*)cheaterBuffer);
         }
     }
@@ -247,7 +245,7 @@ namespace mab
             uint8_t cheaterBuffer[72];
             memcpy(&cheaterBuffer[1], bus->getRxBuffer(), bus->getBytesReceived());
             *(uint16_t*)&cheaterBuffer[0] = drive.getId();
-            cheaterBuffer[2] = 16;  //Cheater buffer is a dirty trick to make USB_FRAME_MD80_GENERIC_FRAME response compatibile with __updateResponseData
+            cheaterBuffer[2] = 16;  //Cheater buffer is a dirty trick to make BUS_FRAME_MD80_GENERIC_FRAME response compatibile with __updateResponseData
             drive.__updateResponseData((mab::StdMd80ResponseFrame_t*)cheaterBuffer);
         }
     }
@@ -266,9 +264,9 @@ namespace mab
             vout << "Cannot add more drives in current FAST_MODE. Max devices in current mode: " << maxDevices << statusFAIL << std::endl;
             return false;
         }
-        AddMd80Frame_t add = {USB_FRAME_MD80_ADD, canId};
+        AddMd80Frame_t add = {BUS_FRAME_MD80_ADD, canId};
         if(bus->transfer((char*)&add, sizeof(AddMd80Frame_t), true, 2, 2))
-            if(*bus->getRxBuffer(0) == USB_FRAME_MD80_ADD)
+            if(*bus->getRxBuffer(0) == BUS_FRAME_MD80_ADD)
                 if(*bus->getRxBuffer(1) == true)
                 {
                     vout << "Added Md80." << statusOK << std::endl;
@@ -288,7 +286,7 @@ namespace mab
             return std::vector<uint16_t>();
         vout << "Starting pinging drives at baudrate: " << baudrate << "M" << std::endl;
         char tx[128];
-        tx[0] = USB_FRAME_PING_START;
+        tx[0] = BUS_FRAME_PING_START;
         tx[1] = 0x00;
         std::vector<uint16_t> ids;
         if(bus->transfer(tx, 2, true, 2500, 33))    //Scanning 2047 FDCAN ids, takes ~2100ms, thus wait for 2.5 sec
@@ -338,7 +336,7 @@ namespace mab
             fdcanTimeout = 1;
         }
         GenericMd80Frame64 frame;
-        frame.frameId = mab::UsbFrameId_t::USB_FRAME_MD80_GENERIC_FRAME;
+        frame.frameId = mab::BusFrameId_t::BUS_FRAME_MD80_GENERIC_FRAME;
         frame.driveCanId = canId;
         frame.canMsgLen = msgLen;
         frame.timeoutMs = fdcanTimeout;
@@ -363,7 +361,7 @@ namespace mab
     bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout)
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 10, Md80FrameId_E::FRAME_CAN_CONFIG);
-        frame.frameId = USB_FRAME_MD80_CONFIG_CAN;
+        frame.frameId = BUS_FRAME_MD80_CONFIG_CAN;
         *(uint16_t*)&frame.canMsg[2] = newId;
         *(uint32_t*)&frame.canMsg[4] = newBaudrateMbps * 1000000;
         *(uint16_t*)&frame.canMsg[8] = newTimeout;
@@ -440,7 +438,7 @@ namespace mab
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
         if(bus->transfer(tx, len, true, 50, 66))
-            if (*bus->getRxBuffer(0) == USB_FRAME_MD80_GENERIC_FRAME && *bus->getRxBuffer(1) == true)
+            if (*bus->getRxBuffer(0) == BUS_FRAME_MD80_GENERIC_FRAME && *bus->getRxBuffer(1) == true)
             {
                 vout << "Setting new current limit successful at ID = " << canId << statusOK << std::endl;
                 return true;
@@ -453,10 +451,10 @@ namespace mab
     {
         this->canBaudrate = canBaudrate;
         char tx[10];
-        tx[0] = USB_FRAME_CANDLE_CONFIG_BAUDRATE;
+        tx[0] = BUS_FRAME_CANDLE_CONFIG_BAUDRATE;
         tx[1] = (uint8_t)canBaudrate;
         if(bus->transfer(tx, 2, true, 50, 3))
-            if(*bus->getRxBuffer(0) == USB_FRAME_CANDLE_CONFIG_BAUDRATE && *bus->getRxBuffer(1) == true)
+            if(*bus->getRxBuffer(0) == BUS_FRAME_CANDLE_CONFIG_BAUDRATE && *bus->getRxBuffer(1) == true)
             {
                 candleDeviceVersion = *bus->getRxBuffer(2);
                 if(printVersionInfo)
@@ -552,7 +550,7 @@ namespace mab
             return false;
         }
         char tx[128];
-        tx[0] = USB_FRAME_BEGIN;
+        tx[0] = BUS_FRAME_BEGIN;
         tx[1] = 0x00;
         if(bus->transfer(tx, 2, true, 10, 2))
         {
@@ -587,11 +585,11 @@ namespace mab
             transmitterThread.join(); 
 
         char tx[128];
-        tx[0] = USB_FRAME_END;
+        tx[0] = BUS_FRAME_END;
         tx[1] = 0x00;
         bus->transfer(tx,2, true, 10, 2);  //Stops update but produces garbage output
         if(bus->transfer(tx,2, true, 10, 2))
-            if(*bus->getRxBuffer(0) == USB_FRAME_END && *bus->getRxBuffer(1) == 1)
+            if(*bus->getRxBuffer(0) == BUS_FRAME_END && *bus->getRxBuffer(1) == 1)
                 mode = CANdleMode_E::CONFIG;
                 
         vout << "Ending auto update loop mode" << (mode == CANdleMode_E::CONFIG ? statusOK : statusFAIL) << std::endl;
@@ -601,7 +599,7 @@ namespace mab
     bool Candle::reset()
     {
         char tx[128];
-        tx[0] = USB_FRAME_RESET;
+        tx[0] = BUS_FRAME_RESET;
         tx[1] = 0x00;
         if(bus->transfer(tx, 2, true, 100, 2))
             return true;
@@ -623,7 +621,7 @@ namespace mab
     void Candle::transmitNewStdFrame()
     {
         char tx[512];
-        tx[0] = USB_FRAME_UPDATE;
+        tx[0] = BUS_FRAME_UPDATE;
         for(int i = 0; i < (int)md80s.size(); i++)
         {
             md80s[i].__updateCommandFrame();
@@ -631,7 +629,7 @@ namespace mab
         }
         
         int length = 1 + md80s.size() * sizeof(StdMd80CommandFrame_t);
-        bus->transfer(tx, length, false, 100, 36*md80s.size()+1);
+        bus->transfer(tx, length, false, 100, sizeof(StdMd80ResponseFrame_t)*md80s.size()+1);
     }
 
     bool Candle::setupMd80Calibration(uint16_t canId, uint16_t torqueBandwidth)
