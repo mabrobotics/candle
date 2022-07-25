@@ -1,6 +1,6 @@
 #include "md80.hpp"
 #include "mab_types.hpp"
-    #include <iostream>
+#include <iostream>
 
 namespace mab
 {
@@ -85,10 +85,16 @@ namespace mab
             return;
         errorVector = *(uint16_t*)&_responseFrame->fromMd80.data[1];
         temperature = _responseFrame->fromMd80.data[3];
-        position = *(float*)&_responseFrame->fromMd80.data[4];
-        velocity = *(float*)&_responseFrame->fromMd80.data[8];
-        torque = *(float*)&_responseFrame->fromMd80.data[12];
+        motor_status.at(0) = position = *(float*)&_responseFrame->fromMd80.data[4];
+        motor_status.at(1) = velocity = *(float*)&_responseFrame->fromMd80.data[8];
+        motor_status.at(2) = torque = *(float*)&_responseFrame->fromMd80.data[12];
     }
+    void Md80::__updateResponseData(StdMd80ResponseFrame_t*_responseFrame, double time, int seq){
+	   this->__updateResponseData(_responseFrame);
+	   motor_status.at(3) = time;
+	   motor_status.at(4) = seq;
+    }
+
     void Md80::__updateRegulatorsAdjusted(bool adjusted)
     {
         this->regulatorsAdjusted = adjusted;

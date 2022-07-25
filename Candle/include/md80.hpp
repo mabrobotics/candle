@@ -4,7 +4,11 @@
 
 #include <cstdint>
 #include <cmath>
+#include <chrono>
+#include <vector>
 
+
+#define mdout std::cout << "[MD] "
 namespace mab
 {
     /**
@@ -20,10 +24,11 @@ namespace mab
         float position = 0.0f;
         float velocity = 0.0f;
         float torque = 0.0f;
+        std::vector<double> motor_status = std::vector<double>(5, 0.0);
         uint8_t temperature = 0;
         uint16_t errorVector = 0;
-
-        Md80Mode_E controlMode = Md80Mode_E::IDLE;
+        
+	Md80Mode_E controlMode = Md80Mode_E::IDLE;
         float positionTarget = 0.0f;
         float velocityTarget = 0.0f;
         float torqueSet = 0.0f;
@@ -137,6 +142,8 @@ namespace mab
          * @return float torque in Nm (Newton-meters)
          */
         float getTorque()   {return torque;};
+
+        std::vector<double> getMotorStatus() {return motor_status;};
         /**
          * @brief Get the Error Vector of the md80
          * @return uint16_t vector with per-bit coded errors. Refer to documentation for meaning of error codes.
@@ -158,6 +165,12 @@ namespace mab
          * @private
          */
         void __updateResponseData(StdMd80ResponseFrame_t*_responseFrame);
+	/**
+         * @brief For internal use by CANdle only. Updates FDCAN frame parameters with candle seq number
+         * @private
+         */
+        void __updateResponseData(StdMd80ResponseFrame_t*_responseFrame, double time, int seq);
+
         /**
          * @brief For internal use by CANdle only. Updates regulatorsAdjusted.
          * @private

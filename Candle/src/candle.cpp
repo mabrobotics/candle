@@ -48,6 +48,7 @@ namespace mab
                 if(newIdCount == instances.size())
                 {
                     usb = new UsbDevice(entry, "MAB_Robotics", "MD_USB-TO-CAN");
+                    candleId = newIdCount;
                     goto loopdone;  //Only legit use of goto left in C++
                 }
             }
@@ -118,8 +119,12 @@ loopdone:
             {
                 if(usb->rxBuffer[0] == USB_FRAME_UPDATE)
                 {
+		            uint64_t nsec = std::chrono::duration_cast<nsec_t>(std::chrono::system_clock::now().time_since_epoch()).count();
+			    double timeInSec = nsec * 1e-9;
+			    receiveLogFile << std::to_string(receive_count) << "," << std::to_string(timeInSec) << "\n";
                     for(int i = 0; i < (int)md80s.size(); i++)
-                        md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)&usb->rxBuffer[1 + i * sizeof(StdMd80ResponseFrame_t)]);
+                        md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)&usb->rxBuffer[1 + i * sizeof(StdMd80ResponseFrame_t)], timeInSec,receive_count);
+		                receive_count++;
                 }
             }
         }
@@ -220,6 +225,7 @@ loopdone:
                 {
                     vout << "Added Md80." << statusOK << std::endl;
 					md80s.push_back(Md80(canId));
+					md80Ids.push_back(canId);
                     mab::Md80& newDrive = md80s.back();
                     sendGetInfoFrame(newDrive);
                     sendMotionCommand(newDrive, newDrive.getPosition(), 0.0f, 0.0f);
@@ -503,6 +509,15 @@ loopdone:
         if(usb->transmit(tx, 2, true, 10))
         {
             vout << "Beginnig auto update loop mode" << statusOK << std::endl;
+            std::string homedir = getenv("HOME");
+	        std::string receiveFileName = homedir + "/log/latest/candle_receive"+std::to_string(candleId)+".csv";
+	        vout << "Candle" << candleId << "log file is: " << receiveFileName << std::endl;
+            receiveLogFile.open(receiveFileName, std::fstream::out);
+            receiveLogFile << "frame_id, time, cans ids\n";
+            for (auto canId: md80Ids ){
+                receiveLogFile << ",," << std::to_string(canId) << "\n";
+            }
+
             mode = CANdleMode_E::UPDATE;
             shouldStopTransmitter = false;
             shouldStopReceiver = false;

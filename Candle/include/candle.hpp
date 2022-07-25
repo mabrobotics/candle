@@ -8,6 +8,11 @@
 #include <thread>
 #include <vector>
 #include <iostream>
+#include <fstream>
+#include <chrono> 
+
+using nsec_t = std::chrono::nanoseconds;
+
 namespace mab
 {
     enum CANdleMode_E
@@ -59,6 +64,8 @@ namespace mab
         std::thread transmitterThread;
         CANdleMode_E mode = CANdleMode_E::CONFIG;
         CANdleFastMode_E fastMode = CANdleFastMode_E::NORMAL;
+	    int candleId;
+	    std::ofstream receiveLogFile;
 
         int candleDeviceVersion = 10;
         int maxDevices = 12;
@@ -68,7 +75,7 @@ namespace mab
         int msgsReceived = 0;
         int msgsSent = 0;
         float usbCommsFreq = 0.0f;
-
+	    int receive_count = 0;
         bool printVerbose = true;
 
         void transmitNewStdFrame();
@@ -116,6 +123,7 @@ namespace mab
          * can be used to modify regulator and control parameters of the md80 drives.
          */
         std::vector<Md80> md80s;
+	    std::vector<int> md80Ids;
 
         /**
         @brief Enables/disables extended printing.
