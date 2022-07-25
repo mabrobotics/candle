@@ -51,6 +51,7 @@ PYBIND11_MODULE(pyCandle, m) {
     .def("getPosition",&mab::Md80::getPosition)
     .def("getVelocity",&mab::Md80::getVelocity)
     .def("getTorque",&mab::Md80::getTorque)
+    .def("getMotorStatus",&mab::Md80::getMotorStatus)
     .def("getTemperature",&mab::Md80::getTemperature)
   ;
   
@@ -84,5 +85,6 @@ PYBIND11_MODULE(pyCandle, m) {
     .def("reset", &mab::Candle::reset)
     .def("setupMd80Calibration", &mab::Candle::setupMd80Calibration)
     .def("setupMd80Diagnostic", &mab::Candle::setupMd80Diagnostic)
+    .def("updateModeBasedOnMd80List", &mab::Candle::updateModeBasedOnMd80List)
     ;
 }
