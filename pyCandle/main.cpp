@@ -72,7 +72,7 @@ PYBIND11_MODULE(pyCandle, m) {
     .def("ping",py::overload_cast<mab::CANdleBaudrate_E>(&mab::Candle::ping))    
     .def("getActualCommunicationFrequency",&mab::Candle::getActualCommunicationFrequency)
     .def("sengGenericFDCanFrame", &mab::Candle::sengGenericFDCanFrame)
-    .def("addMd80", &mab::Candle::addMd80)
+    .def("addMd80", &mab::Candle::addMd80,py::arg("canID"), py::arg("printFailure") = false)
     .def("configCandleBaudrate", &mab::Candle::configCandleBaudrate)
     .def("configMd80Can", &mab::Candle::configMd80Can)
     .def("configMd80SetCurrentLimit", &mab::Candle::configMd80SetCurrentLimit)
