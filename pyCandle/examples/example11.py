@@ -3,11 +3,11 @@ import time
 import math
 import sys  
 
-# Create CANdle object and set FDCAN baudrate to 1Mbps
-candle = pyCandle.Candle(pyCandle.CAN_BAUD_1M, True)
+# Create CANdle object and set FDCAN baudrate to 8Mbps
+candle = pyCandle.Candle(pyCandle.CAN_BAUD_8M, True, pyCandle.FAST2, True, pyCandle.UART)
 
 # Ping FDCAN bus in search of drives
-ids = candle.ping()
+ids = candle.ping(pyCandle.CAN_BAUD_8M)
 
 if len(ids) == 0: # If no drives found -> quit
     sys.exit("EXIT FALIURE") 
