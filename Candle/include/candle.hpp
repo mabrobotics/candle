@@ -64,8 +64,8 @@ namespace mab
         std::thread transmitterThread;
         CANdleMode_E mode = CANdleMode_E::CONFIG;
         CANdleFastMode_E fastMode = CANdleFastMode_E::NORMAL;
-	    int candleId;
-	    std::ofstream receiveLogFile;
+        int candleId;
+        std::ofstream receiveLogFile;
 
         int candleDeviceVersion = 10;
         int maxDevices = 12;
@@ -75,8 +75,9 @@ namespace mab
         int msgsReceived = 0;
         int msgsSent = 0;
         float usbCommsFreq = 0.0f;
-	    int receive_count = 0;
+        int receive_count = 0;
         bool printVerbose = true;
+        bool _useLogs = false;
 
         void transmitNewStdFrame();
 
@@ -96,8 +97,13 @@ namespace mab
          * @param fastMode setups update rate NORMAL for 100Hz (max 12 drives), FAST1 for 250Hz (max 6 drives), FAST2 for 500Hz (max 3 drives)
          * @param printFailure if false the constructor will not display terminal messages when something fails
          * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
-        */
-        Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false, mab::CANdleFastMode_E fastMode = mab::CANdleFastMode_E::NORMAL, bool printFailure = true);
+         */
+        Candle(
+            CANdleBaudrate_E canBaudrate,
+            bool printVerbose = false,
+            bool useLogs = false,
+            mab::CANdleFastMode_E fastMode = mab::CANdleFastMode_E::NORMAL,
+            bool printFailure = true);
         /**
          * @brief A destructor of Candle class. Takes care of all started threads that need to be stopped before clean exit
         */
@@ -123,7 +129,7 @@ namespace mab
          * can be used to modify regulator and control parameters of the md80 drives.
          */
         std::vector<Md80> md80s;
-	    std::vector<int> md80Ids;
+        std::vector<int> md80Ids;
 
         /**
         @brief Enables/disables extended printing.

@@ -26,56 +26,60 @@ namespace mab
 
     std::vector<Candle*> Candle::instances = std::vector<Candle*>();
 
-    Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose, mab::CANdleFastMode_E _fastMode, bool printFailure)
+    Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose, bool useLogs, mab::CANdleFastMode_E _fastMode, bool printFailure)
     {
         printVerbose = _printVerbose;
         auto listOfCANdle = UsbDevice::getConnectedACMDevices("MAB_Robotics", "MD_USB-TO-CAN");
-        if(listOfCANdle.size() == 0)
+        if (listOfCANdle.size() == 0)
             vout << "No CANdle found!" << std::endl;
-        if(instances.size() == 0)
+        if (instances.size() == 0)
             usb = new UsbDevice(listOfCANdle[0], "MAB_Robotics", "MD_USB-TO-CAN");
         else
         {
-            for(auto& entry : listOfCANdle)
+            for (auto &entry : listOfCANdle)
             {
                 unsigned int newIdCount = 0;
-                for(auto instance : instances)
+                for (auto instance : instances)
                 {
-                    if(UsbDevice::getConnectedDeviceId(entry) != instance->getUsbDeviceId())
+                    if (UsbDevice::getConnectedDeviceId(entry) != instance->getUsbDeviceId())
                         newIdCount++;
                 }
                 /* only if all instances were different from the current one -> create new device */
-                if(newIdCount == instances.size())
+                if (newIdCount == instances.size())
                 {
                     usb = new UsbDevice(entry, "MAB_Robotics", "MD_USB-TO-CAN");
                     candleId = newIdCount;
-                    goto loopdone;  //Only legit use of goto left in C++
+                    goto loopdone; // Only legit use of goto left in C++
                 }
             }
-            if(printFailure)
+            if (printFailure)
                 vout << "Failed to create CANdle object." << statusFAIL << std::endl;
             throw "Failed to create CANdle object";
             return;
         }
-loopdone:
+    loopdone:
         vout << "CANdle library version: " << getVersion() << std::endl;
         std::string setSerialCommand = "setserial " + usb->getSerialDeviceName() + " low_latency";
         if (system(setSerialCommand.c_str()) != 0)
-            std:: cout << "Could not execute command '" << setSerialCommand <<"'. Communication in low-speed mode." << std::endl;
+            std::cout << "Could not execute command '" << setSerialCommand << "'. Communication in low-speed mode." << std::endl;
         this->reset();
         usleep(100000);
         if (!configCandleBaudrate(canBaudrate, true))
             vout << "Failed to set up CANdle baudrate @" << canBaudrate << "Mbps!" << std::endl;
-        vout << "CANdle at " << this->usb->getSerialDeviceName() << ", ID: 0x" << std::hex << this->getUsbDeviceId() << std::dec <<" ready." << std::endl;
+        vout << "CANdle at " << this->usb->getSerialDeviceName() << ", ID: 0x" << std::hex << this->getUsbDeviceId() << std::dec << " ready." << std::endl;
+        _useLogs = useLogs;
         fastMode = _fastMode;
         switch (fastMode)
         {
         case CANdleFastMode_E::FAST1:
-            maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_FAST1;    break;
+            maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_FAST1;
+            break;
         case CANdleFastMode_E::FAST2:
-            maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_FAST2;    break;
+            maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_FAST2;
+            break;
         default:
-            maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_NORMAL;    break;
+            maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_NORMAL;
+            break;
         }
         Candle::instances.push_back(this);
     }
@@ -113,18 +117,20 @@ loopdone:
 
     void Candle::receive()
     {
-        while(!shouldStopReceiver)
+        while (!shouldStopReceiver)
         {
-            if(usb->receive())
+            if (usb->receive())
             {
-                if(usb->rxBuffer[0] == USB_FRAME_UPDATE)
+                if (usb->rxBuffer[0] == USB_FRAME_UPDATE)
                 {
-		            uint64_t nsec = std::chrono::duration_cast<nsec_t>(std::chrono::system_clock::now().time_since_epoch()).count();
-			    double timeInSec = nsec * 1e-9;
-			    receiveLogFile << std::to_string(receive_count) << "," << std::to_string(timeInSec) << "\n";
-                    for(int i = 0; i < (int)md80s.size(); i++)
-                        md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)&usb->rxBuffer[1 + i * sizeof(StdMd80ResponseFrame_t)], timeInSec,receive_count);
-		                receive_count++;
+                    uint64_t nsec = std::chrono::duration_cast<nsec_t>(std::chrono::system_clock::now().time_since_epoch()).count();
+                    double timeInSec = nsec * 1e-9;
+                    if (_useLogs)
+                        receiveLogFile << std::to_string(receive_count) << "," << std::to_string(timeInSec) << "\n";
+                    for (int i = 0; i < (int)md80s.size(); i++)
+                        md80s[i].__updateResponseData((StdMd80ResponseFrame_t *)&usb->rxBuffer[1 + i * sizeof(StdMd80ResponseFrame_t)], timeInSec, receive_count);
+
+                    receive_count++;
                 }
             }
         }
@@ -205,34 +211,35 @@ loopdone:
     }
     bool Candle::addMd80(uint16_t canId, bool printFailure)
     {
-		if(inUpdateMode())
-			return false;
-        for(auto &d : md80s)
-            if(d.getId() == canId)
+        if (inUpdateMode())
+            return false;
+        for (auto &d : md80s)
+            if (d.getId() == canId)
             {
                 vout << "Md80 with ID: " << canId << " is already on the update list." << statusOK << std::endl;
                 return true;
             }
-        if((int)md80s.size() >= maxDevices)
+        if ((int)md80s.size() >= maxDevices)
         {
             vout << "Cannot add more drives in current FAST_MODE. Max devices in current mode: " << maxDevices << statusFAIL << std::endl;
             return false;
         }
         AddMd80Frame_t add = {USB_FRAME_MD80_ADD, canId};
-        if(usb->transmit((char*)&add, sizeof(AddMd80Frame_t), true))
-            if(usb->rxBuffer[0] == USB_FRAME_MD80_ADD)
-                if(usb->rxBuffer[1] == true)
+        if (usb->transmit((char *)&add, sizeof(AddMd80Frame_t), true))
+            if (usb->rxBuffer[0] == USB_FRAME_MD80_ADD)
+                if (usb->rxBuffer[1] == true)
                 {
                     vout << "Added Md80." << statusOK << std::endl;
-					md80s.push_back(Md80(canId));
-					md80Ids.push_back(canId);
-                    mab::Md80& newDrive = md80s.back();
+                    md80s.push_back(Md80(canId));
+                    md80Ids.push_back(canId);
+                    mab::Md80 &newDrive = md80s.back();
                     sendGetInfoFrame(newDrive);
                     sendMotionCommand(newDrive, newDrive.getPosition(), 0.0f, 0.0f);
                     newDrive.setTargetPosition(newDrive.getPosition());
                     return true;
                 }
-        if(printFailure)vout << "Failed to add Md80." << statusFAIL << std::endl;
+        if (printFailure)
+            vout << "Failed to add Md80." << statusFAIL << std::endl;
         return false;
     }
     std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
@@ -498,7 +505,7 @@ loopdone:
     }
     bool Candle::begin()
     {
-        if(mode == CANdleMode_E::UPDATE)
+        if (mode == CANdleMode_E::UPDATE)
         {
             vout << "Cannot run 'begin', already in update mode." << statusFAIL << std::endl;
             return false;
@@ -506,18 +513,21 @@ loopdone:
         char tx[128];
         tx[0] = USB_FRAME_BEGIN;
         tx[1] = 0x00;
-        if(usb->transmit(tx, 2, true, 10))
+        if (usb->transmit(tx, 2, true, 10))
         {
             vout << "Beginnig auto update loop mode" << statusOK << std::endl;
-            std::string homedir = getenv("HOME");
-	        std::string receiveFileName = homedir + "/log/latest/candle_receive"+std::to_string(candleId)+".csv";
-	        vout << "Candle" << candleId << "log file is: " << receiveFileName << std::endl;
-            receiveLogFile.open(receiveFileName, std::fstream::out);
-            receiveLogFile << "frame_id, time, cans ids\n";
-            for (auto canId: md80Ids ){
-                receiveLogFile << ",," << std::to_string(canId) << "\n";
+            if (_useLogs)
+            {
+                std::string homedir = getenv("HOME");
+                std::string receiveFileName = homedir + "/log/latest/candle_receive" + std::to_string(candleId) + ".csv";
+                vout << "Candle" << candleId << "log file is: " << receiveFileName << std::endl;
+                receiveLogFile.open(receiveFileName, std::fstream::out);
+                receiveLogFile << "frame_id, time, cans ids\n";
+                for (auto canId : md80Ids)
+                {
+                    receiveLogFile << ",," << std::to_string(canId) << "\n";
+                }
             }
-
             mode = CANdleMode_E::UPDATE;
             shouldStopTransmitter = false;
             shouldStopReceiver = false;
