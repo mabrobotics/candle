@@ -87,4 +87,17 @@ PYBIND11_MODULE(pyCandle, m)
       .def("setupMd80Diagnostic", &mab::Candle::setupMd80Diagnostic)
       .def("updateModeBasedOnMd80List", &mab::Candle::updateModeBasedOnMd80List);
 
+  py::class_<mab::MultipleCandles>(m, "MultipleCandles")
+      .def(py::init<bool>())
+      .def("zeroMd80t", &mab::MultipleCandles::zeroMd80t)
+      .def("addMd80", &mab::MultipleCandles::addMd80)
+      .def("setModeMd80", &mab::MultipleCandles::setModeMd80)
+      .def("enableAllMotors", &mab::MultipleCandles::enableAllMotors)
+      .def("enableSomeMotors", &mab::MultipleCandles::enableSomeMotors)
+      .def("disableAllMotors", &mab::MultipleCandles::disableAllMotors)
+      .def("disableSomeMotors", &mab::MultipleCandles::disableSomeMotors)
+      .def("getMotorsData", &mab::MultipleCandles::getMotorsData)
+      .def("getAllMotorsData", &mab::MultipleCandles::getAllMotorsData)
+      .def("sendMotionCommand", &mab::MultipleCandles::sendMotionCommand)
+      .def("setImpedanceParamters", &mab::MultipleCandles::setImpedanceParamters);
 }
