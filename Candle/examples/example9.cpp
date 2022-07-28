@@ -5,8 +5,8 @@ int main()
     // Create CANdle object and ping FDCAN bus in search of drives. 
     // Any found drives will be printed out by the ping() method.
 
-    mab::Candle candle1(mab::CAN_BAUD_1M, true, mab::CANdleFastMode_E::FAST1);
-    mab::Candle candle2(mab::CAN_BAUD_1M, true, mab::CANdleFastMode_E::FAST1);
+    mab::Candle candle1(mab::CAN_BAUD_1M, true, false, mab::CANdleFastMode_E::FAST1);
+    mab::Candle candle2(mab::CAN_BAUD_1M, true, false, mab::CANdleFastMode_E::FAST1);
 
     std::cout << "Candle 1 ID is: " << candle1.getUsbDeviceId() << std::endl;
     std::cout << "Candle 2 ID is: " << candle2.getUsbDeviceId() << std::endl;
