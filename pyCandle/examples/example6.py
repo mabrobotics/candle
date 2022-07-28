@@ -14,7 +14,7 @@ if len(ids) == 0: # If no drives found -> quit
 
 # Add all found to the update list
 for id in ids:
-    candle.addMd80(id)
+    candle.addMd80(id, False)
 
 # Now we shall loop over all found drives to change control mode and enable them one by one
 for md in candle.md80s:
