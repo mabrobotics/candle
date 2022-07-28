@@ -98,6 +98,6 @@ PYBIND11_MODULE(pyCandle, m)
       .def("disableSomeMotors", &mab::MultipleCandles::disableSomeMotors)
       .def("getMotorsData", &mab::MultipleCandles::getMotorsData)
       .def("getAllMotorsData", &mab::MultipleCandles::getAllMotorsData)
-      .def("sendMotionCommand", &mab::MultipleCandles::sendMotionCommand)
+      .def("sendMotorCommand", &mab::MultipleCandles::sendMotorCommand)
       .def("setImpedanceParamters", &mab::MultipleCandles::setImpedanceParamters);
 }
