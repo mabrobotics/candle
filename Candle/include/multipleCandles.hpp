@@ -5,7 +5,6 @@
 #include <map>
 #include <vector>
 
-// typedef std::map<std::string, double> MotorStatus_T;
 typedef std::map<int, MotorStatus_T> MultipleMotorsStatus_T;
 typedef std::vector<bool> CandleResponse_T;
 typedef std::vector<int> IdList_T;
@@ -41,7 +40,7 @@ namespace mab
         MultipleMotorsStatus_T getMotorsData(IdList_T idList);
         MultipleMotorsStatus_T getAllMotorsData();
 
-        void sendMotionCommand(int frameId, MotorCommands_T motorCommands);
+        void sendMotorCommand(int frameId, MotorCommands_T motorCommands);
         void setImpedanceParamters(MotorCommands_T impedanceParams);
 
         ~MultipleCandles();
