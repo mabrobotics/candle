@@ -6,7 +6,9 @@
 #include <cmath>
 #include <chrono>
 #include <vector>
+#include <map>
 
+typedef std::map<std::string, double> MotorStatus_T;
 
 #define mdout std::cout << "[MD] "
 namespace mab
@@ -24,7 +26,7 @@ namespace mab
         float position = 0.0f;
         float velocity = 0.0f;
         float torque = 0.0f;
-        std::vector<double> motor_status = std::vector<double>(5, 0.0);
+        MotorStatus_T motorStatus;
         uint8_t temperature = 0;
         uint16_t errorVector = 0;
         
@@ -143,7 +145,7 @@ namespace mab
          */
         float getTorque()   {return torque;};
 
-        std::vector<double> getMotorStatus() {return motor_status;};
+        MotorStatus_T getMotorStatus() {return motorStatus;};
         /**
          * @brief Get the Error Vector of the md80
          * @return uint16_t vector with per-bit coded errors. Refer to documentation for meaning of error codes.
