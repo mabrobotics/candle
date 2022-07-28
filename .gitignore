@@ -217,3 +217,4 @@ install/share/md80/package.ps1
 install/share/md80/package.sh
 install/share/md80/package.zsh
 .vscode/*
+.idea/
