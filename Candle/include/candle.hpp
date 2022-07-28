@@ -9,7 +9,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <chrono> 
+#include <chrono>
 
 using nsec_t = std::chrono::nanoseconds;
 
@@ -27,10 +27,10 @@ namespace mab
      */
     enum CANdleBaudrate_E : uint8_t
     {
-        CAN_BAUD_1M = 1,    /*!< FDCAN Baudrate of 1Mbps (1 000 000 bits per second) */
-        CAN_BAUD_2M = 2,    /*!< FDCAN Baudrate of 2Mbps (2 000 000 bits per second) */
-        CAN_BAUD_5M = 5,    /*!< FDCAN Baudrate of 5Mbps (5 000 000 bits per second) */
-        CAN_BAUD_8M = 8,    /*!< FDCAN Baudrate of 8Mbps (8 000 000 bits per second) */
+        CAN_BAUD_1M = 1, /*!< FDCAN Baudrate of 1Mbps (1 000 000 bits per second) */
+        CAN_BAUD_2M = 2, /*!< FDCAN Baudrate of 2Mbps (2 000 000 bits per second) */
+        CAN_BAUD_5M = 5, /*!< FDCAN Baudrate of 5Mbps (5 000 000 bits per second) */
+        CAN_BAUD_8M = 8, /*!< FDCAN Baudrate of 8Mbps (8 000 000 bits per second) */
     };
 
     enum class CANdleFastMode_E
@@ -43,9 +43,9 @@ namespace mab
     /*! \class Candle
         \brief Class for communicating with CANdle (USB-CAN converter) and Md80 drives.
 
-        This class is an connector between non-realtime user code and real-time CANdle firmware. It can be used to 
+        This class is an connector between non-realtime user code and real-time CANdle firmware. It can be used to
         configure Md80's via FDCAN, as well as control them.
-        It can automatically communicate with CANdle/Md80s to relieve the user from requiring them to manually 
+        It can automatically communicate with CANdle/Md80s to relieve the user from requiring them to manually
         control USB and FDCAN communications.
     */
     class Candle
@@ -57,9 +57,9 @@ namespace mab
             MAX_DEV_FAST1 = 6,
             MAX_DEV_FAST2 = 3
         };
-        static std::vector<Candle*> instances;
+        static std::vector<Candle *> instances;
         const std::string version = "v2.3";
-        UsbDevice*usb;
+        UsbDevice *usb;
         std::thread receiverThread;
         std::thread transmitterThread;
         CANdleMode_E mode = CANdleMode_E::CONFIG;
@@ -87,8 +87,9 @@ namespace mab
         bool inUpdateMode();
         bool inConfigMode();
 
-        void sendGetInfoFrame(mab::Md80& drive);
-        void sendMotionCommand(mab::Md80& drive, float pos, float vel, float torque);
+        void sendGetInfoFrame(mab::Md80 &drive);
+        void sendMotionCommand(mab::Md80 &drive, float pos, float vel, float torque);
+
     public:
         /**
          * @brief A constructor of Candle class
@@ -106,22 +107,22 @@ namespace mab
             bool printFailure = true);
         /**
          * @brief A destructor of Candle class. Takes care of all started threads that need to be stopped before clean exit
-        */
+         */
         ~Candle();
         /**
          * @brief Updates the current communication speed mode, based on the number of md80s
-        */
+         */
         void updateModeBasedOnMd80List();
         /**
          * @brief Getter for version number
          * @return std::string with version in format "vMAJOR.MINOR"
-        */
+         */
         const std::string getVersion();
 
         /**
          * @brief Getter for USB device ID. Can be used to differentiate between multiple CANdle's connected to one computer.
          * @return unique 64-bit identified
-        */
+         */
         unsigned long int getUsbDeviceId();
 
         /**
@@ -139,9 +140,9 @@ namespace mab
         /**
          * @brief Returns actual USB communication rate with CANdle. This is calculated by measuring how much time was needed to send 250 messages.
          * @return average communication frequency in Hertz
-        */
+         */
         int getActualCommunicationFrequency();
-        
+
         /**
         @brief Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80 at 1M baudrate.
         @return the vector FDCAN IDs of drives that were found. If no drives were found, the vector is empty
@@ -163,7 +164,7 @@ namespace mab
         @param timeoutMs timeout for receiving in milliseconds
         @return true if received response, false otherwise
         */
-        bool sengGenericFDCanFrame(uint16_t canId, int msgLen, const char*txBuffer, char*rxBuffer, int timeoutMs = 100);
+        bool sengGenericFDCanFrame(uint16_t canId, int msgLen, const char *txBuffer, char *rxBuffer, int timeoutMs = 100);
 
         /**
         @brief Adds Md80 to auto update vector.
@@ -190,7 +191,7 @@ namespace mab
         */
         bool configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout);
         /**
-        @brief Changes max phase-to-phase motor current. 
+        @brief Changes max phase-to-phase motor current.
         @param canId ID of the drive
         @param currentLimit phase-to-phase current limit in Amps
         @return true if setting was succesfull, false otherwise
@@ -208,16 +209,15 @@ namespace mab
         @return true if blinking, false otherwise
         */
         bool configMd80Blink(uint16_t canId);
-        
-        
+
         /**
-        @brief Sets current motor position as zero position -> reference for any future movements. 
+        @brief Sets current motor position as zero position -> reference for any future movements.
         @param drive reference to a Md80 class (candle.md80s memeber)
         @return true if setting was succesfull, false otherwise
         */
-        bool controlMd80SetEncoderZero(Md80&drive);
+        bool controlMd80SetEncoderZero(Md80 &drive);
         /**
-        @brief Changes max phase-to-phase motor current. 
+        @brief Changes max phase-to-phase motor current.
         @param canId ID of the drive
         @param currentLimit phase-to-phase current limit in Amps
         @return true if setting was succesfull, false otherwise
@@ -230,7 +230,7 @@ namespace mab
         @param mode Control mode to be used on the drive
         @return true if setting was succesfull, false otherwise
         */
-        bool controlMd80Mode(Md80&drive, Md80Mode_E mode);
+        bool controlMd80Mode(Md80 &drive, Md80Mode_E mode);
         /**
         @brief Sets control mode of the Md80
         @param canId ID of the drive
@@ -245,7 +245,7 @@ namespace mab
         @param enable if true the drive will be enabled, if false the drive will be disabled
         @return true if setting was succesfull, false otherwise
         */
-        bool controlMd80Enable(Md80&drive, bool enable);
+        bool controlMd80Enable(Md80 &drive, bool enable);
         /**
         @brief Enables/disabled actuaction of the Md80
         @param canId ID of the drive
@@ -255,13 +255,19 @@ namespace mab
         bool controlMd80Enable(uint16_t canId, bool enable);
 
         /**
-        @brief Searched if the drive with provided FDCAN canId exists in `Md80s` list (exists only if was previously added 
+        @brief Searched if the drive with provided FDCAN canId exists in `Md80s` list (exists only if was previously added
         by `addMd80` method)
         @param canId ID of the drive
         @return a reference to a drive if found, nullptr otherwise
         */
-        Md80& getMd80FromList(uint16_t canId);
-        
+        Md80 &getMd80FromList(uint16_t canId);
+        /**
+        @brief Searched if the drive with provided FDCAN canId exists in `Md80s` list (exists only if was previously added
+        by `addMd80` method). This might be dangauros. Need to review if needed
+        @param canId ID of the drive
+        @return a pointer to a drive if found, nullptr otherwise
+        */
+        Md80 *getMd80PointerFromList(uint16_t id);
         /**
         @brief Begins auto update mode. In this mode, host and CANdle will automatically exchange USB messages with md80 commands
         and states. In this mode CANdle will automatically send commands and gather state from all Md80's added to update

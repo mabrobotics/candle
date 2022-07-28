@@ -11,20 +11,22 @@
 
 namespace mab
 {
-    class mystreambuf: public std::streambuf {    };
+    class mystreambuf : public std::streambuf
+    {
+    };
     mystreambuf nostreambuf;
     std::ostream nocout(&nostreambuf);
-    #define vout ((this->printVerbose)? std::cout << "[CANDLE] " : nocout)
+#define vout ((this->printVerbose) ? std::cout << "[CANDLE] " : nocout)
     std::string statusOK = "  [OK]";
     std::string statusFAIL = "  [FAILED]";
 
-    uint64_t getTimestamp() 
+    uint64_t getTimestamp()
     {
         using namespace std::chrono;
         return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
     }
 
-    std::vector<Candle*> Candle::instances = std::vector<Candle*>();
+    std::vector<Candle *> Candle::instances = std::vector<Candle *>();
 
     Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose, bool useLogs, mab::CANdleFastMode_E _fastMode, bool printFailure)
     {
@@ -85,25 +87,25 @@ namespace mab
     }
     Candle::~Candle()
     {
-        if(this->inUpdateMode())
+        if (this->inUpdateMode())
             this->end();
     }
     void Candle::updateModeBasedOnMd80List()
     {
-        if(md80s.size()<=(int)CANdleMaxDevices_E::MAX_DEV_FAST2)
+        if (md80s.size() <= (int)CANdleMaxDevices_E::MAX_DEV_FAST2)
         {
             fastMode = CANdleFastMode_E::FAST2;
-            vout<<"Set current speed mode to FAST2"<<std::endl;
+            vout << "Set current speed mode to FAST2" << std::endl;
         }
-        else if(md80s.size()<=(int)CANdleMaxDevices_E::MAX_DEV_FAST1)
+        else if (md80s.size() <= (int)CANdleMaxDevices_E::MAX_DEV_FAST1)
         {
             fastMode = CANdleFastMode_E::FAST1;
-            vout<<"Set current speed mode to FAST1"<<std::endl;
+            vout << "Set current speed mode to FAST1" << std::endl;
         }
-        else if(md80s.size()<=(int)CANdleMaxDevices_E::MAX_DEV_NORMAL)
+        else if (md80s.size() <= (int)CANdleMaxDevices_E::MAX_DEV_NORMAL)
         {
             fastMode = CANdleFastMode_E::NORMAL;
-            vout<<"Set current speed mode to NORMAL"<<std::endl;
+            vout << "Set current speed mode to NORMAL" << std::endl;
         }
     }
     const std::string Candle::getVersion()
@@ -139,9 +141,9 @@ namespace mab
     {
         int txCounter = 0;
         uint64_t freqCheckStart = getTimestamp();
-        while(!shouldStopTransmitter)
+        while (!shouldStopTransmitter)
         {
-            if(++txCounter == 250)
+            if (++txCounter == 250)
             {
                 this->usbCommsFreq = 250.0 / (float)(getTimestamp() - freqCheckStart) * 1000.0f;
                 freqCheckStart = getTimestamp();
@@ -151,8 +153,8 @@ namespace mab
             msgsSent++;
             switch (fastMode)
             {
-            case CANdleFastMode_E::FAST1:  
-                usleep(1990*2);
+            case CANdleFastMode_E::FAST1:
+                usleep(1990 * 2);
                 break;
             case CANdleFastMode_E::FAST2:
                 usleep(1950);
@@ -182,31 +184,31 @@ namespace mab
         frame.canMsg[1] = 0x00;
         return frame;
     }
-    void Candle::sendGetInfoFrame(mab::Md80& drive)
+    void Candle::sendGetInfoFrame(mab::Md80 &drive)
     {
         GenericMd80Frame32 getInfoFrame = _packMd80Frame(drive.getId(), 2, Md80FrameId_E::FRAME_GET_INFO);
-        if(usb->transmit((char*)&getInfoFrame, sizeof(getInfoFrame), true, 100))
+        if (usb->transmit((char *)&getInfoFrame, sizeof(getInfoFrame), true, 100))
         {
             uint8_t cheaterBuffer[72];
             memcpy(&cheaterBuffer[1], usb->rxBuffer, usb->bytesReceived);
-            *(uint16_t*)&cheaterBuffer[0] = drive.getId();
-            cheaterBuffer[2] = 16;  //Cheater buffer is a dirty trick to make USB_FRAME_MD80_GENERIC_FRAME response compatibile with __updateResponseData
-            drive.__updateResponseData((mab::StdMd80ResponseFrame_t*)cheaterBuffer);
+            *(uint16_t *)&cheaterBuffer[0] = drive.getId();
+            cheaterBuffer[2] = 16; // Cheater buffer is a dirty trick to make USB_FRAME_MD80_GENERIC_FRAME response compatibile with __updateResponseData
+            drive.__updateResponseData((mab::StdMd80ResponseFrame_t *)cheaterBuffer);
         }
     }
-    void Candle::sendMotionCommand(mab::Md80& drive, float pos, float vel, float torque)
+    void Candle::sendMotionCommand(mab::Md80 &drive, float pos, float vel, float torque)
     {
         GenericMd80Frame32 motionCommandFrame = _packMd80Frame(drive.getId(), 16, Md80FrameId_E::FRAME_SET_MOTION_TARGETS);
-        *(float*)&motionCommandFrame.canMsg[2] = vel;
-        *(float*)&motionCommandFrame.canMsg[6] = pos;
-        *(float*)&motionCommandFrame.canMsg[10] = torque;
-        if(usb->transmit((char*)&motionCommandFrame, sizeof(motionCommandFrame), true, 100))
+        *(float *)&motionCommandFrame.canMsg[2] = vel;
+        *(float *)&motionCommandFrame.canMsg[6] = pos;
+        *(float *)&motionCommandFrame.canMsg[10] = torque;
+        if (usb->transmit((char *)&motionCommandFrame, sizeof(motionCommandFrame), true, 100))
         {
             uint8_t cheaterBuffer[72];
             memcpy(&cheaterBuffer[1], usb->rxBuffer, usb->bytesReceived);
-            *(uint16_t*)&cheaterBuffer[0] = drive.getId();
-            cheaterBuffer[2] = 16;  //Cheater buffer is a dirty trick to make USB_FRAME_MD80_GENERIC_FRAME response compatibile with __updateResponseData
-            drive.__updateResponseData((mab::StdMd80ResponseFrame_t*)cheaterBuffer);
+            *(uint16_t *)&cheaterBuffer[0] = drive.getId();
+            cheaterBuffer[2] = 16; // Cheater buffer is a dirty trick to make USB_FRAME_MD80_GENERIC_FRAME response compatibile with __updateResponseData
+            drive.__updateResponseData((mab::StdMd80ResponseFrame_t *)cheaterBuffer);
         }
     }
     bool Candle::addMd80(uint16_t canId, bool printFailure)
@@ -251,34 +253,33 @@ namespace mab
         tx[0] = USB_FRAME_PING_START;
         tx[1] = 0x00;
         std::vector<uint16_t> ids;
-        if(usb->transmit(tx, 2, true, 2500))    //Scanning 2047 FDCAN ids, takes ~2100ms, thus wait for 2.5 sec
+        if (usb->transmit(tx, 2, true, 2500)) // Scanning 2047 FDCAN ids, takes ~2100ms, thus wait for 2.5 sec
         {
-            uint16_t*idsPointer = (uint16_t*)&usb->rxBuffer[1];
-            for(int i = 0; i < 12; i++)
+            uint16_t *idsPointer = (uint16_t *)&usb->rxBuffer[1];
+            for (int i = 0; i < 12; i++)
             {
                 uint16_t id = idsPointer[i];
-                if(id == 0x00)
+                if (id == 0x00)
                     break;
                 ids.push_back(id);
             }
-            if(ids.size() == 0)
+            if (ids.size() == 0)
             {
                 vout << "No drives found." << std::endl;
                 return ids;
             }
-            vout << "Found drives."  << std::endl;
-            for(size_t i = 0; i < ids.size(); i++)
+            vout << "Found drives." << std::endl;
+            for (size_t i = 0; i < ids.size(); i++)
             {
                 if (ids[i] == 0)
-                    break;  //No more ids in the message
-                
-                vout << std::to_string(i+1) <<": ID = " << ids[i]  << 
-                    " (0x" << std::hex << ids[i] << std::dec << ")" << std::endl;
-                if(ids[i] > 2047)
+                    break; // No more ids in the message
+
+                vout << std::to_string(i + 1) << ": ID = " << ids[i] << " (0x" << std::hex << ids[i] << std::dec << ")" << std::endl;
+                if (ids[i] > 2047)
                 {
-                    vout << "Error! This ID is invalid! Probably two or more drives share same ID." <<
-                        "Communication will most likely be broken until IDs are unique!" << statusFAIL << std::endl;
-                    std::vector<uint16_t>empty;
+                    vout << "Error! This ID is invalid! Probably two or more drives share same ID."
+                         << "Communication will most likely be broken until IDs are unique!" << statusFAIL << std::endl;
+                    std::vector<uint16_t> empty;
                     return empty;
                 }
             }
@@ -289,10 +290,10 @@ namespace mab
     {
         return ping(mab::CANdleBaudrate_E::CAN_BAUD_1M);
     }
-    bool Candle::sengGenericFDCanFrame(uint16_t canId, int msgLen, const char*txBuffer, char*rxBuffer, int timeoutMs)
+    bool Candle::sengGenericFDCanFrame(uint16_t canId, int msgLen, const char *txBuffer, char *rxBuffer, int timeoutMs)
     {
         int fdcanTimeout = timeoutMs - 3;
-        if(timeoutMs < 3)
+        if (timeoutMs < 3)
         {
             timeoutMs = 3;
             fdcanTimeout = 1;
@@ -306,11 +307,11 @@ namespace mab
         char tx[96];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
-        if (usb->transmit(tx, len, true, timeoutMs))    //Got some response
+        if (usb->transmit(tx, len, true, timeoutMs)) // Got some response
         {
-            if(usb->rxBuffer[0] == tx[0] && // USB Frame ID matches
+            if (usb->rxBuffer[0] == tx[0] && // USB Frame ID matches
                 usb->rxBuffer[1] == true &&
-                usb->bytesReceived <= 64 + 2)   // response can ID matches
+                usb->bytesReceived <= 64 + 2) // response can ID matches
             {
                 memcpy(rxBuffer, &usb->rxBuffer[2], usb->bytesReceived - 2);
                 return true;
@@ -319,27 +320,26 @@ namespace mab
         return false;
     }
 
-
     bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout)
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 10, Md80FrameId_E::FRAME_CAN_CONFIG);
         frame.frameId = USB_FRAME_MD80_CONFIG_CAN;
-        *(uint16_t*)&frame.canMsg[2] = newId;
-        *(uint32_t*)&frame.canMsg[4] = newBaudrateMbps * 1000000;
-        *(uint16_t*)&frame.canMsg[8] = newTimeout;
+        *(uint16_t *)&frame.canMsg[2] = newId;
+        *(uint32_t *)&frame.canMsg[4] = newBaudrateMbps * 1000000;
+        *(uint16_t *)&frame.canMsg[8] = newTimeout;
         char tx[63];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
         if (usb->transmit(tx, len, true, 100))
-            if(usb->rxBuffer[1] == 1)
+            if (usb->rxBuffer[1] == 1)
             {
                 vout << "CAN config change successful!" << statusOK << std::endl;
                 vout << "Drive ID = " << std::to_string(canId) << " was changed to ID = " << std::to_string(newId) << std::endl;
                 vout << "It's baudrate is now " << std::to_string(newBaudrateMbps) << "Mbps" << std::endl;
-                vout << "It's CAN timeout (watchdog) is now " << (newTimeout == 0 ? "Disabled" : std::to_string(newTimeout) + "ms")  << std::endl;
+                vout << "It's CAN timeout (watchdog) is now " << (newTimeout == 0 ? "Disabled" : std::to_string(newTimeout) + "ms") << std::endl;
                 return true;
             }
-                vout << "CAN config change failed!" << statusFAIL << std::endl;
+        vout << "CAN config change failed!" << statusFAIL << std::endl;
         return false;
     }
     bool Candle::configMd80Save(uint16_t canId)
@@ -348,7 +348,7 @@ namespace mab
         char tx[64];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
-        if(usb->transmit(tx, len, true, 500))
+        if (usb->transmit(tx, len, true, 500))
             if (usb->rxBuffer[1] == true)
             {
                 vout << "Saving in flash successful at ID = " << canId << statusOK << std::endl;
@@ -363,7 +363,7 @@ namespace mab
         char tx[64];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
-        if(usb->transmit(tx, len, true, 500))
+        if (usb->transmit(tx, len, true, 500))
             if (usb->rxBuffer[1] == true)
             {
                 vout << "LEDs blining at ID = " << canId << statusOK << std::endl;
@@ -379,11 +379,11 @@ namespace mab
         char tx[64];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
-        if(usb->transmit(tx, len, true, 50))
+        if (usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
                 /* set target position to 0.0f to avoid jerk at startup */
-                Md80&drive = getMd80FromList(canId);
+                Md80 &drive = getMd80FromList(canId);
                 sendMotionCommand(drive, 0.0f, 0.0f, 0.0f);
                 drive.setTargetPosition(0.0f);
                 vout << "Setting new zero position successful at ID = " << canId << statusOK << std::endl;
@@ -395,11 +395,11 @@ namespace mab
     bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 6, Md80FrameId_E::FRAME_BASE_CONFIG);
-        *(float*)&frame.canMsg[2] = currentLimit;
+        *(float *)&frame.canMsg[2] = currentLimit;
         char tx[64];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
-        if(usb->transmit(tx, len, true, 50))
+        if (usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[0] == USB_FRAME_MD80_GENERIC_FRAME && usb->rxBuffer[1] == true)
             {
                 vout << "Setting new current limit successful at ID = " << canId << statusOK << std::endl;
@@ -414,36 +414,43 @@ namespace mab
         char tx[10];
         tx[0] = USB_FARME_CANDLE_CONFIG_BAUDRATE;
         tx[1] = (uint8_t)canBaudrate;
-        if(usb->transmit(tx, 2, true, 50))
-            if(usb->rxBuffer[0] == USB_FARME_CANDLE_CONFIG_BAUDRATE && usb->rxBuffer[1] == true)
+        if (usb->transmit(tx, 2, true, 50))
+            if (usb->rxBuffer[0] == USB_FARME_CANDLE_CONFIG_BAUDRATE && usb->rxBuffer[1] == true)
             {
                 candleDeviceVersion = usb->rxBuffer[2];
-                if(printVersionInfo)
+                if (printVersionInfo)
                 {
-                    vout << "Device firmware version: v" << candleDeviceVersion / 10 << "." <<candleDeviceVersion % 10 << std::endl;
-                    if(candleDeviceVersion < 14)
-                    std::cout << "Your CANdle firmware seems to be out-dated. Contact MAB: support@mabrobotics.pl , for intructions how to update." << std::endl;
+                    vout << "Device firmware version: v" << candleDeviceVersion / 10 << "." << candleDeviceVersion % 10 << std::endl;
+                    if (candleDeviceVersion < 14)
+                        std::cout << "Your CANdle firmware seems to be out-dated. Contact MAB: support@mabrobotics.pl , for intructions how to update." << std::endl;
                 }
                 return true;
             }
         return false;
     }
-    Md80& Candle::getMd80FromList(uint16_t id)
+    Md80 &Candle::getMd80FromList(uint16_t id)
     {
-        for(int i = 0; i < (int)md80s.size(); i++)
-            if(md80s[i].getId() == id)
+        for (int i = 0; i < (int)md80s.size(); i++)
+            if (md80s[i].getId() == id)
                 return md80s[i];
         throw "getMd80FromList(id): Id not found on the list!";
     }
-    bool Candle::controlMd80SetEncoderZero(Md80&drive)
+    Md80 *Candle::getMd80PointerFromList(uint16_t id)
+    {
+        for (int i = 0; i < (int)md80s.size(); i++)
+            if (md80s[i].getId() == id)
+                return &md80s[i];
+        throw "getMd80FromList(id): Id not found on the list!";
+    }
+    bool Candle::controlMd80SetEncoderZero(Md80 &drive)
     {
         return this->controlMd80SetEncoderZero(drive.getId());
     }
-    bool Candle::controlMd80Enable(Md80&drive, bool enable)
+    bool Candle::controlMd80Enable(Md80 &drive, bool enable)
     {
         return this->controlMd80Enable(drive.getId(), enable);
     }
-    bool Candle::controlMd80Mode(Md80&drive, Md80Mode_E mode)
+    bool Candle::controlMd80Mode(Md80 &drive, Md80Mode_E mode)
     {
         return this->controlMd80Mode(drive.getId(), mode);
     }
@@ -451,27 +458,27 @@ namespace mab
     {
         try
         {
-            Md80&drive = getMd80FromList(canId);
+            Md80 &drive = getMd80FromList(canId);
             GenericMd80Frame32 frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_CONTROL_SELECT);
             frame.canMsg[2] = mode;
             char tx[64];
             int len = sizeof(frame);
             memcpy(tx, &frame, len);
-            if(usb->transmit(tx, len, true, 50))
-            if (usb->rxBuffer[1] == true)
-            {
-                vout << "Setting control mode successful at ID = " << canId << statusOK << std::endl;
-                drive.__setControlMode(mode);
-                return true;
-            }
+            if (usb->transmit(tx, len, true, 50))
+                if (usb->rxBuffer[1] == true)
+                {
+                    vout << "Setting control mode successful at ID = " << canId << statusOK << std::endl;
+                    drive.__setControlMode(mode);
+                    return true;
+                }
             vout << "Setting control mode failed at ID = " << canId << statusFAIL << std::endl;
             return false;
         }
-        catch (const char*msg)
+        catch (const char *msg)
         {
             vout << msg << std::endl;
             return false;
-        }        
+        }
     }
     bool Candle::controlMd80Enable(uint16_t canId, bool enable)
     {
@@ -482,26 +489,26 @@ namespace mab
             char tx[64];
             int len = sizeof(frame);
             memcpy(tx, &frame, len);
-            if(usb->transmit(tx, len, true, 50))
+            if (usb->transmit(tx, len, true, 50))
                 if (usb->rxBuffer[1] == true)
-                {   
-                    if(enable)
+                {
+                    if (enable)
                         vout << "Enabling successful at ID = " << canId << statusOK << std::endl;
                     else
                     {
                         vout << "Disabling successful at ID = " << canId << statusOK << std::endl;
-                        this->getMd80FromList(canId).__updateRegulatorsAdjusted(false);  //Drive will operate at default params
+                        this->getMd80FromList(canId).__updateRegulatorsAdjusted(false); // Drive will operate at default params
                     }
                     return true;
                 }
             vout << "Enabling/Disabling failed at ID = " << canId << statusFAIL << std::endl;
             return false;
         }
-        catch(const char*msg)
+        catch (const char *msg)
         {
             vout << msg << std::endl;
             return false;
-        }        
+        }
     }
     bool Candle::begin()
     {
@@ -542,26 +549,26 @@ namespace mab
     }
     bool Candle::end()
     {
-        if(mode == CANdleMode_E::CONFIG)
+        if (mode == CANdleMode_E::CONFIG)
             return false;
 
         shouldStopReceiver = true;
-        if(receiverThread.joinable())
+        if (receiverThread.joinable())
             receiverThread.join();
 
         shouldStopTransmitter = true;
-        if(transmitterThread.joinable())
-            transmitterThread.join(); 
+        if (transmitterThread.joinable())
+            transmitterThread.join();
 
         char tx[128];
         tx[0] = USB_FRAME_END;
         tx[1] = 0x00;
-        usb->transmit(tx,2, true, 10);  //Stops update but produces garbage output
-        
-        if(usb->transmit(tx,2, true, 10))
-            if(usb->rxBuffer[0] == USB_FRAME_END && usb->rxBuffer[1] == 1)
+        usb->transmit(tx, 2, true, 10); // Stops update but produces garbage output
+
+        if (usb->transmit(tx, 2, true, 10))
+            if (usb->rxBuffer[0] == USB_FRAME_END && usb->rxBuffer[1] == 1)
                 mode = CANdleMode_E::CONFIG;
-                
+
         vout << "Ending auto update loop mode" << (mode == CANdleMode_E::CONFIG ? statusOK : statusFAIL) << std::endl;
 
         return mode == CANdleMode_E::CONFIG ? true : false;
@@ -571,33 +578,33 @@ namespace mab
         char tx[128];
         tx[0] = USB_FRAME_RESET;
         tx[1] = 0x00;
-        if(usb->transmit(tx, 2, true, 100))
+        if (usb->transmit(tx, 2, true, 100))
             return true;
 
         return false;
     }
-	bool Candle::inUpdateMode()
-	{
-		if(mode == CANdleMode_E::UPDATE)
-			return true;
-		return false;
-	}
-	bool Candle::inConfigMode()
-	{
-		if(mode == CANdleMode_E::CONFIG)
-			return true;
-		return false;
-	}
+    bool Candle::inUpdateMode()
+    {
+        if (mode == CANdleMode_E::UPDATE)
+            return true;
+        return false;
+    }
+    bool Candle::inConfigMode()
+    {
+        if (mode == CANdleMode_E::CONFIG)
+            return true;
+        return false;
+    }
     void Candle::transmitNewStdFrame()
     {
         char tx[512];
         tx[0] = USB_FRAME_UPDATE;
-        for(int i = 0; i < (int)md80s.size(); i++)
+        for (int i = 0; i < (int)md80s.size(); i++)
         {
             md80s[i].__updateCommandFrame();
-            *(StdMd80CommandFrame_t*)&tx[1 + i*sizeof(StdMd80CommandFrame_t)] = md80s[i].__getCommandFrame();
+            *(StdMd80CommandFrame_t *)&tx[1 + i * sizeof(StdMd80CommandFrame_t)] = md80s[i].__getCommandFrame();
         }
-        
+
         int length = 1 + md80s.size() * sizeof(StdMd80CommandFrame_t);
         usb->transmit(tx, length, false);
     }
@@ -610,7 +617,7 @@ namespace mab
         frame.canMsg[3] = (uint8_t)(torqueBandwidth >> 8);
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
-        if(usb->transmit(tx, len, true, 50))
+        if (usb->transmit(tx, len, true, 50))
             if (usb->rxBuffer[1] == true)
             {
                 vout << "Starting calibration at ID = " << canId << statusOK << std::endl;
@@ -625,7 +632,7 @@ namespace mab
         char tx[64];
         int len = sizeof(frame);
         memcpy(tx, &frame, len);
-        if(usb->transmit(tx, len, true, 50))
+        if (usb->transmit(tx, len, true, 50))
         {
             std::cout << "[CANDLE] Library version: " << getVersion() << std::endl;
             std::cout << "[CANDLE] DIAG at ID = " << canId << ": " << std::string(&usb->rxBuffer[2]) << std::endl;
