@@ -37,6 +37,7 @@ SpiDevice::SpiDevice(char* rxBufferPtr, const int rxBufferSize_)
     rxBuffer = rxBufferPtr;
     rxBufferSize = rxBufferSize_;
     /* set transfer parameters that are constant in each cycle */
+    memset(&trx,0,sizeof(trx));
     trx.bits_per_word = 8;
     trx.speed_hz = spiSpeed;
 
