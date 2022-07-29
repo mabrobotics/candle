@@ -98,7 +98,13 @@ namespace mab
             vout << "Failed to set up CANdle baudrate @" << canBaudrate << "Mbps!" << std::endl;
 
         if(bus->getType() == mab::BusType_E::USB)
-            vout << "CANdle at " << this->bus->usb->getSerialDeviceName() << ", ID: 0x" << std::hex << this->getUsbDeviceId() << std::dec <<" ready." << std::endl;
+            vout << "CANdle at " << this->bus->usb->getSerialDeviceName() << ", ID: 0x" << std::hex << this->getUsbDeviceId() << std::dec <<" ready (USB)" << std::endl;
+#if PLATFORM == RPI
+        else if(bus->getType() == mab::BusType_E::SPI)
+            vout << "CANdle ready (SPI)" << std::endl;
+        else if(bus->getType() == mab::BusType_E::UART)
+            vout << "CANdle ready (UART)" << std::endl;
+#endif
       
         fastMode = _fastMode;
         switch (fastMode)

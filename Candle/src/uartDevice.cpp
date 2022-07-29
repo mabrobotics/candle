@@ -132,13 +132,9 @@ bool UartDevice::receive(int timeoutMs)
         bytesReceived = bytesReceived-crc->getCrcLen();
     else
     { 
-    #ifdef UART_VERBOSE_ON_CRC_ERROR
-        std::cout << "Got " << std::dec << bytesReceived  << "bytes." <<std::endl;
-        std::cout << rxBuffer << std::endl;
-        for(int i = 0; i < bytesReceived; i++)
-            std::cout << std::hex << "0x" << (unsigned short)rxBuffer[i] << " ";
-        std::cout << std::dec << std::endl << "#######################################################" << std::endl; 
-    #endif
+#ifdef UART_VERBOSE_ON_CRC_ERROR
+    displayDebugMsg(char* rxBuffer, int bytesReceived);
+#endif
     
         errorCnt++;
         /* clear the command byte -> the frame will be rejected */
@@ -148,14 +144,7 @@ bool UartDevice::receive(int timeoutMs)
     }
 
 #ifdef UART_VERBOSE
-    if(bytesReceived > 0)
-    {
-        std::cout << "Got " << std::dec << bytesReceived  << "bytes." <<std::endl;
-        std::cout << rxBuffer << std::endl;
-        for(int i = 0; i < bytesReceived; i++)
-            std::cout << std::hex << "0x" << (unsigned short)rxBuffer[i] << " ";
-        std::cout << std::dec << std::endl << "#######################################################" << std::endl; 
-    }
+    displayDebugMsg(char* rxBuffer, int bytesReceived);
 #endif
     if(bytesReceived > 0)
     {
@@ -163,4 +152,16 @@ bool UartDevice::receive(int timeoutMs)
         return true;
     }
     return false;
+}
+
+void UartDevice::displayDebugMsg(char* buffer, int bytesReceived)
+{
+    if(bytesReceived > 0)
+    {
+        std::cout << "Got " << std::dec << bytesReceived  << "bytes." <<std::endl;
+        std::cout << buffer << std::endl;
+        for(int i = 0; i < bytesReceived; i++)
+            std::cout << std::hex << "0x" << (unsigned short)buffer[i] << " ";
+        std::cout << std::dec << std::endl << "#######################################################" << std::endl; 
+    }
 }

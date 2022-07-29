@@ -38,4 +38,6 @@ private:
     struct spi_ioc_transfer trx;
     int bytesReceived;
     std::mutex rxLock;
+
+    void displayDebugMsg(char* buffer, int bytesReceived);
 };

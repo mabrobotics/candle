@@ -3,7 +3,7 @@ import time
 import math
 import sys  
 
-# Create CANdle object and set FDCAN baudrate to 1Mbps
+# Create CANdle object and set FDCAN baudrate to 8Mbps
 candle = pyCandle.Candle(pyCandle.CAN_BAUD_8M, True, pyCandle.NORMAL, True, pyCandle.SPI)
 
 # Ping FDCAN bus in search of drives

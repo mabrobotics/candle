@@ -37,4 +37,6 @@ private:
     int bytesReceived;
     bool gotResponse;
     std::mutex rxLock;
+
+    void displayDebugMsg(char* buffer, int bytesReceived);
 };

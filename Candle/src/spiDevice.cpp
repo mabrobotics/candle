@@ -9,27 +9,27 @@ SpiDevice::SpiDevice(char* rxBufferPtr, const int rxBufferSize_)
 {
     fd = open(spiDev, O_RDWR);
     if(fd < 0) {
-        printf("Could not open the SPI device...\r\n");
+        std::cout<<"Could not open the SPI device..." <<std::endl;
         exit(EXIT_FAILURE);
     }
 
     int ret = ioctl(fd, SPI_IOC_WR_MODE, &mode);
     if(ret != 0) {
-        printf("Could not read SPI mode...\r\n");
+        std::cout<<"Could not write SPI mode..." <<std::endl;
         close(fd);
         exit(EXIT_FAILURE);
     }
 
     ret = ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bits);
     if(ret != 0) {
-        printf("Could not write SPI mode...\r\n");
+        std::cout<<"Could not write SPI mode..." <<std::endl;
         close(fd);
         exit(EXIT_FAILURE);
     }
 
     ret = ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &spiSpeed);
     if(ret != 0) {
-        printf("Could not write the SPI max speed...\r\n");
+        std::cout<<"Could not write the SPI max speed..." <<std::endl;
         close(fd);
         exit(EXIT_FAILURE);
     }
@@ -124,14 +124,10 @@ bool SpiDevice::receive(int timeout, int responseLen)
 
     if(crc->checkCrcBuf(rxBuffer, bytesReceived) == false)
     {
-    #ifdef SPI_VERBOSE_ON_CRC_ERROR
+#ifdef SPI_VERBOSE_ON_CRC_ERROR
         bytesReceived = responseLen;
-        std::cout << "Got " << std::dec << bytesReceived  << "bytes." <<std::endl;
-        std::cout << rxBuffer << std::endl;
-        for(int i = 0; i < bytesReceived; i++)
-        std::cout << std::hex << "0x" << (unsigned short)rxBuffer[i] << " ";
-        std::cout << std::dec << std::endl << "#######################################################" << std::endl; 
-    #endif
+        displayDebugMsg(rxBuffer, bytesReceived);
+#endif
         errorCnt++;
         /* clear the command byte -> the frame will be rejected */
         rxBuffer[0] = 0;
@@ -143,16 +139,9 @@ bool SpiDevice::receive(int timeout, int responseLen)
 
     rxLock.unlock();
 
-    #ifdef SPI_VERBOSE
-    if(bytesReceived > 0)
-    {
-        std::cout << "Got " << std::dec << bytesReceived  << "bytes." <<std::endl;
-        std::cout << rxBuffer << std::endl;
-        for(int i = 0; i < bytesReceived; i++)
-            std::cout << std::hex << "0x" << (unsigned short)rxBuffer[i] << " ";
-        std::cout << std::dec << std::endl << "#######################################################" << std::endl; 
-    }
-    #endif
+#ifdef SPI_VERBOSE
+    displayDebugMsg(rxBuffer, bytesReceived);
+#endif
 
     if(bytesReceived > 0)
         return true;
@@ -187,14 +176,10 @@ bool SpiDevice::transmitReceive(char* buffer, int commandLen, int responseLen)
         bytesReceived = responseLen-crc->getCrcLen();
     else
     {
-    #ifdef SPI_VERBOSE_ON_CRC_ERROR
+#ifdef SPI_VERBOSE_ON_CRC_ERROR
         bytesReceived = responseLen;
-        std::cout << "Got " << std::dec << bytesReceived  << "bytes." <<std::endl;
-        std::cout << rxBuffer << std::endl;
-        for(int i = 0; i < bytesReceived; i++)
-        std::cout << std::hex << "0x" << (unsigned short)rxBuffer[i] << " ";
-        std::cout << std::dec << std::endl << "#######################################################" << std::endl; 
-    #endif
+        displayDebugMsg(rxBuffer, bytesReceived);
+#endif
 
         errorCnt++;
         /* clear the command byte -> the frame will be rejected */
@@ -205,19 +190,24 @@ bool SpiDevice::transmitReceive(char* buffer, int commandLen, int responseLen)
 
     rxLock.unlock();
 
-    #ifdef SPI_VERBOSE
-    if(bytesReceived > 0)
-    {
-        std::cout << "Got " << std::dec << bytesReceived  << "bytes." <<std::endl;
-        std::cout << rxBuffer << std::endl;
-        for(int i = 0; i < bytesReceived; i++)
-            std::cout << std::hex << "0x" << (unsigned short)rxBuffer[i] << " ";
-        std::cout << std::dec << std::endl << "#######################################################" << std::endl; 
-    }
-    #endif
+#ifdef SPI_VERBOSE
+    displayDebugMsg(rxBuffer, bytesReceived);
+#endif
 
     if(bytesReceived > 0)
         return true;
 
     return false;
+}
+
+void SpiDevice::displayDebugMsg(char* buffer, int bytesReceived)
+{
+    if(bytesReceived > 0)
+    {
+        std::cout << "Got " << std::dec << bytesReceived  << "bytes." <<std::endl;
+        std::cout << buffer << std::endl;
+        for(int i = 0; i < bytesReceived; i++)
+            std::cout << std::hex << "0x" << (unsigned short)buffer[i] << " ";
+        std::cout << std::dec << std::endl << "#######################################################" << std::endl; 
+    }
 }
