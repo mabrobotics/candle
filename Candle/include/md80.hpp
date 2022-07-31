@@ -10,6 +10,7 @@
 
 typedef std::map<std::string, double> MotorStatus_T;
 
+
 #define mdout std::cout << "[MD] "
 namespace mab
 {
@@ -36,6 +37,7 @@ namespace mab
         float torqueSet = 0.0f;
         float maxTorque = 1.0f;
         float maxVelocity = 100.0f;
+        int frameId = -1;
         RegPid_t velocityController;
         RegPid_t positionController;
         RegImpedance_t impedanceController;
@@ -107,6 +109,16 @@ namespace mab
          * @param target target position in radians
          */
         void setTargetPosition(float target) { positionTarget = target; };
+        /**
+         * @brief Set the frame id of the transmit
+         * @param target target position in radians
+         */
+        void setFrameId(int frameId) { this->frameId = frameId; };
+        /**
+         * @brief get the frame id
+         */
+        int getFrameId() {return frameId;};
+
         /**
          * @brief Set the Target Velocity for Velocity PID and Impedance modes.
          * @param target target velocity in rad/s (radians per second)

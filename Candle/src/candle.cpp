@@ -527,13 +527,25 @@ namespace mab
             {
                 std::string homedir = getenv("HOME");
                 std::string receiveFileName = homedir + "/log/latest/candle_receive" + std::to_string(candleId) + ".csv";
-                vout << "Candle" << candleId << "log file is: " << receiveFileName << std::endl;
+                std::string transmitFileName = homedir + "/log/latest/candle_transmit" + std::to_string(candleId) + ".csv";
+
+                vout << "Candle" << candleId << "receive log file is: " << receiveFileName << std::endl;
+                vout << "Candle" << candleId << "transmit log file is: " << transmitFileName << std::endl;
+
                 receiveLogFile.open(receiveFileName, std::fstream::out);
                 receiveLogFile << "frame_id, time, cans ids\n";
+                transmitLogFile.open(transmitFileName, std::fstream::out);
+                transmitLogFile << "frame_id, time, cans ids\n";
+                receiveLogFile << ",,";
+                transmitLogFile << ",,";
+
                 for (auto canId : md80Ids)
                 {
-                    receiveLogFile << ",," << std::to_string(canId) << "\n";
+                    receiveLogFile << std::to_string(canId);
+                    transmitLogFile << std::to_string(canId);
                 }
+                receiveLogFile << std::endl;
+                transmitLogFile << std::endl;
             }
             mode = CANdleMode_E::UPDATE;
             shouldStopTransmitter = false;
@@ -599,13 +611,24 @@ namespace mab
     {
         char tx[512];
         tx[0] = USB_FRAME_UPDATE;
+        std::vector<int> frameIds;
         for (int i = 0; i < (int)md80s.size(); i++)
         {
             md80s[i].__updateCommandFrame();
+            frameIds.push_back(md80s[i].getFrameId());
             *(StdMd80CommandFrame_t *)&tx[1 + i * sizeof(StdMd80CommandFrame_t)] = md80s[i].__getCommandFrame();
         }
 
         int length = 1 + md80s.size() * sizeof(StdMd80CommandFrame_t);
+        uint64_t nsec = std::chrono::duration_cast<nsec_t>(std::chrono::system_clock::now().time_since_epoch()).count();
+        if (_useLogs)
+        {
+            double timeInSec = nsec * 1e-9;
+            transmitLogFile << std::to_string(timeInSec) << ",";
+            for (const auto &e : frameIds)
+                transmitLogFile << e << " ";
+            transmitLogFile << std::endl;
+        }
         usb->transmit(tx, length, false);
     }
 

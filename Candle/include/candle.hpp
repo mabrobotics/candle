@@ -66,6 +66,7 @@ namespace mab
         CANdleFastMode_E fastMode = CANdleFastMode_E::NORMAL;
         int candleId;
         std::ofstream receiveLogFile;
+        std::ofstream transmitLogFile;
 
         int candleDeviceVersion = 10;
         int maxDevices = 12;

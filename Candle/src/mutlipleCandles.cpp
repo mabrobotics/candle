@@ -258,7 +258,7 @@ namespace mab
             uint64_t nsec = std::chrono::duration_cast<nsec_t>(std::chrono::system_clock::now().time_since_epoch()).count();
             double timeInSec = nsec * 1e-9;
 
-            logFile << frameId << "," << timeInSec << "\n";
+            logFile << frameId << "," << std::to_string(timeInSec) << "\n";
         }
         for (auto const &[motorId, motorCommand] : motorCommands)
         {
@@ -267,6 +267,7 @@ namespace mab
                 if (md80Instances.find(motorId) != md80Instances.end())
                 {
                     auto md = md80Instances[motorId];
+                    md->setFrameId(frameId);
                     md->setTargetPosition(motorCommand.at("position"));
                     md->setTargetVelocity(motorCommand.at("velocity"));
                     md->setTorque(motorCommand.at("torque"));
