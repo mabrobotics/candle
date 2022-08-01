@@ -218,3 +218,6 @@ install/share/md80/package.sh
 install/share/md80/package.zsh
 .vscode/*
 .idea/
+
+# .so from build
+*.so
