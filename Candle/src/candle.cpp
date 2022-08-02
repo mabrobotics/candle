@@ -593,7 +593,10 @@ namespace mab
         char tx[128];
         tx[0] = BUS_FRAME_END;
         tx[1] = 0x00;
-        bus->transfer(tx,2, true, 10, 2);  //Stops update but produces garbage output
+        
+        if(bus->getType() == mab::BusType_E::USB)
+            bus->transfer(tx,2, false, 10, 2);   //Stops update but produces garbage output
+
         if(bus->transfer(tx,2, true, 10, 2))
             if(*bus->getRxBuffer(0) == BUS_FRAME_END && *bus->getRxBuffer(1) == 1)
                 mode = CANdleMode_E::CONFIG;
