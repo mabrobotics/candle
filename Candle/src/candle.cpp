@@ -8,6 +8,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <vector>
+
 namespace mab
 {
     class mystreambuf: public std::streambuf {    };
@@ -159,8 +160,28 @@ namespace mab
             {
                 if(*bus->getRxBuffer() == BUS_FRAME_UPDATE)
                 {
+#ifdef BENCHMARKING
+                    bool flag = false;
+#endif
                     for(int i = 0; i < (int)md80s.size(); i++)
+                    {
                         md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t)));
+#ifdef BENCHMARKING
+                        StdMd80ResponseFrame_t*_responseFrame = (StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t));
+                        if(*(uint16_t*)&_responseFrame->fromMd80.data[1] & (1<<15))flag = true;
+#endif
+                    }
+#ifdef BENCHMARKING
+                    long long microseconds_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                    // std::cout<< "RX:" << microseconds_since_epoch << std::endl;
+                    
+                    if(flag && !flag_glob_rx)
+                    {
+                        flag_glob_rx = true;
+                        time_delta = microseconds_since_epoch - txTimestamp;
+                        std::cout<< "got the flag!" << " time:" <<time_delta<< std::endl;
+                    }
+#endif
                 }
             }
         }
@@ -181,10 +202,41 @@ namespace mab
             /* transmit thread is also the receive thread for SPI in update mode */
             if(bus->getType() == mab::BusType_E::SPI && *bus->getRxBuffer() == BUS_FRAME_UPDATE)
             {
+#ifdef BENCHMARKING
+                bool flag = false;
+#endif
                 for(int i = 0; i < (int)md80s.size(); i++)
+                {
                     md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t)));
+#ifdef BENCHMARKING
+                    StdMd80ResponseFrame_t*_responseFrame = (StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t));
+                    if(*(uint16_t*)&_responseFrame->fromMd80.data[1] & (1<<15))flag = true;
+#endif
+                }
+                
+#ifdef BENCHMARKING
+
+                long long microseconds_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                // std::cout<< "RX:" << microseconds_since_epoch << std::endl;
+                
+                if(flag && !flag_glob_rx)
+                {
+                    flag_glob_rx = true;
+                    time_delta = microseconds_since_epoch - txTimestamp;
+                    std::cout<< "got the flag!" << " time:" <<time_delta<< std::endl;
+                }
+#endif
             }
 
+#ifdef BENCHMARKING
+            long long microseconds_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            // std::cout<< "TX:" << microseconds_since_epoch << std::endl;
+            if(flag_glob_tx == true)
+            {
+                flag_glob_tx = false;
+                txTimestamp = microseconds_since_epoch;
+            }
+#endif
             msgsSent++;
             switch (fastMode)
             {
@@ -595,7 +647,7 @@ namespace mab
         tx[1] = 0x00;
         
         if(bus->getType() == mab::BusType_E::USB)
-            bus->transfer(tx,2, false, 10, 2);   //Stops update but produces garbage output
+            bus->transfer(tx,2, true, 10, 2);   //Stops update but produces garbage output
 
         if(bus->transfer(tx,2, true, 10, 2))
             if(*bus->getRxBuffer(0) == BUS_FRAME_END && *bus->getRxBuffer(1) == 1)
@@ -673,4 +725,28 @@ namespace mab
         vout << "Diagnostic failed at ID = " << canId << std::endl;
         return false;
     }
+
+#ifdef BENCHMARKING
+    bool Candle::benchGetFlagRx()
+    {
+        return flag_glob_rx;
+    }
+    bool Candle::benchGetFlagTx()
+    {
+        return flag_glob_tx;
+    }
+    void Candle::benchSetFlagRx(bool state)
+    {
+        flag_glob_rx = state;
+    }
+    void Candle::benchSetFlagTx(bool state)
+    {
+        flag_glob_tx = state;
+    }
+    long long Candle::benchGetTimeDelta()
+    {
+        return time_delta;
+    }
+#endif
+
 }

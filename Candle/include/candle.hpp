@@ -10,10 +10,13 @@
 #include <vector>
 #include <iostream>
 
+/* Turn on benchmarking */
+// #define BENCHMARKING    
+
 /* PC supports only USB bus */
-#define PC          0
+#define PC              0
 /* RPI supports all busses - USB/SPI/UART */
-#define RPI         1
+#define RPI             1
 
 namespace mab
 {
@@ -79,6 +82,13 @@ namespace mab
         float usbCommsFreq = 0.0f;
 
         bool printVerbose = true;
+
+#ifdef BENCHMARKING
+        long long txTimestamp = 0;
+        bool flag_glob_tx = false;
+        bool flag_glob_rx = false;
+        long long time_delta;
+#endif
 
         void transmitNewStdFrame();
 
@@ -290,5 +300,13 @@ namespace mab
         @return true if the succesfull, false otherwise
         */
         bool setupMd80Diagnostic(uint16_t canId);
+
+#ifdef BENCHMARKING
+        bool benchGetFlagRx();
+        bool benchGetFlagTx();
+        void benchSetFlagRx(bool state);
+        void benchSetFlagTx(bool state);
+        long long benchGetTimeDelta();
+#endif  
     };
 }

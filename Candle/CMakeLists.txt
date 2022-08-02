@@ -56,6 +56,9 @@ if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
 
     add_executable(example12 examples/example12.cpp)
     target_link_libraries(example12 candle)
+
+    add_executable(latency_test examples/latency_test.cpp)
+    target_link_libraries(latency_test candle)
 endif()
 
 if(${LIB_TYPE} MATCHES "SHARED")
