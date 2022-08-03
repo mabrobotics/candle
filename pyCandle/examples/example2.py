@@ -10,18 +10,20 @@ ids = candle.ping()
 
 # Add all found to the update list
 for id in ids:
-    candle.addMd80(id)
+    candle.addMd80(id, True)
 
+
+print(f"this is error{candle.md80s[0].getErrorVector()}")
 # Begin update loop (it starts in the background)
-candle.begin()
+# candle.begin()
 
-# Auto update loop is running in the background updating data in candle.md80s vector. Each md80 object can be 
-# called for data at any time
-for i in range(1000):
-    print("Drive Id: " + str(candle.md80s[0].getId()) + " Position: " + str(candle.md80s[0].getPosition()))
-    time.sleep(0.1)
+# # Auto update loop is running in the background updating data in candle.md80s vector. Each md80 object can be 
+# # called for data at any time
+# for i in range(1000):
+#     print("Drive Id: " + str(candle.md80s[0].getId()) + " Position: " + str(candle.md80s[0].getPosition()))
+#     time.sleep(0.1)
 
-#Close the update loop
-candle.end()
+# #Close the update loop
+# candle.end()
 
 sys.exit("EXIT SUCCESS")

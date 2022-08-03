@@ -3,23 +3,26 @@ import time
 import math
 import sys  
 
-# Create CANdle object and set FDCAN baudrate to 1Mbps
-candle = pyCandle.Candle(pyCandle.CAN_BAUD_1M, True)
+motor_id = 101
+candle = None
+while True:
+    try:
+        tmp = pyCandle.Candle(pyCandle.CAN_BAUD_1M,True)
+        ids = tmp.ping()
+        print(ids)
+        if motor_id in ids:
+            candle = tmp
+            break
+    except:
+        break
 
-# Ping FDCAN bus in search of drives
-ids = candle.ping()
 
-if len(ids) == 0: # If no drives found -> quit
-    sys.exit("EXIT FALIURE") 
+candle.addMd80(motor_id, False)
 
-# Add all found to the update list
-for id in ids:
-    candle.addMd80(id, False)
-
-# Now we shall loop over all found drives to change control mode and enable them one by one
 for md in candle.md80s:
-    candle.controlMd80SetEncoderZero(md)      #  Reset encoder at current position
     candle.controlMd80Mode(md, pyCandle.IMPEDANCE)    # Set mode to impedance control
+    md.setImpedanceControllerParams(100.0, 2.5)
+    md.setMaxTorque(30)
     candle.controlMd80Enable(md, True)     # Enable the drive
 
 t = 0.0
@@ -27,15 +30,22 @@ dt = 0.04
 
 # Begin update loop (it starts in the background)
 candle.begin()
-
-for i in range(1000):
+count = 0
+# for i in range(1000):
+while True:
     # Once again we loop over all drives, this time setting thier position target. All drives should now perform
     # a nice synchronized movement.
     for md in candle.md80s:
-        md.setTargetPosition(math.sin(t) * 2.0)
+        # if count % 2 == 0:
+        #     md.setTargetPosition(0.0)
+        # else:
+        #     md.setTargetPosition(0.1)
+        print(md.getMotorStatus())
 
+    count += 1;
+        
     t = t + dt
-    time.sleep(0.01)  # Add some delay
+    time.sleep(5)  # Add some delay
 
 
 # Close the update loop

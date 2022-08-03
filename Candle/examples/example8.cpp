@@ -42,8 +42,8 @@ int main()
     for(int i = 0; i < 1000; i++)
     {
         t+=dt;
-        candle.md80s[0].setTargetPosition(sin(t) * 10.0f);  
-        std::cout << "Drive ID = " << candle.md80s[0].getId() << " Velocity: " << candle.md80s[0].getVelocity() << std::endl;
+        candle.md80s.at(ids[0]).setTargetPosition(sin(t) * 10.0f);  
+        std::cout << "Drive ID = " << candle.md80s.at(ids[0]).getId() << " Velocity: " << candle.md80s.at(ids[0]).getVelocity() << std::endl;
         usleep(10000);
     }
 

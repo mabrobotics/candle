@@ -47,7 +47,7 @@ int main(int argc, char**argv)
 
     // Now we modify the Impedance regulator parameters - the drive will behave much different than in 
     // previous examples. The drive will change default params to the ones we select below.
-    candle.md80s[0].setImpedanceControllerParams(kp, kd);
+    candle.md80s.at(ids[0]).setImpedanceControllerParams(kp, kd);
 
     // To reload default regulator parameters, simply disable the drive (contorlMd80Enable(id, false)), 
     // stop the communications (candle.end()) or power cycle the drive (off-on).
@@ -61,7 +61,7 @@ int main(int argc, char**argv)
     for(int i = 0; i < 1000; i++)
     {
         t+=dt;
-        candle.md80s[0].setTargetPosition(sin(t));  
+        candle.md80s.at(ids[0]).setTargetPosition(sin(t));  
         usleep(10000);
     }
 
