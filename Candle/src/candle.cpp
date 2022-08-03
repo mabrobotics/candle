@@ -130,13 +130,17 @@ namespace mab
                     if (_useLogs)
                         receiveLogFile << std::to_string(receive_count) << "," << std::to_string(timeInSec) << "\n";
                     for (int i = 0; i < (int)md80s.size(); i++)
-                        md80s[i].__updateResponseData((StdMd80ResponseFrame_t *)&usb->rxBuffer[1 + i * sizeof(StdMd80ResponseFrame_t)], timeInSec, receive_count);
+                    {
+                        StdMd80ResponseFrame_t *frame = (StdMd80ResponseFrame_t *)&usb->rxBuffer[1 + i * sizeof(StdMd80ResponseFrame_t)];
+                        md80s.at(frame->canId).__updateResponseData(frame, timeInSec, receive_count);
+                    }
 
                     receive_count++;
                 }
             }
         }
     }
+
     void Candle::transmit()
     {
         int txCounter = 0;
@@ -215,26 +219,27 @@ namespace mab
     {
         if (inUpdateMode())
             return false;
-        for (auto &d : md80s)
-            if (d.getId() == canId)
-            {
-                vout << "Md80 with ID: " << canId << " is already on the update list." << statusOK << std::endl;
-                return true;
-            }
+        if (md80s.count(canId))
+        {
+            vout << "Md80 with ID: " << canId << " is already on the update list." << statusOK << std::endl;
+            return true;
+        }
+
         if ((int)md80s.size() >= maxDevices)
         {
             vout << "Cannot add more drives in current FAST_MODE. Max devices in current mode: " << maxDevices << statusFAIL << std::endl;
             return false;
         }
+
         AddMd80Frame_t add = {USB_FRAME_MD80_ADD, canId};
         if (usb->transmit((char *)&add, sizeof(AddMd80Frame_t), true))
             if (usb->rxBuffer[0] == USB_FRAME_MD80_ADD)
                 if (usb->rxBuffer[1] == true)
                 {
                     vout << "Added Md80." << statusOK << std::endl;
-                    md80s.push_back(Md80(canId));
+                    md80s.insert(std::pair<int, Md80>(canId,Md80(canId)));
                     md80Ids.push_back(canId);
-                    mab::Md80 &newDrive = md80s.back();
+                    mab::Md80 &newDrive = md80s.at(canId);
                     sendGetInfoFrame(newDrive);
                     sendMotionCommand(newDrive, newDrive.getPosition(), 0.0f, 0.0f);
                     newDrive.setTargetPosition(newDrive.getPosition());
@@ -244,6 +249,7 @@ namespace mab
             vout << "Failed to add Md80." << statusFAIL << std::endl;
         return false;
     }
+
     std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
     {
         if (!this->configCandleBaudrate(baudrate))
@@ -383,7 +389,7 @@ namespace mab
             if (usb->rxBuffer[1] == true)
             {
                 /* set target position to 0.0f to avoid jerk at startup */
-                Md80 &drive = getMd80FromList(canId);
+                Md80 &drive = md80s.at(canId);
                 sendMotionCommand(drive, 0.0f, 0.0f, 0.0f);
                 drive.setTargetPosition(0.0f);
                 vout << "Setting new zero position successful at ID = " << canId << statusOK << std::endl;
@@ -428,20 +434,7 @@ namespace mab
             }
         return false;
     }
-    Md80 &Candle::getMd80FromList(uint16_t id)
-    {
-        for (int i = 0; i < (int)md80s.size(); i++)
-            if (md80s[i].getId() == id)
-                return md80s[i];
-        throw "getMd80FromList(id): Id not found on the list!";
-    }
-    Md80 *Candle::getMd80PointerFromList(uint16_t id)
-    {
-        for (int i = 0; i < (int)md80s.size(); i++)
-            if (md80s[i].getId() == id)
-                return &md80s[i];
-        throw "getMd80FromList(id): Id not found on the list!";
-    }
+   
     bool Candle::controlMd80SetEncoderZero(Md80 &drive)
     {
         return this->controlMd80SetEncoderZero(drive.getId());
@@ -458,7 +451,7 @@ namespace mab
     {
         try
         {
-            Md80 &drive = getMd80FromList(canId);
+            Md80 &drive = md80s.at(canId);
             GenericMd80Frame32 frame = _packMd80Frame(canId, 3, Md80FrameId_E::FRAME_CONTROL_SELECT);
             frame.canMsg[2] = mode;
             char tx[64];
@@ -497,7 +490,7 @@ namespace mab
                     else
                     {
                         vout << "Disabling successful at ID = " << canId << statusOK << std::endl;
-                        this->getMd80FromList(canId).__updateRegulatorsAdjusted(false); // Drive will operate at default params
+                        this->md80s.at(canId).__updateRegulatorsAdjusted(false); // Drive will operate at default params
                     }
                     return true;
                 }
@@ -541,8 +534,8 @@ namespace mab
 
                 for (auto canId : md80Ids)
                 {
-                    receiveLogFile << std::to_string(canId);
-                    transmitLogFile << std::to_string(canId);
+                    receiveLogFile << std::to_string(canId) << ";";
+                    transmitLogFile << std::to_string(canId) << ";";
                 }
                 receiveLogFile << std::endl;
                 transmitLogFile << std::endl;
@@ -612,11 +605,14 @@ namespace mab
         char tx[512];
         tx[0] = USB_FRAME_UPDATE;
         std::vector<int> frameIds;
-        for (int i = 0; i < (int)md80s.size(); i++)
+        int i = 0;
+        for (auto& [canId, md80Drive] : md80s)
         {
-            md80s[i].__updateCommandFrame();
-            frameIds.push_back(md80s[i].getFrameId());
-            *(StdMd80CommandFrame_t *)&tx[1 + i * sizeof(StdMd80CommandFrame_t)] = md80s[i].__getCommandFrame();
+            md80Drive.__updateCommandFrame();
+            // md80s[candleId].__updateCommandFrame();
+            frameIds.push_back(md80Drive.getFrameId());
+            *(StdMd80CommandFrame_t *)&tx[1 + i * sizeof(StdMd80CommandFrame_t)] = md80Drive.__getCommandFrame();
+            i++;
         }
 
         int length = 1 + md80s.size() * sizeof(StdMd80CommandFrame_t);

@@ -25,6 +25,7 @@ namespace mab
         std::ofstream logFile;
         mab::Candle *findCandleByMd80Id(uint16_t md80Id);
         std::map<int, int> motorIdToCandleId;
+
         bool _useLogs;
 
     public:

@@ -4,7 +4,14 @@
 
 #include <cstdint>
 #include <cmath>
+#include <chrono>
+#include <vector>
+#include <map>
 
+typedef std::map<std::string, double> MotorStatus_T;
+
+
+#define mdout std::cout << "[MD] "
 namespace mab
 {
     /**
@@ -20,6 +27,7 @@ namespace mab
         float position = 0.0f;
         float velocity = 0.0f;
         float torque = 0.0f;
+        MotorStatus_T motorStatus;
         uint8_t temperature = 0;
         uint16_t errorVector = 0;
 
@@ -29,6 +37,7 @@ namespace mab
         float torqueSet = 0.0f;
         float maxTorque = 1.0f;
         float maxVelocity = 100.0f;
+        int frameId = -1;
         RegPid_t velocityController;
         RegPid_t positionController;
         RegImpedance_t impedanceController;
@@ -42,12 +51,13 @@ namespace mab
         void packPositionFrame();
         void packVelocityFrame();
         void packMotionTargetsFrame();
+
     public:
-    /**
-     * @brief Construct a new Md80 object
-     * 
-     * @param canID FDACN Id of the drive
-     */
+        /**
+         * @brief Construct a new Md80 object
+         *
+         * @param canID FDACN Id of the drive
+         */
         Md80(uint16_t canID);
         /**
          * @brief Destroy the Md80 objec
@@ -77,8 +87,8 @@ namespace mab
          * @param kd Damping coefficient (analogin to 'b' parameter of the spring-damper equation)
          */
         void setImpedanceControllerParams(float kp, float kd);
-        
-        //simple setters
+
+        // simple setters
         /**
          * @brief Set the Max Torque object
          * @note This can be overriden by current limiter set by 'Candle.configMd80CurrentLimit'. Current/torque
@@ -91,63 +101,75 @@ namespace mab
          * @brief Set the Max Velocity for Position PID and Velocity PID modes.
          * @note This is only applied with CUSTOM Position PID and Velocity PID controller settings.
          * @note Has no effect in Torque or Impedance mode.
-         * @param maxVelocity 
+         * @param maxVelocity
          */
         void setMaxVelocity(float maxVelocity);
         /**
          * @brief Set the Target Position for Position PID and Impedance modes.
          * @param target target position in radians
          */
-        void setTargetPosition(float target)    {positionTarget = target; };
+        void setTargetPosition(float target) { positionTarget = target; };
+        /**
+         * @brief Set the frame id of the transmit
+         * @param target target position in radians
+         */
+        void setFrameId(int frameId) { this->frameId = frameId; };
+        /**
+         * @brief get the frame id
+         */
+        int getFrameId() {return frameId;};
+
         /**
          * @brief Set the Target Velocity for Velocity PID and Impedance modes.
          * @param target target velocity in rad/s (radians per second)
          */
-        void setTargetVelocity(float target)    {velocityTarget = target; };
+        void setTargetVelocity(float target) { velocityTarget = target; };
         /**
          * @brief Set the Torque Command for TORQUE and Impedance (torque_ff) modes.
          * @param target target torque in Nm (Newton-meters)
          */
-        void setTorque(float target)            {torqueSet = target; };
-        
-        //getters
+        void setTorque(float target) { torqueSet = target; };
+
+        // getters
         /**
          * @brief Get the Error Vector of the md80
          * @return uint16_t vector with per-bit coded errors. Refer to documentation for meaning of error codes.
          */
-        uint16_t getErrorVector()               {return errorVector; };
+        uint16_t getErrorVector() { return errorVector; };
 
         /**
          * @brief Get the FDCAN Id of the drive
          * @return uint16_t FDCAN Id (10 - 2047)
          */
-        uint16_t getId()    {return canId;};
+        uint16_t getId() { return canId; };
         /**
          * @brief Get the Position of md80
          * @return float angular position in radians
          */
-        float getPosition() {return position;};
+        float getPosition() { return position; };
         /**
          * @brief Get the Velocity of md80
          * @return float angular velocity in rad/s (radians per second)
          */
-        float getVelocity() {return velocity;};
+        float getVelocity() { return velocity; };
         /**
          * @brief Get the Torque of md80
          * @return float torque in Nm (Newton-meters)
          */
-        float getTorque()   {return torque;};
+        float getTorque() { return torque; };
+
+        MotorStatus_T getMotorStatus() { return motorStatus; };
         /**
          * @brief Get the Error Vector of the md80
          * @return uint16_t vector with per-bit coded errors. Refer to documentation for meaning of error codes.
          */
-        uint16_t getTemperature()               {return temperature; };
+        uint16_t getTemperature() { return temperature; };
 
         /**
          * @brief For internal use by CANdle only.
          * @private
          */
-        StdMd80CommandFrame_t __getCommandFrame() {return commandFrame;}; 
+        StdMd80CommandFrame_t __getCommandFrame() { return commandFrame; };
         /**
          * @brief For internal use by CANdle only. Updates FDCAN frame based on parameters.
          * @private
@@ -157,7 +179,13 @@ namespace mab
          * @brief For internal use by CANdle only. Updates FDCAN frame parameters.
          * @private
          */
-        void __updateResponseData(StdMd80ResponseFrame_t*_responseFrame);
+        void __updateResponseData(StdMd80ResponseFrame_t *_responseFrame);
+        /**
+         * @brief For internal use by CANdle only. Updates FDCAN frame parameters with candle seq number
+         * @private
+         */
+        void __updateResponseData(StdMd80ResponseFrame_t *_responseFrame, double time, int seq);
+
         /**
          * @brief For internal use by CANdle only. Updates regulatorsAdjusted.
          * @private
@@ -168,6 +196,5 @@ namespace mab
          * @private
          */
         void __setControlMode(Md80Mode_E mode);
-
     };
 }

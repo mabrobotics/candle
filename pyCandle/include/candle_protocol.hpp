@@ -2,9 +2,9 @@
 
 #include <cstdint>
 /**
- * 
- * @brief This file contains Definitions for communicating between host <-> CANdle. 
- * This should not be required by the user during the creation of custom code. * 
+ *
+ * @brief This file contains Definitions for communicating between host <-> CANdle.
+ * This should not be required by the user during the creation of custom code. *
  */
 namespace mab
 {
@@ -22,11 +22,11 @@ namespace mab
         USB_FRAME_RESET = 9,
     };
 
-#pragma pack(push, 1)   //Ensures there in no padding (dummy) bytes in the structures below
+#pragma pack(push, 1) // Ensures there in no padding (dummy) bytes in the structures below
     struct GenericMd80Frame32
     {
         uint8_t frameId;
-        uint8_t canMsgLen; 
+        uint8_t canMsgLen;
         uint8_t timeoutMs = 1;
         uint16_t driveCanId;
         uint8_t canMsg[32];
@@ -34,7 +34,7 @@ namespace mab
     struct GenericMd80Frame64
     {
         uint8_t frameId;
-        uint8_t canMsgLen = 64; 
+        uint8_t canMsgLen = 64;
         uint8_t timeoutMs = 2;
         uint16_t driveCanId;
         uint8_t canMsg[64];

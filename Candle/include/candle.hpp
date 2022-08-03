@@ -7,6 +7,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <map>
 #include <iostream>
 #include <fstream>
 #include <chrono>
@@ -130,7 +131,7 @@ namespace mab
          * @brief A vector holding all md80 instances that were succesfully added via `addMd80` method. This vector
          * can be used to modify regulator and control parameters of the md80 drives.
          */
-        std::vector<Md80> md80s;
+        std::map<int, Md80> md80s;
         std::vector<int> md80Ids;
 
         /**
@@ -254,21 +255,6 @@ namespace mab
         @return true if setting was succesfull, false otherwise
         */
         bool controlMd80Enable(uint16_t canId, bool enable);
-
-        /**
-        @brief Searched if the drive with provided FDCAN canId exists in `Md80s` list (exists only if was previously added
-        by `addMd80` method)
-        @param canId ID of the drive
-        @return a reference to a drive if found, nullptr otherwise
-        */
-        Md80 &getMd80FromList(uint16_t canId);
-        /**
-        @brief Searched if the drive with provided FDCAN canId exists in `Md80s` list (exists only if was previously added
-        by `addMd80` method). This might be dangauros. Need to review if needed
-        @param canId ID of the drive
-        @return a pointer to a drive if found, nullptr otherwise
-        */
-        Md80 *getMd80PointerFromList(uint16_t id);
         /**
         @brief Begins auto update mode. In this mode, host and CANdle will automatically exchange USB messages with md80 commands
         and states. In this mode CANdle will automatically send commands and gather state from all Md80's added to update
