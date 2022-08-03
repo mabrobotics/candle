@@ -10,7 +10,7 @@
 /* change the scheduler priority for this task (shouldmake the results more stable) */
 #define CHANGE_PRIORITY    1
 /* communication bus */
-#define BUS                mab::BusType_E::USB
+#define BUS                mab::BusType_E::SPI
 
 /* how many tests to conduct for averaging purposes */
 const int tests = 50;
@@ -31,14 +31,19 @@ int main()
 #endif
 
     //Create CANdle object and set FDCAN baudrate to 8Mbps
-    mab::Candle candle(mab::CAN_BAUD_8M, false, mab::CANdleFastMode_E::FAST2, true, BUS);
+    mab::Candle candle(mab::CAN_BAUD_8M, false, mab::CANdleFastMode_E::FAST1, true, BUS);
 
     std::vector<uint16_t> ids;
     ids.push_back(200);
-    // ids.push_back(150);
-    // ids.push_back(350);
-    // ids.push_back(300);
-    // ids.push_back(450);
+    ids.push_back(300);
+    ids.push_back(307);
+    ids.push_back(308);
+    ids.push_back(309);
+    ids.push_back(310);
+    // ids.push_back(311);
+
+    for(auto &id : ids)
+        candle.addMd80(id);
 
     /* measured time delta vector */
     std::vector<long long> delta_times;
@@ -47,20 +52,17 @@ int main()
     {
         for(auto &id : ids)
         {
-            candle.addMd80(id);
             candle.controlMd80SetEncoderZero(id);       // Reset encoder at current position
             candle.controlMd80Mode(id, mab::Md80Mode_E::IMPEDANCE);     //Set mode to impedance control
             candle.controlMd80Enable(id, true);     //Enable the drive
         }
-        usleep(50000);
+        
         candle.md80s[0].setTargetPosition(0.0f);
         candle.md80s[0].setTargetVelocity(0.0f);
-        // candle.md80s[1].setTargetPosition(0.0f);
-        // candle.md80s[2].setTargetPosition(0.0f);
         candle.benchSetFlagTx(false);
         std::cout<<"candle begin"<<std::endl;
         candle.begin();
-        usleep(100);
+        usleep(500);
 
         std::cout<<"flag deployed"<<std::endl;
         candle.benchSetFlagTx(true);
@@ -86,6 +88,7 @@ int main()
 
         std::cout<<"candle end"<<std::endl;
         delta_times.push_back(candle.benchGetTimeDelta());
+        usleep(10000);
     }
 
     /* cout the measured delta times vector */
@@ -108,6 +111,8 @@ int main()
     std::cout<<"*************** RESULTS ***************"<<std::endl;
     std::cout<<"STD DEV DELAY: "<<stdev<<std::endl;
     std::cout<<"MEAN DELAY: "<<m<<std::endl;
+    std::cout<<"MAX DELAY: "<<*max_element(std::begin(delta_times), std::end(delta_times))<<std::endl;
+    std::cout<<"MIN DELAY: "<<*min_element(std::begin(delta_times), std::end(delta_times))<<std::endl;
     std::cout<<"***************************************"<<std::endl;
     std::cout<<"STD DEV FREQUENCY: "<<fabs(mean_f-(1e6f/(stdev+m))) <<std::endl;
     std::cout<<"MEAN FREQUENCY: "<<mean_f<<std::endl;

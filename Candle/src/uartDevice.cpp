@@ -66,7 +66,7 @@ UartDevice::UartDevice(char* rxBufferPtr, const int rxBufferSize_)
     /* frame used to automatically detect baudrate on Slave device side -> send twice so that it can be easily discarded on the Candle slave device */
     char detectFrame[10] = {0x55,0x55};
     if (write(fd, detectFrame, 2) == -1)
-        std::cout << "[UART] Writing to Uart Device failed. Device Unavailable!" << std::endl;
+        std::cout << "[UART] Writing to UART Device failed. Device Unavailable!" << std::endl;
     /* allow the frame to be detected by the slave, before a next one is sent (the receiver timeout is set to a rather high value to ensure stable communication)*/
     usleep(20000);  
 }
@@ -83,19 +83,11 @@ bool UartDevice::transmit(char* buffer, int commandLen, bool _waitForResponse, i
 
     if (write(fd, buffer, commandLen) == -1)
     {
-        std::cout << "[UART] Writing to Uart Device failed. Device Unavailable!" << std::endl;
+        std::cout << "[UART] Writing to UART Device failed. Device Unavailable!" << std::endl;
         return false;
     }
     if(_waitForResponse)
-    {
-        if (receive(timeout))
-            return true;
-        else
-        {
-            std::cout << "[UART] Did not receive response from Uart Device." << std::endl;
-            return false;
-        }
-    }
+        return receive(timeout);
     return true;
 }
 
@@ -130,10 +122,10 @@ bool UartDevice::receive(int timeoutMs)
     /* check CRC */
     if(crc->checkCrcBuf(rxBuffer,bytesReceived))
         bytesReceived = bytesReceived-crc->getCrcLen();
-    else
+    else if(bytesReceived>0)
     { 
 #ifdef UART_VERBOSE_ON_CRC_ERROR
-    displayDebugMsg(char* rxBuffer, int bytesReceived);
+        displayDebugMsg(rxBuffer, bytesReceived);
 #endif
     
         errorCnt++;
@@ -142,9 +134,11 @@ bool UartDevice::receive(int timeoutMs)
         bytesReceived = 0;
         std::cout<<"[UART] ERROR CRC!"<<std::endl;
     }
+    else            
+        std::cout << "[UART] Did not receive response from UART Device." << std::endl;
 
 #ifdef UART_VERBOSE
-    displayDebugMsg(char* rxBuffer, int bytesReceived);
+    displayDebugMsg(rxBuffer, bytesReceived);
 #endif
     if(bytesReceived > 0)
     {

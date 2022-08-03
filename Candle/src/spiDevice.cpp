@@ -64,6 +64,9 @@ bool SpiDevice::transmit(char* buffer, int commandLen, bool waitForResponse, int
 
     if(waitForResponse)
     {
+        /* allow for SPI reinit on the slave side */
+        usleep(10);
+
         if (receive(timeout, responseLen))
             return true;
         else
@@ -151,9 +154,6 @@ bool SpiDevice::receive(int timeout, int responseLen)
 
 bool SpiDevice::transmitReceive(char* buffer, int commandLen, int responseLen)
 {
-    /* without this delay the communication hangs after a few frames, probably has something to do with threads
-    * it can actually be anywhere in this function and it will work. TODO: find out why */
-    usleep(1);
     memset(rxBuffer, 0, rxBufferSize);
     rxLock.lock();
     bytesReceived = 0;

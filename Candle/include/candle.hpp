@@ -11,7 +11,7 @@
 #include <iostream>
 
 /* Turn on benchmarking */
-// #define BENCHMARKING    
+#define BENCHMARKING    
 
 /* PC supports only USB bus */
 #define PC              0

@@ -44,8 +44,6 @@ int main()
         for(auto &md : candle.md80s)
             md.setTargetPosition(sin(t) * 2.0f);
         
-        std::cout<<candle.md80s[0].getPosition() << std::endl;
-
         t+=dt;
         usleep(1000);
     }
