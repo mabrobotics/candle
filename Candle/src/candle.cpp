@@ -534,8 +534,8 @@ namespace mab
 
                 for (auto canId : md80Ids)
                 {
-                    receiveLogFile << std::to_string(canId) << ";";
-                    transmitLogFile << std::to_string(canId) << ";";
+                    receiveLogFile << std::to_string(canId) << "|";
+                    transmitLogFile << std::to_string(canId) << "|";
                 }
                 receiveLogFile << std::endl;
                 transmitLogFile << std::endl;
@@ -619,11 +619,12 @@ namespace mab
         uint64_t nsec = std::chrono::duration_cast<nsec_t>(std::chrono::system_clock::now().time_since_epoch()).count();
         if (_useLogs)
         {
-            double timeInSec = nsec * 1e-9;
-            transmitLogFile << std::to_string(timeInSec) << ",";
             for (const auto &e : frameIds)
                 transmitLogFile << e << " ";
-            transmitLogFile << std::endl;
+        
+            double timeInSec = nsec * 1e-9;
+            transmitLogFile << "," <<std::to_string(timeInSec) << std::endl;
+
         }
         usb->transmit(tx, length, false);
     }
