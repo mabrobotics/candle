@@ -12,6 +12,8 @@
 
 /* Turn on benchmarking */
 #define BENCHMARKING    
+/* Turn on RX and TX timestamps */
+// #define BENCHMARKING_VERBOSE
 
 /* PC supports only USB bus */
 #define PC              0

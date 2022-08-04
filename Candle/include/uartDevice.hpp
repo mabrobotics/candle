@@ -19,7 +19,7 @@ public:
     UartDevice(char* rxBufferPtr, const int rxBufferSize_);
     ~UartDevice();
     bool transmit(char* buffer, int len, bool waitForConfirmation = false, int timeout = 100);
-    bool receive(int timeout = 100);
+    bool receive(int timeout = 100, bool checkCrc = true);
     int getBytesReceived(){return bytesReceived;};
     uint32_t getErrorCnt(){return errorCnt;}
 

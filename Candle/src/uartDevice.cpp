@@ -91,7 +91,7 @@ bool UartDevice::transmit(char* buffer, int commandLen, bool _waitForResponse, i
     return true;
 }
 
-bool UartDevice::receive(int timeoutMs)
+bool UartDevice::receive(int timeoutMs, bool checkCrc)
 {    
     memset(rxBuffer, 0, rxBufferSize);
     rxLock.lock();
@@ -120,9 +120,9 @@ bool UartDevice::receive(int timeoutMs)
     rxLock.unlock();
 
     /* check CRC */
-    if(crc->checkCrcBuf(rxBuffer,bytesReceived))
+    if(crc->checkCrcBuf(rxBuffer,bytesReceived) && checkCrc)
         bytesReceived = bytesReceived-crc->getCrcLen();
-    else if(bytesReceived>0)
+    else if(bytesReceived>0 && checkCrc)
     { 
 #ifdef UART_VERBOSE_ON_CRC_ERROR
         displayDebugMsg(rxBuffer, bytesReceived);
@@ -134,7 +134,7 @@ bool UartDevice::receive(int timeoutMs)
         bytesReceived = 0;
         std::cout<<"[UART] ERROR CRC!"<<std::endl;
     }
-    else            
+    else if(bytesReceived == 0)        
         std::cout << "[UART] Did not receive response from UART Device." << std::endl;
 
 #ifdef UART_VERBOSE

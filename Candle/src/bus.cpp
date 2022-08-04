@@ -64,7 +64,7 @@ namespace mab
         return false;
     }
 
-    bool Bus::receive(int timeoutMs)
+    bool Bus::receive(int timeoutMs, bool checkCrc)
     {
         switch(busType)
         {
@@ -75,7 +75,7 @@ namespace mab
             }
             case BusType_E::UART:
             {
-                return uart->receive(timeoutMs);
+                return uart->receive(timeoutMs, checkCrc);
                 break;
             }
             default:

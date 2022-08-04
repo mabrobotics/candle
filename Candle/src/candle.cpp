@@ -173,7 +173,9 @@ namespace mab
                     }
 #ifdef BENCHMARKING
                     long long microseconds_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-                    // if(!flag || !flag_glob_rx)std::cout<< "RX:" << microseconds_since_epoch << std::endl;
+#ifdef BENCHMARKING_VERBOSE
+                    if(!flag || !flag_glob_rx)std::cout<< "RX:" << microseconds_since_epoch << std::endl;
+#endif
                     
                     if(flag && !flag_glob_rx)
                     {
@@ -217,7 +219,9 @@ namespace mab
 #ifdef BENCHMARKING
 
                 long long microseconds_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-                // if(!flag && !flag_glob_rx)std::cout<< "RX:" << microseconds_since_epoch << std::endl;
+#ifdef BENCHMARKING_VERBOSE               
+                if(!flag && !flag_glob_rx)std::cout<< "RX:" << microseconds_since_epoch << std::endl;
+#endif
                 
                 if(flag && !flag_glob_rx)
                 {
@@ -230,7 +234,9 @@ namespace mab
 
 #ifdef BENCHMARKING
             long long microseconds_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-            // if(!flag_glob_rx)std::cout<< "TX:" << microseconds_since_epoch << std::endl;
+#ifdef BENCHMARKING_VERBOSE
+            if(!flag_glob_rx)std::cout<< "TX:" << microseconds_since_epoch << std::endl;
+#endif
             if(flag_glob_tx == true)
             {
                 flag_glob_tx = false;
@@ -254,7 +260,7 @@ namespace mab
                 break;
             default:
                 if(bus->getType() == mab::BusType_E::SPI)
-                    usleep(100);
+                    usleep(400);
                 else 
                     usleep(10000);
                 break;
@@ -647,10 +653,13 @@ namespace mab
         tx[1] = 0x00;
         
         if(bus->getType() == mab::BusType_E::USB)
-            bus->transfer(tx,2, true, 10, 2);   //Stops update but produces garbage output
+            bus->transfer(tx,2, true, 10, 2);               //Stops update but produces garbage output
         
-        if(bus->getType() == mab::BusType_E::UART) //receive remaining bytes
-            bus->receive(10);  
+        if(bus->getType() == mab::BusType_E::UART) 
+        {
+            bus->transfer(tx,2, false, 10, 2);              //ensure there's something to receive
+            bus->receive(100, false);                       //receive remaining bytes and do not check crc cause it will be garbage 
+        }
 
         if(bus->transfer(tx,2, true, 10, 2))
             if(*bus->getRxBuffer(0) == BUS_FRAME_END && *bus->getRxBuffer(1) == 1)

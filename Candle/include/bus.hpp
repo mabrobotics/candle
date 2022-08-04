@@ -27,7 +27,7 @@ namespace mab
         mab::BusType_E getType();
         char* getRxBuffer(int index = 0);
         bool transfer(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0);
-        bool receive(int timeoutMs = 100);
+        bool receive(int timeoutMs = 100, bool checkCrc = true);
         int getBytesReceived();
         int getRxBufferSize(){return rxBufferSize;};
         int getTxBufferSize(){return txBufferSize;};

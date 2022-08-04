@@ -66,14 +66,7 @@ bool SpiDevice::transmit(char* buffer, int commandLen, bool waitForResponse, int
     {
         /* allow for SPI reinit on the slave side */
         usleep(10);
-
-        if (receive(timeout, responseLen))
-            return true;
-        else
-        {
-            std::cout << "[SPI] Did not receive response from SPI device" << std::endl;
-            return false;
-        }
+        return receive(timeout, responseLen);
     }
 
     return true;
@@ -125,7 +118,9 @@ bool SpiDevice::receive(int timeout, int responseLen)
         usleep(delayUs);        
     }
 
-    if(crc->checkCrcBuf(rxBuffer, bytesReceived) == false)
+    if(crc->checkCrcBuf(rxBuffer, bytesReceived))
+        bytesReceived-=crc->getCrcLen();
+    else if(bytesReceived > 0)
     {
 #ifdef SPI_VERBOSE_ON_CRC_ERROR
         bytesReceived = responseLen;
@@ -138,7 +133,7 @@ bool SpiDevice::receive(int timeout, int responseLen)
         std::cout<<"[SPI] ERROR CRC!"<<std::endl;
     }
     else 
-        bytesReceived-=crc->getCrcLen();
+        std::cout << "[SPI] Did not receive response from SPI device" << std::endl;
 
     rxLock.unlock();
 
@@ -174,7 +169,7 @@ bool SpiDevice::transmitReceive(char* buffer, int commandLen, int responseLen)
     /* check CRC */
     if(crc->checkCrcBuf(rxBuffer,responseLen))
         bytesReceived = responseLen-crc->getCrcLen();
-    else
+    else if(bytesReceived > 0)
     {
 #ifdef SPI_VERBOSE_ON_CRC_ERROR
         bytesReceived = responseLen;
@@ -187,6 +182,8 @@ bool SpiDevice::transmitReceive(char* buffer, int commandLen, int responseLen)
         bytesReceived = 0;
         std::cout<<"[SPI] ERROR CRC!"<<std::endl;
     }
+    else 
+        std::cout << "[SPI] Did not receive response from SPI device" << std::endl;
 
     rxLock.unlock();
 
