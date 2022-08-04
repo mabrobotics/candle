@@ -266,7 +266,7 @@ namespace mab
                 auto candle = findCandleByMd80Id(motorId);
                 if (candle != NULL)
                 {
-                    auto md = candle->md80s.at(motorId);
+                    auto &md = candle->md80s.at(motorId);
                     md.setFrameId(frameId);
                     md.setTargetPosition(motorCommand.at("position"));
                     md.setTargetVelocity(motorCommand.at("velocity"));
@@ -293,7 +293,7 @@ namespace mab
                 auto candle = findCandleByMd80Id(motorId);
                 if (candle != NULL)
                 {
-                    auto md = candle->md80s.at(motorId);
+                    auto &md = candle->md80s.at(motorId);
                     md.setImpedanceControllerParams(motorCommand.at("kp"), motorCommand.at("kd"));
                     md.setMaxTorque(motorCommand.at("max_torque"));
                 }
