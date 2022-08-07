@@ -34,30 +34,25 @@ namespace mab
         CandleResponse_T retVal;
         for (auto &id : idList)
         {
-            unsigned int md80NotFound = 0;
             unsigned int md80Found = 0;
-            mab::Candle *foundCandle;
-            for (auto candle : candleInstances)
+            for (int i = 0; i < (int)candleInstances.size(); i++)
             {
-                if (candle->addMd80(id, false) == true)
+
+                if (candleInstances[i]->addMd80(id, false) == true)
                 {
                     retVal.push_back(true);
+                    motorIdToCandleId[id] = i;
                     md80Found++;
-                    foundCandle = candle;
                 }
-                else
-                    md80NotFound++;
             }
             /* if the id was found on multiple CANdle devices */
+            if (md80Found == 0)
+            {
+                candleHandlerOut << "Drive with ID " << id << "was not found" << std::endl;
+                retVal.push_back(false);
+            }
             if (md80Found > 1)
                 candleHandlerOut << "Drive with ID " << id << "seem to be duplicated" << std::endl;
-            /* if the drive was not found on any of CANdle devices */
-            else if (md80NotFound == candleInstances.size())
-                retVal.push_back(false);
-            else
-            { // Then we found one candle
-                md80Instances[id] = foundCandle->getMd80PointerFromList(id);
-            }
         }
 
         /* collect total number of drives from all CANdle devices */
@@ -79,7 +74,7 @@ namespace mab
             else
             {
                 retVal.push_back(false);
-                candleHandlerOut << "Drive with ID" << id << "is not added!" << std::endl;
+                candleHandlerOut << "Drive with ID" << id << "was not found. No zero command add!" << std::endl;
             }
         }
         return retVal;
@@ -228,9 +223,9 @@ namespace mab
         MultipleMotorsStatus_T retVal;
         for (auto candle : candleInstances)
         {
-            for (auto &md : candle->md80s)
+            for (auto &[canId, md] : candle->md80s)
             {
-                retVal[md.getId()] = md.getMotorStatus();
+                retVal[canId] = md.getMotorStatus();
             }
         }
 
@@ -242,8 +237,12 @@ namespace mab
         MultipleMotorsStatus_T retVal;
         for (auto &id : idList)
         {
-            if (md80Instances.find(id) != md80Instances.end())
-                retVal[id] = md80Instances[id]->getMotorStatus();
+            auto candle = findCandleByMd80Id(id);
+            if (candle != NULL)
+            {
+                auto &md = candle->md80s.at(id);
+                retVal[id] = md.getMotorStatus();
+            }
             else
                 candleHandlerOut << " [getMotorData] Drive with ID: " << id << " doesn't exist" << std::endl;
         }
@@ -264,15 +263,16 @@ namespace mab
         {
             try
             {
-                if (md80Instances.find(motorId) != md80Instances.end())
+                auto candle = findCandleByMd80Id(motorId);
+                if (candle != NULL)
                 {
-                    auto md = md80Instances[motorId];
-                    md->setFrameId(frameId);
-                    md->setTargetPosition(motorCommand.at("position"));
-                    md->setTargetVelocity(motorCommand.at("velocity"));
-                    md->setTorque(motorCommand.at("torque"));
+                    auto &md = candle->md80s.at(motorId);
+                    md.setFrameId(frameId);
+                    md.setTargetPosition(motorCommand.at("position"));
+                    md.setTargetVelocity(motorCommand.at("velocity"));
+                    md.setTorque(motorCommand.at("torque"));
                     if (motorCommand.find("kp") != motorCommand.end())
-                        md->setImpedanceControllerParams(motorCommand.at("kp"), motorCommand.at("kd"));
+                        md.setImpedanceControllerParams(motorCommand.at("kp"), motorCommand.at("kd"));
                 }
                 else
                     candleHandlerOut << "Drive with ID: " << motorId << "was not found so command not set" << std::endl;
@@ -290,11 +290,12 @@ namespace mab
         {
             try
             {
-                if (md80Instances.find(motorId) != md80Instances.end())
+                auto candle = findCandleByMd80Id(motorId);
+                if (candle != NULL)
                 {
-                    auto md = md80Instances[motorId];
-                    md->setImpedanceControllerParams(motorCommand.at("kp"), motorCommand.at("kd"));
-                    md->setMaxTorque(motorCommand.at("max_torque"));
+                    auto &md = candle->md80s.at(motorId);
+                    md.setImpedanceControllerParams(motorCommand.at("kp"), motorCommand.at("kd"));
+                    md.setMaxTorque(motorCommand.at("max_torque"));
                 }
                 else
                     candleHandlerOut << " [setImpedanceParamters] Drive with ID: " << motorId << " doesn't exist" << std::endl;
@@ -312,14 +313,10 @@ namespace mab
 
     mab::Candle *MultipleCandles::findCandleByMd80Id(uint16_t md80Id)
     {
-        for (auto candle : candleInstances)
-        {
-            for (auto id : candle->md80s)
-            {
-                if (id.getId() == md80Id)
-                    return candle;
-            }
-        }
-        return NULL;
+        auto it = motorIdToCandleId.find(md80Id);
+        if (it == motorIdToCandleId.end())
+            return NULL;
+        else
+            return candleInstances[it->second];
     }
 } // namespace mab
