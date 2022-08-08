@@ -41,7 +41,8 @@ namespace mab
         MultipleMotorsStatus_T getAllMotorsData();
 
         void sendMotorCommand(int frameId, MotorCommands_T motorCommands);
-        void setImpedanceParamters(MotorCommands_T impedanceParams);
+        void setImpedanceParameters(MotorCommands_T impedanceParams);
+        void setPositionPIDParameters(MotorCommands_T positionPIDParams);
 
         ~MultipleCandles();
     };

@@ -284,7 +284,7 @@ namespace mab
         }
     }
 
-    void MultipleCandles::setImpedanceParamters(MotorCommands_T impedanceParams)
+    void MultipleCandles::setImpedanceParameters(MotorCommands_T impedanceParams)
     {
         for (auto const &[motorId, motorCommand] : impedanceParams)
         {
@@ -299,6 +299,31 @@ namespace mab
                 }
                 else
                     candleHandlerOut << " [setImpedanceParamters] Drive with ID: " << motorId << " doesn't exist" << std::endl;
+            }
+            catch (const char *eMsg)
+            {
+                candleHandlerOut << eMsg << std::endl;
+            }
+        }
+    }
+
+    void MultipleCandles::setPositionPIDParameters(MotorCommands_T positionPIDParams)
+    {
+        for (auto const &[motorId, motorCommand] : positionPIDParams)
+        {
+            try
+            {
+                auto candle = findCandleByMd80Id(motorId);
+                if (candle != NULL)
+                {
+                    auto &md = candle->md80s.at(motorId);
+                    md.setPositionControllerParams(motorCommand.at("p_kp"), motorCommand.at("p_ki"), motorCommand.at("p_kd"), motorCommand.at("p_iwu"));
+                    md.setMaxVelocity(motorCommand.at("max_vel"));
+                    md.setVelocityControllerParams(motorCommand.at("v_kp"), motorCommand.at("v_ki"), motorCommand.at("v_kd"), motorCommand.at("v_iwu"));
+                    md.setMaxTorque(motorCommand.at("max_torque"));
+                }
+                else
+                    candleHandlerOut << " [setPositionParamters] Drive with ID: " << motorId << " doesn't exist" << std::endl;
             }
             catch (const char *eMsg)
             {
