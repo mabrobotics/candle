@@ -30,7 +30,11 @@ namespace mab
     {
 #if PLATFORM == PC
         if(busType == mab::BusType_E::SPI || busType == mab::BusType_E::UART)
+        {
+            vout << "Current communication bus is not available on selected platform!" << std::endl;
             throw "Current communication bus is not available on selected platform!";
+            return;
+        }
 #endif
         
         bus = new Bus(busType);
@@ -96,7 +100,10 @@ namespace mab
         usleep(5000);
 
         if (!configCandleBaudrate(canBaudrate, true))
+        {
             vout << "Failed to set up CANdle baudrate @" << canBaudrate << "Mbps!" << std::endl;
+            return;
+        }
 
         if(bus->getType() == mab::BusType_E::USB)
             vout << "CANdle at " << this->bus->usb->getSerialDeviceName() << ", ID: 0x" << std::hex << this->getUsbDeviceId() << std::dec <<" ready (USB)" << std::endl;
