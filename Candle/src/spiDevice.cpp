@@ -9,27 +9,27 @@ SpiDevice::SpiDevice(char* rxBufferPtr, const int rxBufferSize_)
 {
     fd = open(spiDev, O_RDWR);
     if(fd < 0) {
-        std::cout<<"Could not open the SPI device..." <<std::endl;
+        std::cout<<"[SPI] Could not open the SPI device..." <<std::endl;
         exit(EXIT_FAILURE);
     }
 
     int ret = ioctl(fd, SPI_IOC_WR_MODE, &mode);
     if(ret != 0) {
-        std::cout<<"Could not write SPI mode..." <<std::endl;
+        std::cout<<"[SPI] Could not write SPI mode..." <<std::endl;
         close(fd);
         exit(EXIT_FAILURE);
     }
 
     ret = ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bits);
     if(ret != 0) {
-        std::cout<<"Could not write SPI mode..." <<std::endl;
+        std::cout<<"[SPI] Could not write SPI mode..." <<std::endl;
         close(fd);
         exit(EXIT_FAILURE);
     }
 
     ret = ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &spiSpeed);
     if(ret != 0) {
-        std::cout<<"Could not write the SPI max speed..." <<std::endl;
+        std::cout<<"[SPI] Could not write the SPI max speed..." <<std::endl;
         close(fd);
         exit(EXIT_FAILURE);
     }
@@ -60,7 +60,7 @@ bool SpiDevice::transmit(char* buffer, int commandLen, bool waitForResponse, int
     trx.len = commandLen;
 
     /* send */
-    ioctl(fd, SPI_IOC_MESSAGE(1), &trx);
+    sendMessage(SPI_IOC_MESSAGE(1), &trx);
 
     if(waitForResponse)
     {
@@ -91,7 +91,7 @@ bool SpiDevice::receive(int timeout, int responseLen)
         trx.rx_buf = (unsigned long)&byteRx;
         trx.len = 1;
 
-        ioctl(fd, SPI_IOC_MESSAGE(1), &trx);
+        sendMessage(SPI_IOC_MESSAGE(1), &trx);
         timeoutBusOutUs -= delayUs; //If not receiving wait for 100ms and return false
         /* if the received byte is non-zero, continue with a larger transfer for the rest (responseLen -1) */
         if(byteRx != 0 )firstByteReceived = true;
@@ -106,7 +106,7 @@ bool SpiDevice::receive(int timeout, int responseLen)
             trx.rx_buf = (unsigned long)&rxBuffer[1];
             trx.len = responseLen - 1;
             /* send request */
-            ioctl(fd, SPI_IOC_MESSAGE(1), &trx);
+            sendMessage(SPI_IOC_MESSAGE(1), &trx);
             bytesReceived += (responseLen - 1);
             break;
         }
@@ -164,7 +164,7 @@ bool SpiDevice::transmitReceive(char* buffer, int commandLen, int responseLen)
     trx.rx_buf = (unsigned long)rxBuffer;
     trx.len = responseLen > commandLen ? responseLen : commandLen;
     /* make the transfer */
-    ioctl(fd, SPI_IOC_MESSAGE(1), &trx);
+    sendMessage(SPI_IOC_MESSAGE(1), &trx);
 
     /* check CRC */
     if(crc->checkCrcBuf(rxBuffer,responseLen))
@@ -206,5 +206,17 @@ void SpiDevice::displayDebugMsg(char* buffer, int bytesReceived)
         for(int i = 0; i < bytesReceived; i++)
             std::cout << std::hex << "0x" << (unsigned short)buffer[i] << " ";
         std::cout << std::dec << std::endl << "#######################################################" << std::endl; 
+    }
+}
+
+void SpiDevice::sendMessage(unsigned long request, spi_ioc_transfer* trx)
+{
+    errno = 0;
+    ioctl(fd, request, trx);
+
+    if (errno != 0)
+    {
+        std::cout<<"[SPI] LOW LEVEL ERROR! Returned ("<<errno<<") "<<strerror(errno)<<std::endl;
+        exit(EXIT_FAILURE);
     }
 }

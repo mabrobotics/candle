@@ -147,11 +147,14 @@ int main(int argc, char *argv[])
                 break;
             }  
         }
+
         candle.end();
+
+        for(auto &id : ids)
+            candle.controlMd80Enable(id, false);     //Disable the drive
 
         std::cout<<"candle end"<<std::endl;
         deltaTimes.push_back(candle.benchGetTimeDelta());
-        usleep(10000);
     }
 
     /* cout the measured delta times vector */

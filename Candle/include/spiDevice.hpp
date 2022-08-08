@@ -40,4 +40,5 @@ private:
     std::mutex rxLock;
 
     void displayDebugMsg(char* buffer, int bytesReceived);
+    void sendMessage(unsigned long request, spi_ioc_transfer* trx);
 };
