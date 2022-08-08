@@ -33,10 +33,17 @@ namespace mab
         int getTxBufferSize(){return txBufferSize;};
         
     private:
+        static const int errorThreshold = 5;
+        static const int msgCntThreshold = 1000;
+        int errorCnt = 0;
+        int msgCnt = 0;
+
         BusType_E busType;
         static const int rxBufferSize = 1024;
         static const int txBufferSize = 1024;
         char rxBuffer[rxBufferSize];
         char txBuffer[txBufferSize];
+        
+        void manageMsgCount(bool ret);
     };
 }

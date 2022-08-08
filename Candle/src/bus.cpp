@@ -40,48 +40,57 @@ namespace mab
 
     bool Bus::transfer(char* buffer, int commandLen, bool waitForResponse, int timeout, int responseLen)
     {
+        bool ret = false;
+
         switch(busType)
         {
             case BusType_E::USB:
             {
-                return usb->transmit(buffer,commandLen,waitForResponse,timeout);
+                ret = usb->transmit(buffer,commandLen,waitForResponse,timeout);
                 break;
             }
             case BusType_E::SPI:
             {
                 if(buffer[0] == BUS_FRAME_UPDATE)
-                    return spi->transmitReceive(buffer,commandLen,responseLen);
+                    ret = spi->transmitReceive(buffer,commandLen,responseLen);
                 else
-                    return spi->transmit(buffer,commandLen,waitForResponse,timeout,responseLen);
+                    ret = spi->transmit(buffer,commandLen,waitForResponse,timeout,responseLen);
                 break;
             }
             case BusType_E::UART:
             {
-                return uart->transmit(buffer,commandLen,waitForResponse,timeout);
+                ret = uart->transmit(buffer,commandLen,waitForResponse,timeout);
                 break;
             }
         }
-        return false;
+
+        manageMsgCount(ret);
+        return ret;
     }
 
     bool Bus::receive(int timeoutMs, bool checkCrc)
     {
+        bool ret = false;
+
         switch(busType)
         {
             case BusType_E::USB:
             {
-                return usb->receive(timeoutMs);
+                ret = usb->receive(timeoutMs);
                 break;
             }
             case BusType_E::UART:
             {
-                return uart->receive(timeoutMs, checkCrc);
+                ret = uart->receive(timeoutMs, checkCrc);
                 break;
             }
             default:
                 break;
         }
-        return false;
+
+        manageMsgCount(ret);
+
+        return ret;
     }
 
     int Bus::getBytesReceived()
@@ -105,5 +114,21 @@ namespace mab
             }
         }
         return 0;
+    }
+
+    void Bus::manageMsgCount(bool ret)
+    {
+        msgCnt++;
+        if(ret == false)errorCnt++;
+        if(errorCnt > errorThreshold)
+        {
+            std::cout<<"[CANDLE] Fatal communication error count ("<< errorCnt<<"). Exiting..."<<std::endl;
+            exit(EXIT_FAILURE);
+        }
+        if(msgCnt > msgCntThreshold)
+        {
+            errorCnt = 0;
+            msgCnt = 0;
+        }
     }
 }
