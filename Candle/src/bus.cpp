@@ -12,17 +12,20 @@ namespace mab
         {
             case BusType_E::USB:
             {
-                delete usb;
+                if(usb != NULL)
+                    delete usb;
                 break;
             }
             case BusType_E::SPI:
             {
-                delete spi;
+                if(spi != NULL)
+                    delete spi;
                 break;
             }
             case BusType_E::UART:
             {
-                delete uart;
+                if(uart != NULL)
+                    delete uart;
                 break;
             }
         }
@@ -38,7 +41,7 @@ namespace mab
         return (char*)&rxBuffer[index];
     }   
 
-    bool Bus::transfer(char* buffer, int commandLen, bool waitForResponse, int timeout, int responseLen)
+    bool Bus::transfer(char* buffer, int commandLen, bool waitForResponse, int timeout, int responseLen, bool faultVerbose)
     {
         bool ret = false;
 
@@ -46,7 +49,7 @@ namespace mab
         {
             case BusType_E::USB:
             {
-                ret = usb->transmit(buffer,commandLen,waitForResponse,timeout);
+                ret = usb->transmit(buffer,commandLen,waitForResponse,timeout,faultVerbose);
                 break;
             }
             case BusType_E::SPI:
@@ -54,12 +57,12 @@ namespace mab
                 if(buffer[0] == BUS_FRAME_UPDATE)
                     ret = spi->transmitReceive(buffer,commandLen,responseLen);
                 else
-                    ret = spi->transmit(buffer,commandLen,waitForResponse,timeout,responseLen);
+                    ret = spi->transmit(buffer,commandLen,waitForResponse,timeout,responseLen,faultVerbose);
                 break;
             }
             case BusType_E::UART:
             {
-                ret = uart->transmit(buffer,commandLen,waitForResponse,timeout);
+                ret = uart->transmit(buffer,commandLen,waitForResponse,timeout,faultVerbose);
                 break;
             }
         }

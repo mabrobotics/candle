@@ -737,11 +737,26 @@ namespace mab
         memcpy(tx, &frame, len);
         if(bus->transfer(tx, len, true, 50, 66))
         {
-            std::cout << "[CANDLE] Library version: " << getVersion() << std::endl;
-            std::cout << "[CANDLE] DIAG at ID = " << canId << ": " << std::string(&*bus->getRxBuffer(2)) << std::endl;
+            vout << "Library version: " << getVersion() << std::endl;
+            vout << "DIAG at ID = " << canId << ": " << std::string(&*bus->getRxBuffer(2)) << std::endl;
             return true;
         }
         vout << "Diagnostic failed at ID = " << canId << std::endl;
+        return false;
+    }
+    mab::CANdleBaudrate_E Candle::getCurrentBaudrate()
+    {
+        return this->canBaudrate;
+    }
+    bool Candle::checkMd80ForBaudrate(uint16_t canId)
+    {
+        GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_GET_INFO);
+        char tx[64];
+        int len = sizeof(frame);
+        memcpy(tx, &frame, len);
+        if(bus->transfer(tx, len, true, 10, 66, false))
+            if (*bus->getRxBuffer(1) == true)
+                return true;
         return false;
     }
 

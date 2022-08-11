@@ -65,7 +65,7 @@ UsbDevice::UsbDevice(std::string deviceName, std::string idVendor, std::string i
     rxBufferSize = rxBufferSize_;
 }
 
-bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeout)
+bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeout, bool faultVerbose)
 {
     if (write(fd, buffer, len) == -1)
     {
@@ -74,18 +74,18 @@ bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeo
     }
     if(_waitForResponse)
     {
-        if (receive(timeout))
+        if (receive(timeout,faultVerbose))
             return true;
         else
         {
-            std::cout << "[USB] Did not receive response from USB Device." << std::endl;
+            if(faultVerbose)std::cout << "[USB] Did not receive response from USB Device." << std::endl;
             return false;
         }
     }
     return true;
 }
 
-bool UsbDevice::receive(int timeoutMs)
+bool UsbDevice::receive(int timeoutMs, bool faultVerbose)
 {    
     memset(rxBuffer, 0, rxBufferSize);
     rxLock.lock();

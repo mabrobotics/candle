@@ -50,7 +50,7 @@ SpiDevice::~SpiDevice()
     close(fd);
 }
 
-bool SpiDevice::transmit(char* buffer, int commandLen, bool waitForResponse, int timeout, int responseLen)
+bool SpiDevice::transmit(char* buffer, int commandLen, bool waitForResponse, int timeout, int responseLen, bool faultVerbose)
 {
     /* CRC */
     commandLen = crc->addCrcToBuf(buffer,commandLen);
@@ -66,13 +66,13 @@ bool SpiDevice::transmit(char* buffer, int commandLen, bool waitForResponse, int
     {
         /* allow for SPI reinit on the slave side */
         usleep(10);
-        return receive(timeout, responseLen);
+        return receive(timeout, responseLen, faultVerbose);
     }
 
     return true;
 }
 
-bool SpiDevice::receive(int timeout, int responseLen)
+bool SpiDevice::receive(int timeout, int responseLen, bool faultVerbose)
 {
     memset(rxBuffer, 0, rxBufferSize);
     rxLock.lock();
@@ -133,7 +133,7 @@ bool SpiDevice::receive(int timeout, int responseLen)
         std::cout<<"[SPI] ERROR CRC!"<<std::endl;
     }
     else 
-        std::cout << "[SPI] Did not receive response from SPI device" << std::endl;
+        if(faultVerbose)std::cout << "[SPI] Did not receive response from SPI device" << std::endl;
 
     rxLock.unlock();
 

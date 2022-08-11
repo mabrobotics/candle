@@ -18,15 +18,15 @@ namespace mab
     {
 
     public:
-        UsbDevice* usb;
-        SpiDevice* spi;
-        UartDevice* uart;
+        UsbDevice* usb = NULL;
+        SpiDevice* spi = NULL;
+        UartDevice* uart = NULL;
         
         Bus(mab::BusType_E type);
         ~Bus();
         mab::BusType_E getType();
         char* getRxBuffer(int index = 0);
-        bool transfer(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0);
+        bool transfer(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0, bool faultVerbose = true);
         bool receive(int timeoutMs = 100, bool checkCrc = true);
         int getBytesReceived();
         int getRxBufferSize(){return rxBufferSize;};

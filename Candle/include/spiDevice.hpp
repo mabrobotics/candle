@@ -16,8 +16,8 @@ class SpiDevice
 public:
     SpiDevice(char* rxBufferPtr, const int rxBufferSize_);
     ~SpiDevice();
-    bool transmit(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0);
-    bool receive(int timeout = 100, int responseLen = 0);
+    bool transmit(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0, bool faultVerbose = true);
+    bool receive(int timeout = 100, int responseLen = 0, bool faultVerbose = true);
     bool transmitReceive(char* buffer, int commandLen, int responseLen);
     int getBytesReceived(){return bytesReceived;}
     uint32_t getErrorCnt(){return errorCnt;}

@@ -302,6 +302,17 @@ namespace mab
         @return true if the succesfull, false otherwise
         */
         bool setupMd80Diagnostic(uint16_t canId);
+        /**
+        @brief Returns current CAN baudrate
+        @return either mab::CANdleBaudrate_E::1M, mab::CANdleBaudrate_E::2M, mab::CANdleBaudrate_E::5M, or mab::CANdleBaudrate_E::8M
+        */
+        mab::CANdleBaudrate_E getCurrentBaudrate();
+        /**
+        @brief checks if a drive could be reached with current baudrate
+        @param canId ID of the drive
+        @return true if drive was successfully contacted, false otherwise
+        */
+        bool checkMd80ForBaudrate(uint16_t canId);
 
 #ifdef BENCHMARKING
         bool benchGetFlagRx();
