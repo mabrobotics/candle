@@ -535,17 +535,9 @@ namespace mab
                 vout << "Candle" << candleId << "transmit log file is: " << transmitFileName << std::endl;
 
                 receiveLogFile.open(receiveFileName, std::fstream::out);
-                receiveLogFile << "frame_id, time, cans ids, list[poisiton velocity torque]\n";
+                receiveLogFile << "frame_id, time, list[poisiton velocity torque]" << std::endl;
                 transmitLogFile.open(transmitFileName, std::fstream::out);
-                transmitLogFile << "frame_id, time, cans ids\n";
-                transmitLogFile << ",,";
-
-                for (auto canId : md80Ids)
-                {
-                    transmitLogFile << std::to_string(canId) << "|";
-                }
-                receiveLogFile << std::endl;
-                transmitLogFile << std::endl;
+                transmitLogFile <<"frame_id, time, list[poisiton velocity torque]" << std::endl;
             }
             mode = CANdleMode_E::UPDATE;
             shouldStopTransmitter = false;
@@ -613,10 +605,16 @@ namespace mab
         tx[0] = USB_FRAME_UPDATE;
         std::vector<int> frameIds;
         int i = 0;
+        std::string output = "";
         for (auto &[canId, md80Drive] : md80s)
         {
             md80Drive.__updateCommandFrame();
-            // md80s[candleId].__updateCommandFrame();
+            output += "," + std::to_string(canId) + ":" +
+            std::to_string(md80Drive.getTargetPos()) + " " + 
+            std::to_string(md80Drive.getTargetVel()) + " " +
+            std::to_string(md80Drive.getTorqueRequest()) + " " +
+            std::to_string(md80Drive.getKP())+ " " +
+            std::to_string(md80Drive.getKD())+ " ";
             frameIds.push_back(md80Drive.getFrameId());
             *(StdMd80CommandFrame_t *)&tx[1 + i * sizeof(StdMd80CommandFrame_t)] = md80Drive.__getCommandFrame();
             i++;
@@ -630,7 +628,7 @@ namespace mab
                 transmitLogFile << e << " ";
 
             double timeInSec = nsec * 1e-9;
-            transmitLogFile << "," << std::to_string(timeInSec) << std::endl;
+            transmitLogFile << "," << std::to_string(timeInSec) << output <<std::endl;
         }
         usb->transmit(tx, length, false);
     }
