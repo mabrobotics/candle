@@ -508,6 +508,17 @@ bool Candle::controlMd80SetEncoderZero(uint16_t canId)
 }
 bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
 {
+	if (currentLimit > driverMaxCurrent)
+	{
+		vout << "Current setting above limit (" << driverMaxCurrent << " A)! Setting current limit to maximum (" << driverMaxCurrent << " A)" << std::endl;
+		currentLimit = driverMaxCurrent;
+	}
+	else if (currentLimit < driverMinCurrent)
+	{
+		vout << "Current setting below limit (" << driverMinCurrent << " A)! Setting current limit to minimum (" << driverMinCurrent << " A)" << std::endl;
+		currentLimit = driverMinCurrent;
+	}
+
 	GenericMd80Frame32 frame = _packMd80Frame(canId, 6, Md80FrameId_E::FRAME_BASE_CONFIG);
 	*(float*)&frame.canMsg[2] = currentLimit;
 	char tx[64];
@@ -719,6 +730,17 @@ void Candle::transmitNewStdFrame()
 
 bool Candle::setupMd80Calibration(uint16_t canId, uint16_t torqueBandwidth)
 {
+	if (torqueBandwidth > driverMaxBandwidth)
+	{
+		vout << "Bandwidth setting above limit (" << driverMaxBandwidth << " Hz)! Setting bandwidth to maximum (" << driverMaxBandwidth << " Hz)" << std::endl;
+		torqueBandwidth = driverMaxBandwidth;
+	}
+	else if (torqueBandwidth < driverMinBandwidth)
+	{
+		vout << "Bandwidth setting below limit (" << driverMinBandwidth << " Hz)! Setting bandwidth to minimum (" << driverMinBandwidth << " Hz)" << std::endl;
+		torqueBandwidth = driverMinBandwidth;
+	}
+
 	GenericMd80Frame32 frame = _packMd80Frame(canId, 4, Md80FrameId_E::FRAME_CALIBRATION);
 	char tx[64];
 	frame.canMsg[2] = (uint8_t)(torqueBandwidth & 0xff);

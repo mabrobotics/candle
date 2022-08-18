@@ -85,6 +85,13 @@ class Candle
 
 	bool printVerbose = true;
 
+	/* controller limits */
+	const uint16_t driverMinBandwidth = 50;
+	const uint16_t driverMaxBandwidth = 2500;
+
+	const float driverMaxCurrent = 40.0f;
+	const float driverMinCurrent = 1.0f;
+
 #ifdef BENCHMARKING
 	long long txTimestamp = 0;
 	bool flag_glob_tx = false;
