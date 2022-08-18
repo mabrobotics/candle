@@ -166,7 +166,7 @@ namespace mab
         @param timeoutMs timeout for receiving in milliseconds
         @return true if received response, false otherwise
         */
-        bool sengGenericFDCanFrame(uint16_t canId, int msgLen, const char *txBuffer, char *rxBuffer, int timeoutMs = 100);
+        bool sendGenericFDCanFrame(uint16_t canId, int msgLen, const char *txBuffer, char *rxBuffer, int timeoutMs = 100);
 
         /**
         @brief Adds Md80 to auto update vector.

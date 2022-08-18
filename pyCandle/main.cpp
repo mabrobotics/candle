@@ -66,7 +66,7 @@ PYBIND11_MODULE(pyCandle, m)
       .def("ping", py::overload_cast<>(&mab::Candle::ping))
       .def("ping", py::overload_cast<mab::CANdleBaudrate_E>(&mab::Candle::ping))
       .def("getActualCommunicationFrequency", &mab::Candle::getActualCommunicationFrequency)
-      .def("sengGenericFDCanFrame", &mab::Candle::sengGenericFDCanFrame)
+      .def("sendGenericFDCanFrame", &mab::Candle::sendGenericFDCanFrame)
       .def("addMd80", &mab::Candle::addMd80)
       .def("configCandleBaudrate", &mab::Candle::configCandleBaudrate)
       .def("configMd80Can", &mab::Candle::configMd80Can)
@@ -98,5 +98,7 @@ PYBIND11_MODULE(pyCandle, m)
       .def("getMotorsData", &mab::MultipleCandles::getMotorsData)
       .def("getAllMotorsData", &mab::MultipleCandles::getAllMotorsData)
       .def("sendMotorCommand", &mab::MultipleCandles::sendMotorCommand)
-      .def("setImpedanceParamters", &mab::MultipleCandles::setImpedanceParamters);
+      .def("setImpedanceParameters", &mab::MultipleCandles::setImpedanceParameters)
+      .def("setPositionPIDParameters", &mab::MultipleCandles::setPositionPIDParameters);
+
 }
