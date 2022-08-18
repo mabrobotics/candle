@@ -128,12 +128,21 @@ namespace mab
                     uint64_t nsec = std::chrono::duration_cast<nsec_t>(std::chrono::system_clock::now().time_since_epoch()).count();
                     double timeInSec = nsec * 1e-9;
                     if (_useLogs)
-                        receiveLogFile << std::to_string(receive_count) << "," << std::to_string(timeInSec) << "\n";
+                        receiveLogFile << std::to_string(receive_count) << "," << std::to_string(timeInSec);
                     for (int i = 0; i < (int)md80s.size(); i++)
                     {
                         StdMd80ResponseFrame_t *frame = (StdMd80ResponseFrame_t *)&usb->rxBuffer[1 + i * sizeof(StdMd80ResponseFrame_t)];
                         md80s.at(frame->canId).__updateResponseData(frame, timeInSec, receive_count);
+                        if (_useLogs)
+                        {
+                            auto motorStatus = md80s.at(frame->canId).getMotorStatus();
+                            receiveLogFile << "," << std::to_string(frame->canId) << ":" << std::to_string(motorStatus["position"])
+                                           << " " << std::to_string(motorStatus["velocity"])
+                                           << " " << std::to_string(motorStatus["torque"]);
+                        }
                     }
+                    if (_useLogs)
+                        receiveLogFile << std::endl;
 
                     receive_count++;
                 }
@@ -237,7 +246,7 @@ namespace mab
                 if (usb->rxBuffer[1] == true)
                 {
                     vout << "Added Md80." << statusOK << std::endl;
-                    md80s.insert(std::pair<int, Md80>(canId,Md80(canId)));
+                    md80s.insert(std::pair<int, Md80>(canId, Md80(canId)));
                     md80Ids.push_back(canId);
                     mab::Md80 &newDrive = md80s.at(canId);
                     sendGetInfoFrame(newDrive);
@@ -434,7 +443,7 @@ namespace mab
             }
         return false;
     }
-   
+
     bool Candle::controlMd80SetEncoderZero(Md80 &drive)
     {
         return this->controlMd80SetEncoderZero(drive.getId());
@@ -526,15 +535,13 @@ namespace mab
                 vout << "Candle" << candleId << "transmit log file is: " << transmitFileName << std::endl;
 
                 receiveLogFile.open(receiveFileName, std::fstream::out);
-                receiveLogFile << "frame_id, time, cans ids\n";
+                receiveLogFile << "frame_id, time, cans ids, list[poisiton velocity torque]\n";
                 transmitLogFile.open(transmitFileName, std::fstream::out);
                 transmitLogFile << "frame_id, time, cans ids\n";
-                receiveLogFile << ",,";
                 transmitLogFile << ",,";
 
                 for (auto canId : md80Ids)
                 {
-                    receiveLogFile << std::to_string(canId) << "|";
                     transmitLogFile << std::to_string(canId) << "|";
                 }
                 receiveLogFile << std::endl;
@@ -606,7 +613,7 @@ namespace mab
         tx[0] = USB_FRAME_UPDATE;
         std::vector<int> frameIds;
         int i = 0;
-        for (auto& [canId, md80Drive] : md80s)
+        for (auto &[canId, md80Drive] : md80s)
         {
             md80Drive.__updateCommandFrame();
             // md80s[candleId].__updateCommandFrame();
@@ -621,10 +628,9 @@ namespace mab
         {
             for (const auto &e : frameIds)
                 transmitLogFile << e << " ";
-        
-            double timeInSec = nsec * 1e-9;
-            transmitLogFile << "," <<std::to_string(timeInSec) << std::endl;
 
+            double timeInSec = nsec * 1e-9;
+            transmitLogFile << "," << std::to_string(timeInSec) << std::endl;
         }
         usb->transmit(tx, length, false);
     }
