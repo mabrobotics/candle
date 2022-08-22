@@ -9,7 +9,6 @@ typedef std::map<int, MotorStatus_T> MultipleMotorsStatus_T;
 typedef std::vector<bool> CandleResponse_T;
 typedef std::vector<int> IdList_T;
 typedef std::vector<float> CommandList_T;
-typedef std::map<std::string, float> MotorCommand_T;
 typedef std::map<int, MotorCommand_T> MotorCommands_T;
 
 #define candleHandlerOut std::cout << "[CANDLE HANDLER] "
@@ -30,7 +29,7 @@ namespace mab
 
     public:
         MultipleCandles(bool useLogs);
-        CandleResponse_T addMd80(IdList_T idList);
+        CandleResponse_T addMd80(MotorCommands_T motorsConfig);
         CandleResponse_T zeroMd80t(IdList_T idList);
         CandleResponse_T setModeMd80(IdList_T idList, std::string reqMode);
         CandleResponse_T enableAllMotors();

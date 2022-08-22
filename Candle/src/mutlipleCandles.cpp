@@ -29,16 +29,16 @@ namespace mab
         }
     }
 
-    CandleResponse_T MultipleCandles::addMd80(IdList_T idList)
+    CandleResponse_T MultipleCandles::addMd80(MotorCommands_T motorsConfig)
     {
         CandleResponse_T retVal;
-        for (auto &id : idList)
+        for (auto &[id, motorConf]: motorsConfig)
         {
             unsigned int md80Found = 0;
             for (int i = 0; i < (int)candleInstances.size(); i++)
             {
 
-                if (candleInstances[i]->addMd80(id, false) == true)
+                if (candleInstances[i]->addMd80(id, motorConf, false) == true)
                 {
                     retVal.push_back(true);
                     motorIdToCandleId[id] = i;
@@ -272,7 +272,7 @@ namespace mab
                     md.setTargetVelocity(motorCommand.at("velocity"));
                     md.setTorque(motorCommand.at("torque"));
                     if (motorCommand.find("kp") != motorCommand.end())
-                        md.setImpedanceControllerParams(motorCommand.at("kp"), motorCommand.at("kd"));
+                        md.setImpedanceRequestedControllerParams(motorCommand.at("kp"), motorCommand.at("kd"));
                 }
                 else
                     candleHandlerOut << "Drive with ID: " << motorId << "was not found so command not set" << std::endl;
@@ -294,7 +294,7 @@ namespace mab
                 if (candle != NULL)
                 {
                     auto &md = candle->md80s.at(motorId);
-                    md.setImpedanceControllerParams(motorCommand.at("kp"), motorCommand.at("kd"));
+                    md.setImpedanceRequestedControllerParams(motorCommand.at("kp"), motorCommand.at("kd"));
                     md.setMaxTorque(motorCommand.at("max_torque"));
                 }
                 else
