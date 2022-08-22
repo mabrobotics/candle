@@ -73,12 +73,10 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose, mab::CANdleFast
 				}
 			}
 			if (printFailure)
-			{
 				vout << "Failed to create CANdle object." << statusFAIL << std::endl;
-				delete (bus);
-				throw "Failed to create CANdle object";
-				return;
-			}
+			delete (bus);
+			throw "Failed to create CANdle object";
+			return;
 		}
 	loopdone:
 		vout << "CANdle library version: " << getVersion() << std::endl;
