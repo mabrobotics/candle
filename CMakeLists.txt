@@ -1,24 +1,13 @@
 cmake_minimum_required(VERSION 3.5)
 
-
-if(NOT DEFINED ARCH)
-    set(ARCH "native")
-    execute_process(COMMAND dpkg --print-architecture OUTPUT_VARIABLE ARCH)
-    string(REGEX REPLACE "\n$" "" ARCH "${ARCH}")
-endif()
-
-if( "${ARCH}" STREQUAL "armhf")
+if(ARCH STREQUAL "armhf")
     message("[CANDLE] Compiling for armhf")
     set(CMAKE_CXX_COMPILER /usr/bin/arm-linux-gnueabihf-g++)
     set(CMAKE_C_COMPILER /usr/bin/arm-linux-gnueabihf-gcc)
-elseif ( "${ARCH}" STREQUAL "aarm64")
+elseif(ARCH STREQUAL "aarm64")
     message("[CANDLE] Compiling for aarm64")
     set(CMAKE_CXX_COMPILER /usr/bin/aarch64-linux-gnu-g++)
     set(CMAKE_C_COMPILER /usr/bin/aarch64-linux-gnu-gcc)
-else ()
-    message("[CANDLE] Compiling for native architecture")
-    set(CMAKE_CXX_COMPILER /usr/bin/g++)
-    set(CMAKE_C_COMPILER /usr/bin/gcc)
 endif()
 
 project(md80)
