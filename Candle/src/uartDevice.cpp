@@ -22,9 +22,10 @@ UartDevice::UartDevice(char* rxBufferPtr, const int rxBufferSize_)
 	fd = open(uartDev, O_RDWR);
 
 	if (tcgetattr(fd, &tty) != 0)
-	{
+	{	
+		std::cout << "[UART] Could not open the UART device... (is UART bus available on your device?)" << std::endl;
 		std::cout << "[UART] Error " << errno << " from tcgetattr: " << strerror(errno) << std::endl;
-		return;
+		exit(EXIT_FAILURE);
 	}
 
 	tty.c_cflag &= ~PARENB;	 // Clear parity bit, disabling parity (most common)

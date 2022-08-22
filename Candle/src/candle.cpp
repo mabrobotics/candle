@@ -31,15 +31,6 @@ std::vector<Candle*> Candle::instances = std::vector<Candle*>();
 
 Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose, mab::CANdleFastMode_E _fastMode, bool printFailure, mab::BusType_E busType)
 {
-#if PLATFORM == PC
-	if (busType == mab::BusType_E::SPI || busType == mab::BusType_E::UART)
-	{
-		vout << "Current communication bus is not available on selected platform!" << std::endl;
-		throw "Current communication bus is not available on selected platform!";
-		return;
-	}
-#endif
-
 	bus = new Bus(busType);
 	printVerbose = _printVerbose;
 
@@ -84,8 +75,6 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose, mab::CANdleFast
 		if (system(setSerialCommand.c_str()) != 0)
 			std::cout << "Could not execute command '" << setSerialCommand << "'. Communication in low-speed mode." << std::endl;
 	}
-
-#if PLATFORM == RPI
 	else if (bus->getType() == mab::BusType_E::SPI)
 	{
 		bus->spi = new SpiDevice(bus->getRxBuffer(), bus->getRxBufferSize());
@@ -94,7 +83,6 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose, mab::CANdleFast
 	{
 		bus->uart = new UartDevice(bus->getRxBuffer(), bus->getRxBufferSize());
 	}
-#endif
 
 	this->reset();
 	usleep(5000);
@@ -107,12 +95,10 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose, mab::CANdleFast
 
 	if (bus->getType() == mab::BusType_E::USB)
 		vout << "CANdle at " << this->bus->usb->getSerialDeviceName() << ", ID: 0x" << std::hex << this->getUsbDeviceId() << std::dec << " ready (USB)" << std::endl;
-#if PLATFORM == RPI
 	else if (bus->getType() == mab::BusType_E::SPI)
 		vout << "CANdle ready (SPI)" << std::endl;
 	else if (bus->getType() == mab::BusType_E::UART)
 		vout << "CANdle ready (UART)" << std::endl;
-#endif
 
 	fastMode = _fastMode;
 	switch (fastMode)
