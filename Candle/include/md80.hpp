@@ -7,8 +7,11 @@
 #include <chrono>
 #include <vector>
 #include <map>
+#include <algorithm>
+
 
 typedef std::map<std::string, double> MotorStatus_T;
+typedef std::map<std::string, float> MotorCommand_T;
 
 
 #define mdout std::cout << "[MD] "
@@ -23,15 +26,35 @@ namespace mab
     {
     private:
         uint16_t canId;
-
+        
+        // the current status of the motor
         float position = 0.0f;
         float velocity = 0.0f;
         float torque = 0.0f;
         MotorStatus_T motorStatus;
         uint8_t temperature = 0;
         uint16_t errorVector = 0;
-
         Md80Mode_E controlMode = Md80Mode_E::IDLE;
+        
+        // watchdog paramters
+        float maxMotorPosition = 6.2831;
+        float minMotorPosition = -6.2831;
+        float softLimitFactor = 1.0;
+        float softMaxPosition = 6.2831;
+        float softMinPosition = -6.2831;
+        float watchdogKP = 10.0f;
+        float watchdogKD = 0.0f;
+        float watchdogTorqueOffset = 0.0f;
+        float watchdogPosPercentage = 1.0;
+        
+        // requested controll
+        float requestedPosition = 0.0f;
+        float requestedVelocity = 0.0f;
+        float requestorqueSet = 0.0f;
+        RegImpedance_t requestedImpedanceController;
+        bool requestKpKdAdjusted = false;
+        
+        // transmit values
         float positionTarget = 0.0f;
         float velocityTarget = 0.0f;
         float torqueSet = 0.0f;
@@ -41,7 +64,6 @@ namespace mab
         RegPid_t velocityController;
         RegPid_t positionController;
         RegImpedance_t impedanceController;
-
         bool regulatorsAdjusted = false;
         bool velocityRegulatorAdjusted = false;
         StdMd80CommandFrame_t commandFrame;
@@ -51,13 +73,17 @@ namespace mab
         void packPositionFrame();
         void packVelocityFrame();
         void packMotionTargetsFrame();
-
+        void watchdog();
+        void updateTargets();
+        void setImpedanceControllerParams(float kp, float kd);
+    
     public:
         /**
          * @brief Construct a new Md80 object
          *
          * @param canID FDACN Id of the drive
          */
+        Md80(uint16_t canID, MotorCommand_T config);
         Md80(uint16_t canID);
         /**
          * @brief Destroy the Md80 objec
@@ -86,7 +112,7 @@ namespace mab
          * @param kp Displacement gain ( analogic to 'k' parameter of the spring-damper equation)
          * @param kd Damping coefficient (analogin to 'b' parameter of the spring-damper equation)
          */
-        void setImpedanceControllerParams(float kp, float kd);
+        void setImpedanceRequestedControllerParams(float kp, float kd);
 
         // simple setters
         /**
@@ -108,7 +134,7 @@ namespace mab
          * @brief Set the Target Position for Position PID and Impedance modes.
          * @param target target position in radians
          */
-        void setTargetPosition(float target) { positionTarget = target; };
+        void setTargetPosition(float target) { requestedPosition = target; };
         /**
          * @brief Set the frame id of the transmit
          * @param target target position in radians
@@ -123,12 +149,12 @@ namespace mab
          * @brief Set the Target Velocity for Velocity PID and Impedance modes.
          * @param target target velocity in rad/s (radians per second)
          */
-        void setTargetVelocity(float target) { velocityTarget = target; };
+        void setTargetVelocity(float target) { requestedVelocity = target; };
         /**
          * @brief Set the Torque Command for TORQUE and Impedance (torque_ff) modes.
          * @param target target torque in Nm (Newton-meters)
          */
-        void setTorque(float target) { torqueSet = target; };
+        void setTorque(float target) { requestorqueSet = target; };
 
         // getters
         /**
@@ -223,3 +249,7 @@ namespace mab
         void __setControlMode(Md80Mode_E mode);
     };
 }
+
+
+
+

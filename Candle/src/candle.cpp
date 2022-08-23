@@ -14,6 +14,7 @@ namespace mab
     class mystreambuf : public std::streambuf
     {
     };
+
     mystreambuf nostreambuf;
     std::ostream nocout(&nostreambuf);
 #define vout ((this->printVerbose) ? std::cout << "[CANDLE] " : nocout)
@@ -85,11 +86,13 @@ namespace mab
         }
         Candle::instances.push_back(this);
     }
+
     Candle::~Candle()
     {
         if (this->inUpdateMode())
             this->end();
     }
+
     void Candle::updateModeBasedOnMd80List()
     {
         if (md80s.size() <= (int)CANdleMaxDevices_E::MAX_DEV_FAST2)
@@ -108,10 +111,12 @@ namespace mab
             vout << "Set current speed mode to NORMAL" << std::endl;
         }
     }
+
     const std::string Candle::getVersion()
     {
         return version;
     }
+
     int Candle::getActualCommunicationFrequency()
     {
         return (int)this->usbCommsFreq;
@@ -178,14 +183,17 @@ namespace mab
             }
         }
     }
+
     void Candle::setVebose(bool enable)
     {
         printVerbose = enable;
     }
+
     unsigned long Candle::getUsbDeviceId()
     {
         return usb->getId();
     }
+
     GenericMd80Frame32 _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameId)
     {
         GenericMd80Frame32 frame;
@@ -197,6 +205,7 @@ namespace mab
         frame.canMsg[1] = 0x00;
         return frame;
     }
+
     void Candle::sendGetInfoFrame(mab::Md80 &drive)
     {
         GenericMd80Frame32 getInfoFrame = _packMd80Frame(drive.getId(), 2, Md80FrameId_E::FRAME_GET_INFO);
@@ -209,6 +218,7 @@ namespace mab
             drive.__updateResponseData((mab::StdMd80ResponseFrame_t *)cheaterBuffer);
         }
     }
+
     void Candle::sendMotionCommand(mab::Md80 &drive, float pos, float vel, float torque)
     {
         GenericMd80Frame32 motionCommandFrame = _packMd80Frame(drive.getId(), 16, Md80FrameId_E::FRAME_SET_MOTION_TARGETS);
@@ -224,10 +234,12 @@ namespace mab
             drive.__updateResponseData((mab::StdMd80ResponseFrame_t *)cheaterBuffer);
         }
     }
-    bool Candle::addMd80(uint16_t canId, bool printFailure)
+
+    bool Candle::addMd80(uint16_t canId, MotorCommand_T config, bool printFailure)
     {
         if (inUpdateMode())
             return false;
+        
         if (md80s.count(canId))
         {
             vout << "Md80 with ID: " << canId << " is already on the update list." << statusOK << std::endl;
@@ -246,7 +258,7 @@ namespace mab
                 if (usb->rxBuffer[1] == true)
                 {
                     vout << "Added Md80." << statusOK << std::endl;
-                    md80s.insert(std::pair<int, Md80>(canId, Md80(canId)));
+                    md80s.insert(std::pair<int, Md80>(canId, Md80(canId, config)));
                     md80Ids.push_back(canId);
                     mab::Md80 &newDrive = md80s.at(canId);
                     sendGetInfoFrame(newDrive);
@@ -301,10 +313,12 @@ namespace mab
         }
         return ids;
     }
+
     std::vector<uint16_t> Candle::ping()
     {
         return ping(mab::CANdleBaudrate_E::CAN_BAUD_1M);
     }
+    
     bool Candle::sendGenericFDCanFrame(uint16_t canId, int msgLen, const char *txBuffer, char *rxBuffer, int timeoutMs)
     {
         int fdcanTimeout = timeoutMs - 3;
@@ -357,6 +371,7 @@ namespace mab
         vout << "CAN config change failed!" << statusFAIL << std::endl;
         return false;
     }
+   
     bool Candle::configMd80Save(uint16_t canId)
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CAN_SAVE);
@@ -372,6 +387,7 @@ namespace mab
         vout << "Saving in flash failed at ID = " << canId << statusFAIL << std::endl;
         return false;
     }
+ 
     bool Candle::configMd80Blink(uint16_t canId)
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_FLASH_LED);
@@ -407,6 +423,7 @@ namespace mab
         vout << "Setting new zero position failed at ID = " << canId << statusFAIL << std::endl;
         return false;
     }
+ 
     bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 6, Md80FrameId_E::FRAME_BASE_CONFIG);
@@ -448,14 +465,17 @@ namespace mab
     {
         return this->controlMd80SetEncoderZero(drive.getId());
     }
+  
     bool Candle::controlMd80Enable(Md80 &drive, bool enable)
     {
         return this->controlMd80Enable(drive.getId(), enable);
     }
+  
     bool Candle::controlMd80Mode(Md80 &drive, Md80Mode_E mode)
     {
         return this->controlMd80Mode(drive.getId(), mode);
     }
+  
     bool Candle::controlMd80Mode(uint16_t canId, Md80Mode_E mode)
     {
         try
@@ -482,6 +502,7 @@ namespace mab
             return false;
         }
     }
+   
     bool Candle::controlMd80Enable(uint16_t canId, bool enable)
     {
         try
@@ -512,6 +533,7 @@ namespace mab
             return false;
         }
     }
+  
     bool Candle::begin()
     {
         if (mode == CANdleMode_E::UPDATE)
@@ -537,7 +559,7 @@ namespace mab
                 receiveLogFile.open(receiveFileName, std::fstream::out);
                 receiveLogFile << "frame_id, time, list[poisiton velocity torque]" << std::endl;
                 transmitLogFile.open(transmitFileName, std::fstream::out);
-                transmitLogFile <<"frame_id, time, list[poisiton velocity torque]" << std::endl;
+                transmitLogFile <<"frame_id, time, list[target_poisiton target_velocity target_torque position velocity effort]" << std::endl;
             }
             mode = CANdleMode_E::UPDATE;
             shouldStopTransmitter = false;
@@ -551,6 +573,7 @@ namespace mab
         vout << "Failed to begin auto update loop mode" << statusFAIL << std::endl;
         return false;
     }
+  
     bool Candle::end()
     {
         if (mode == CANdleMode_E::CONFIG)
@@ -577,6 +600,7 @@ namespace mab
 
         return mode == CANdleMode_E::CONFIG ? true : false;
     }
+  
     bool Candle::reset()
     {
         char tx[128];
@@ -587,18 +611,21 @@ namespace mab
 
         return false;
     }
+
     bool Candle::inUpdateMode()
     {
         if (mode == CANdleMode_E::UPDATE)
             return true;
         return false;
     }
+
     bool Candle::inConfigMode()
     {
         if (mode == CANdleMode_E::CONFIG)
             return true;
         return false;
     }
+
     void Candle::transmitNewStdFrame()
     {
         char tx[512];
@@ -614,7 +641,10 @@ namespace mab
             std::to_string(md80Drive.getTargetVel()) + " " +
             std::to_string(md80Drive.getTorqueRequest()) + " " +
             std::to_string(md80Drive.getKP())+ " " +
-            std::to_string(md80Drive.getKD())+ " ";
+            std::to_string(md80Drive.getKD())+ " " +
+            std::to_string(md80Drive.getPosition()) + " " +
+            std::to_string(md80Drive.getVelocity()) + " " +
+            std::to_string(md80Drive.getTorque()) + " ";
             frameIds.push_back(md80Drive.getFrameId());
             *(StdMd80CommandFrame_t *)&tx[1 + i * sizeof(StdMd80CommandFrame_t)] = md80Drive.__getCommandFrame();
             i++;
@@ -650,6 +680,7 @@ namespace mab
         vout << "Starting calibration failed at ID = " << canId << statusFAIL << std::endl;
         return false;
     }
+
     bool Candle::setupMd80Diagnostic(uint16_t canId)
     {
         GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_DIAGNOSTIC);

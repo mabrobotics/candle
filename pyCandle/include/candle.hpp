@@ -174,7 +174,7 @@ namespace mab
         @param printFailure when false the function will not display fail messages
         @return true if drive has been found and was added, false otherwise
         */
-        bool addMd80(uint16_t canId, bool printFailure = true);
+        bool addMd80(uint16_t canId, MotorCommand_T config, bool printFailure = true);
         /**
         @brief Changes FDCAN baudrate that CANdle uses to talk to Md80s.
         @param canBaudrate enum listing all available baudrates. CAN_BAUD_1M is equal to baudrate of 1 000 000 bits per second.
