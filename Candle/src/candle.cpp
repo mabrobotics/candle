@@ -559,7 +559,7 @@ namespace mab
                 receiveLogFile.open(receiveFileName, std::fstream::out);
                 receiveLogFile << "frame_id, time, list[poisiton velocity torque]" << std::endl;
                 transmitLogFile.open(transmitFileName, std::fstream::out);
-                transmitLogFile <<"frame_id, time, list[poisiton velocity torque]" << std::endl;
+                transmitLogFile <<"frame_id, time, list[target_poisiton target_velocity target_torque position velocity effort]" << std::endl;
             }
             mode = CANdleMode_E::UPDATE;
             shouldStopTransmitter = false;
@@ -641,7 +641,10 @@ namespace mab
             std::to_string(md80Drive.getTargetVel()) + " " +
             std::to_string(md80Drive.getTorqueRequest()) + " " +
             std::to_string(md80Drive.getKP())+ " " +
-            std::to_string(md80Drive.getKD())+ " ";
+            std::to_string(md80Drive.getKD())+ " " +
+            std::to_string(md80Drive.getPosition()) + " " +
+            std::to_string(md80Drive.getVelocity()) + " " +
+            std::to_string(md80Drive.getTorque()) + " ";
             frameIds.push_back(md80Drive.getFrameId());
             *(StdMd80CommandFrame_t *)&tx[1 + i * sizeof(StdMd80CommandFrame_t)] = md80Drive.__getCommandFrame();
             i++;
