@@ -10,7 +10,7 @@ SpiDevice::SpiDevice(char* rxBufferPtr, const int rxBufferSize_)
 	fd = open(spiDev, O_RDWR);
 	if (fd < 0)
 	{
-		std::cout << "[SPI] Could not open the SPI device..." << std::endl;
+		std::cout << "[SPI] Could not open the SPI device... (is SPI bus available on your device?)" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 

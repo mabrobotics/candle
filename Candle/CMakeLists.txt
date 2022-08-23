@@ -7,12 +7,13 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 
 file(GLOB CANDLE_SOURCE "src/*cpp")
 
-if(DEFINED CANDLE_BUILD_STATIC)
+if(CANDLE_BUILD_STATIC)
     set(LIB_TYPE STATIC)
 else()
     set(LIB_TYPE SHARED)
 endif()
-message("CANDLE BUILT TYPE: ${LIB_TYPE}")
+
+message("[CANDLE] library type: ${LIB_TYPE}")
 
 add_library(candle ${LIB_TYPE} ${CANDLE_SOURCE})
 
@@ -59,33 +60,4 @@ if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
 
     add_executable(latency_test examples/latency_test.cpp)
     target_link_libraries(latency_test candle)
-endif()
-
-if(${LIB_TYPE} MATCHES "SHARED")
-    message("Generating project template at ${CMAKE_BINARY_DIR}/Project/")
-    add_custom_command(
-        TARGET candle
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND}
-        ARGS -E copy $<TARGET_FILE:candle> ../Project/libs/libcandle.so
-        )
-    add_custom_command(
-        TARGET candle
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND}
-        ARGS -E copy ${CMAKE_HOME_DIRECTORY}/Candle/cmake_template.txt ../Project/CMakeLists.txt
-        )
-    add_custom_command(
-        TARGET candle
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND}
-        ARGS -E copy_directory ${CMAKE_HOME_DIRECTORY}/Candle/include/ ../Project/include/
-        )
-    add_custom_command(
-        TARGET candle
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND}
-        ARGS -E copy ${CMAKE_HOME_DIRECTORY}/Candle/examples/example1.cpp ../Project/src/main.cpp
-        )
-    message(STATUS "Generation complete!")
 endif()
