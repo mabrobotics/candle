@@ -27,14 +27,13 @@ struct RegPid_t
  * @brief Md80 Control Mode
  * @note Position PID is a cascade regulator, output of the Position PID (target velocity) is passed as an input
  *  of Velocity PID. Velocity PID output (torque) is then passed directly to internal current/torque controller.
- * @note TORQUE mode directly sends torque to internal current/torque controller.
  */
 enum Md80Mode_E : uint8_t
 {
 	IDLE = 0,		  /*!< Idle mode, no control output */
 	POSITION_PID = 1, /*!< Position PID mode (cascade regulators) */
 	VELOCITY_PID = 2, /*!< Velocity PID mode */
-	TORQUE = 3,		  /*!< Torque mode, raw torque control, no regulators used */
+	DEPRECATED = 3,	  /*!< This mode is deprecated and left for compatibility reasons. Do not use it */
 	IMPEDANCE = 4,	  /*!< Impedance mode, uses Impedance controller similar to spring-damper system */
 };
 /**

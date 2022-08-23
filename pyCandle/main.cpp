@@ -28,7 +28,7 @@ PYBIND11_MODULE(pyCandle, m) {
     .value("IDLE", mab::IDLE)
     .value("POSITION_PID", mab::POSITION_PID)
     .value("VELOCITY_PID", mab::VELOCITY_PID)
-    .value("TORQUE", mab::TORQUE)
+    .value("DEPRECATED", mab::DEPRECATED)
     .value("IMPEDANCE", mab::IMPEDANCE)
     .export_values();
 

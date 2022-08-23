@@ -73,9 +73,6 @@ void Md80::__updateCommandFrame()
 			else
 				packMotionTargetsFrame();
 			break;
-		case Md80Mode_E::TORQUE:
-			packMotionTargetsFrame();
-			break;
 		default:
 			break;
 	}

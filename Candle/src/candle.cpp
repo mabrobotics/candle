@@ -575,6 +575,11 @@ bool Candle::controlMd80Mode(Md80& drive, Md80Mode_E mode)
 }
 bool Candle::controlMd80Mode(uint16_t canId, Md80Mode_E mode)
 {
+	if (mode == DEPRECATED)
+	{
+		vout << "This control mode is DEPRECATED. Please do not use it! " << statusFAIL << std::endl;
+		return false;
+	}
 	try
 	{
 		Md80& drive = getMd80FromList(canId);
