@@ -53,6 +53,7 @@ namespace mab
         float requestorqueSet = 0.0f;
         RegImpedance_t requestedImpedanceController;
         bool requestKpKdAdjusted = false;
+        bool printWatchdog = true;
         
         // transmit values
         float positionTarget = 0.0f;
