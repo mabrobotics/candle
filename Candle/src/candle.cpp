@@ -150,7 +150,7 @@ int Candle::getActualCommunicationFrequency()
 
 void Candle::receive()
 {
-	while (!shouldStopReceiver)
+	while (!shouldStopReceiver && !bus->getBusFatalError())
 	{
 		if (bus->receive())
 		{
@@ -189,7 +189,7 @@ void Candle::transmit()
 {
 	int txCounter = 0;
 	uint64_t freqCheckStart = getTimestamp();
-	while (!shouldStopTransmitter)
+	while (!shouldStopTransmitter && !bus->getBusFatalError())
 	{
 		if (++txCounter == 250)
 		{
@@ -531,7 +531,7 @@ bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersio
 			if (printVersionInfo)
 			{
 				vout << "Device firmware version: v" << candleDeviceVersion / 10 << "." << candleDeviceVersion % 10 << std::endl;
-				if (candleDeviceVersion < 14)
+				if (candleDeviceVersion < candleCompatibleVersion)
 					std::cout << "Your CANdle firmware seems to be out-dated. Contact MAB: support@mabrobotics.pl , for intructions how to update." << std::endl;
 			}
 			return true;

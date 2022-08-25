@@ -11,14 +11,9 @@
 #include "usbDevice.hpp"
 
 /* Turn on benchmarking */
-#define BENCHMARKING
+// #define BENCHMARKING
 /* Turn on RX and TX timestamps */
 // #define BENCHMARKING_VERBOSE
-
-/* PC supports only USB bus */
-#define PC 0
-/* RPI supports all busses - USB/SPI/UART */
-#define RPI 1
 
 namespace mab
 {
@@ -74,6 +69,7 @@ class Candle
 	Bus* bus;
 
 	int candleDeviceVersion = 10;
+	const int candleCompatibleVersion = 14;
 	int maxDevices = 12;
 	bool shouldStopReceiver;
 	bool shouldStopTransmitter;

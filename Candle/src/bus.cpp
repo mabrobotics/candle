@@ -125,10 +125,7 @@ void Bus::manageMsgCount(bool ret)
     msgCnt++;
     if (ret == false) errorCnt++;
     if (errorCnt > errorThreshold)
-    {
-        std::cout << "[CANDLE] Fatal communication error count (" << errorCnt << "). Exiting..." << std::endl;
-        exit(EXIT_FAILURE);
-    }
+        busFatalError = true;
     if (msgCnt > msgCntThreshold)
     {
         errorCnt = 0;

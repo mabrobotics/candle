@@ -30,12 +30,14 @@ class Bus
 	int getBytesReceived();
 	int getRxBufferSize() { return rxBufferSize; };
 	int getTxBufferSize() { return txBufferSize; };
+	bool getBusFatalError() { return busFatalError; };
 
    private:
 	static const int errorThreshold = 5;
 	static const int msgCntThreshold = 1000;
 	int errorCnt = 0;
 	int msgCnt = 0;
+	bool busFatalError = false;
 
 	BusType_E busType;
 	static const int rxBufferSize = 1024;
