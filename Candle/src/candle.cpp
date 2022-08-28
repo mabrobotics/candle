@@ -651,6 +651,7 @@ namespace mab
         }
 
         int length = 1 + md80s.size() * sizeof(StdMd80CommandFrame_t);
+        usb->transmit(tx, length, false);
         uint64_t nsec = std::chrono::duration_cast<nsec_t>(std::chrono::system_clock::now().time_since_epoch()).count();
         if (_useLogs)
         {
@@ -660,7 +661,6 @@ namespace mab
             double timeInSec = nsec * 1e-9;
             transmitLogFile << "," << std::to_string(timeInSec) << output <<std::endl;
         }
-        usb->transmit(tx, length, false);
     }
 
     bool Candle::setupMd80Calibration(uint16_t canId, uint16_t torqueBandwidth)

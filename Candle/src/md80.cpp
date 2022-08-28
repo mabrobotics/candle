@@ -19,7 +19,7 @@ namespace mab
 
         // Get watchdog params
         watchdogKP = config["kp"];
-        watchdogKD = 2 * std::sqrt(watchdogKP);
+        watchdogKD = config["kd"];
         watchdogTorqueOffset = config["torque_offset"];
         softLimitFactor = config["soft_limit"];
         maxMotorPosition = config["max_position"];
@@ -60,12 +60,11 @@ namespace mab
         float curr_pos = position;
         if (curr_pos > softMinPosition && curr_pos < softMaxPosition)
         {
+            printWatchdog = true;
             if (requestedPosition < minMotorPosition || requestedPosition > maxMotorPosition)
             {
                 positionTarget = std::clamp(requestedPosition, minMotorPosition, maxMotorPosition);
-                std::cout << "[md80 WATCHDOG]  Requested position " << std::to_string(requestedPosition) << 
-                " for motor: " << std::to_string(canId) << " was out of bounds: " << std::to_string(minMotorPosition) << 
-                " - " << std::to_string(maxMotorPosition) << " new position is " << std::to_string(positionTarget) << std::endl;
+                std::cout << "[md80 WATCHDOG]  Requested position " << std::to_string(requestedPosition) << " for motor: " << std::to_string(canId) << " was out of bounds: " << std::to_string(minMotorPosition) << " - " << std::to_string(maxMotorPosition) << " new position is " << std::to_string(positionTarget) << std::endl;
             }
             else
                 positionTarget = requestedPosition;
@@ -92,14 +91,18 @@ namespace mab
                 positionTarget = watchdogPosPercentage * softMaxPosition;
                 torqueSet = -1 * watchdogTorqueOffset;
             }
-            std::cout << "[md80 WATCHDOG ] position of motor " << std::to_string(canId) << 
-            " is out of range. Current Position " << std::to_string(curr_pos) << 
-            " not in range " << std::to_string(softMinPosition) << " - " << std::to_string(softMaxPosition) << std::endl << 
-            "[md80 Watchdog] new targets: " << std::endl << 
-            "position: " << std::to_string(positionTarget) << std::endl <<
-            "torque: " << std::to_string(torqueSet) << std::endl << 
-            "kp: " << std::to_string(impedanceController.kp) << std::endl <<
-            "kd: " << std::to_string(impedanceController.kd) << std::endl;
+            if (printWatchdog)
+            {
+                std::cout << "[md80 WATCHDOG ] position of motor " << std::to_string(canId) 
+                << " is out of range. Current Position " << std::to_string(curr_pos) 
+                << " not in range " << std::to_string(softMinPosition) << " - " << std::to_string(softMaxPosition) << std::endl
+                << "[md80 Watchdog] new targets: " << std::endl
+                << "position: " << std::to_string(positionTarget) << std::endl
+                << "torque: " << std::to_string(torqueSet) << std::endl
+                << "kp: " << std::to_string(impedanceController.kp) << std::endl
+                << "kd: " << std::to_string(impedanceController.kd) << std::endl;
+                printWatchdog = false;
+            }
         }
     }
 
