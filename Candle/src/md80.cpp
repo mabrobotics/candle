@@ -60,7 +60,7 @@ namespace mab
         float curr_pos = position;
         if (curr_pos > softMinPosition && curr_pos < softMaxPosition)
         {
-            printWatchdog = false;
+            printWatchdog = true;
             if (requestedPosition < minMotorPosition || requestedPosition > maxMotorPosition)
             {
                 positionTarget = std::clamp(requestedPosition, minMotorPosition, maxMotorPosition);
