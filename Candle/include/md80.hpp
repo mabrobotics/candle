@@ -139,10 +139,10 @@ class Md80
 	 */
 	float getTorque() { return torque; };
 	/**
-	 * @brief Get the Error Vector of the md80
-	 * @return uint16_t vector with per-bit coded errors. Refer to documentation for meaning of error codes.
+	 * @brief Get the exteral thermistor temperature reading
+	 * @return uint8_t internally computed temperature value in *C 
 	 */
-	uint16_t getTemperature() { return temperature; };
+	uint8_t getTemperature() { return temperature; };
 
 	/**
 	 * @brief For internal use by CANdle only.
