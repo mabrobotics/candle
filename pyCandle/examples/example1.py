@@ -1,4 +1,4 @@
-import mab.pyCandle as pyCandle
+import pyCandle
 import sys
 
 # Create CANdle object and ping FDCAN bus in search of drives. 

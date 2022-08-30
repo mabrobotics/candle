@@ -1,4 +1,4 @@
-import mab.pyCandle as pyCandle
+import pyCandle
 import time
 import math
 import sys  
