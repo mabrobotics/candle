@@ -87,6 +87,7 @@ bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeo
 
 bool UsbDevice::receive(int timeoutMs, bool faultVerbose)
 {
+	(void)faultVerbose;
 	memset(rxBuffer, 0, rxBufferSize);
 	rxLock.lock();
 	const int delayUs = 10;
