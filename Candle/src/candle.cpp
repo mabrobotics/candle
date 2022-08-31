@@ -156,20 +156,20 @@ void Candle::receive()
 		{
 			if (*bus->getRxBuffer() == BUS_FRAME_UPDATE)
 			{
-#ifdef BENCHMARKING
+#if BENCHMARKING == 1
 				bool flag = false;
 #endif
 				for (int i = 0; i < (int)md80s.size(); i++)
 				{
 					md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t)));
-#ifdef BENCHMARKING
+#if BENCHMARKING == 1
 					StdMd80ResponseFrame_t* _responseFrame = (StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t));
 					if (*(uint16_t*)&_responseFrame->fromMd80.data[1] & (1 << 15)) flag = true;
 #endif
 				}
-#ifdef BENCHMARKING
+#if BENCHMARKING == 1
 				long long microseconds_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-#ifdef BENCHMARKING_VERBOSE
+#if BENCHMARKING_VERBOSE == 1
 				if (!flag || !flag_glob_rx) std::cout << "RX:" << microseconds_since_epoch << std::endl;
 #endif
 
@@ -201,22 +201,22 @@ void Candle::transmit()
 		/* transmit thread is also the receive thread for SPI in update mode */
 		if (bus->getType() == mab::BusType_E::SPI && *bus->getRxBuffer() == BUS_FRAME_UPDATE)
 		{
-#ifdef BENCHMARKING
+#if BENCHMARKING == 1
 			bool flag = false;
 #endif
 			for (int i = 0; i < (int)md80s.size(); i++)
 			{
 				md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t)));
-#ifdef BENCHMARKING
+#if BENCHMARKING == 1
 				StdMd80ResponseFrame_t* _responseFrame = (StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t));
 				if (*(uint16_t*)&_responseFrame->fromMd80.data[1] & (1 << 15)) flag = true;
 #endif
 			}
 
-#ifdef BENCHMARKING
+#if BENCHMARKING == 1
 
 			long long microseconds_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-#ifdef BENCHMARKING_VERBOSE
+#if BENCHMARKING_VERBOSE == 1
 			if (!flag && !flag_glob_rx) std::cout << "RX:" << microseconds_since_epoch << std::endl;
 #endif
 
@@ -230,9 +230,9 @@ void Candle::transmit()
 #endif
 		}
 
-#ifdef BENCHMARKING
+#if BENCHMARKING == 1
 		long long microseconds_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-#ifdef BENCHMARKING_VERBOSE
+#if BENCHMARKING_VERBOSE == 1
 		if (!flag_glob_rx) std::cout << "TX:" << microseconds_since_epoch << std::endl;
 #endif
 		if (flag_glob_tx == true)
@@ -776,7 +776,7 @@ bool Candle::checkMd80ForBaudrate(uint16_t canId)
 	return false;
 }
 
-#ifdef BENCHMARKING
+#if BENCHMARKING == 1
 bool Candle::benchGetFlagRx()
 {
 	return flag_glob_rx;

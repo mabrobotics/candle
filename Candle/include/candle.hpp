@@ -11,9 +11,9 @@
 #include "usbDevice.hpp"
 
 /* Turn on benchmarking */
-// #define BENCHMARKING
+#define BENCHMARKING 0
 /* Turn on RX and TX timestamps */
-// #define BENCHMARKING_VERBOSE
+#define BENCHMARKING_VERBOSE 0
 
 namespace mab
 {
