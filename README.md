@@ -10,13 +10,13 @@ cd build
 cmake ..
 make
 ```
-After a successful build you should be able to see the compiled examples in `candle/build/Candle/` directory. 
+After a successful build you should be able to see the compiled examples in `candle/build/` directory. 
 To run an example simply call `./exampleX` where `X` is the example number. 
  
 ## Python library
 CANdle Python library was created using [pybind11](https://github.com/pybind/pybind11). 
 You can install the package using the command:
-`pip install pyCandleMAB`. Python examples are located in `pyCandle/examples` directory. 
+`pip install pyCandleMAB`. Python examples are located in `examples_python` directory. 
  
 ## Examples
 Examples feature simple use cases for most of the methods supplied with the library as well as comments guiding the user 
