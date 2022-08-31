@@ -29,8 +29,10 @@ UsbDevice::UsbDevice(std::string deviceName, std::string idVendor, std::string i
 
 	if (device_descriptor < 0)
 	{
-		std::cout << "[USB] Device not found! Try re-plugging the device!" << std::endl;
-		exit(-1);
+		const char* msg = "[USB] Device not found! Try re-plugging the device!";
+		std::cout << msg << std::endl;
+		throw msg;
+		
 	}
 
 	tcgetattr(device_descriptor, &ti_prev);										  // Save the previous serial config

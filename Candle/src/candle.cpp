@@ -150,7 +150,7 @@ int Candle::getActualCommunicationFrequency()
 
 void Candle::receive()
 {
-	while (!shouldStopReceiver && !bus->getBusFatalError())
+	while (!shouldStopReceiver)
 	{
 		if (bus->receive())
 		{
@@ -189,7 +189,7 @@ void Candle::transmit()
 {
 	int txCounter = 0;
 	uint64_t freqCheckStart = getTimestamp();
-	while (!shouldStopTransmitter && !bus->getBusFatalError())
+	while (!shouldStopTransmitter)
 	{
 		if (++txCounter == 250)
 		{

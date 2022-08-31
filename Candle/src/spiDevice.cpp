@@ -10,32 +10,36 @@ SpiDevice::SpiDevice(char* rxBufferPtr, const int rxBufferSize_)
 	fd = open(spiDev, O_RDWR);
 	if (fd < 0)
 	{
-		std::cout << "[SPI] Could not open the SPI device... (is SPI bus available on your device?)" << std::endl;
-		exit(EXIT_FAILURE);
+		const char* msg = "[SPI] Could not open the SPI device... (is SPI bus available on your device?)";
+		std::cout << msg << std::endl;
+		throw msg;
 	}
 
 	int ret = ioctl(fd, SPI_IOC_WR_MODE, &mode);
 	if (ret != 0)
 	{
-		std::cout << "[SPI] Could not write SPI mode..." << std::endl;
+		const char* msg = "[SPI] Could not write SPI mode...";
+		std::cout << msg << std::endl;
 		close(fd);
-		exit(EXIT_FAILURE);
+		throw msg;
 	}
 
 	ret = ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bits);
 	if (ret != 0)
 	{
-		std::cout << "[SPI] Could not write SPI mode..." << std::endl;
+		const char* msg = "[SPI] Could not write SPI bits per word...";
+		std::cout << msg << std::endl;
 		close(fd);
-		exit(EXIT_FAILURE);
+		throw msg;
 	}
 
 	ret = ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &spiSpeed);
 	if (ret != 0)
 	{
-		std::cout << "[SPI] Could not write the SPI max speed..." << std::endl;
+		const char* msg = "[SPI] Could not write the SPI max speed...";
+		std::cout << msg << std::endl;
 		close(fd);
-		exit(EXIT_FAILURE);
+		throw msg;
 	}
 
 	rxBuffer = rxBufferPtr;
@@ -221,7 +225,7 @@ void SpiDevice::sendMessage(unsigned long request, spi_ioc_transfer* trx)
 
 	if (errno != 0)
 	{
-		std::cout << "[SPI] LOW LEVEL ERROR! Returned (" << errno << ") " << strerror(errno) << std::endl;
-		exit(EXIT_FAILURE);
+		std::cout << "[SPI] low level error! Returned (" << errno << ") " << strerror(errno) << std::endl;
+		throw("[SPI] low level error!");
 	}
 }

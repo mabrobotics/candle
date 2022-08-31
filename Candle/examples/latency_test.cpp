@@ -22,7 +22,7 @@ const uint32_t seq = 0xdeadbeef;
 void wrongArguments()
 {
 	std::cout << "Wrong arguments specified, please see ./latency_test --help" << std::endl;
-	exit(-1);
+	exit(EXIT_FAILURE);
 }
 
 int main(int argc, char* argv[])
