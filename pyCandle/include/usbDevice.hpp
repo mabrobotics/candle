@@ -9,7 +9,7 @@ class UsbDevice
 public:
     UsbDevice(std::string deviceName, std::string idVendor, std::string idProduct);
     ~UsbDevice();
-    bool transmit(char *buffer, int len, bool waitForConfirmation = false, int timeout = 100);
+    bool transmit(char *buffer, int len, bool waitForConfirmation = false, int timeout = 100, int id = -1);
     bool receive(int timeout = 100);
     unsigned long getId() { return serialDeviceId; }
 

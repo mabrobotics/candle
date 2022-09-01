@@ -62,11 +62,11 @@ UsbDevice::UsbDevice(std::string deviceName, std::string idVendor, std::string i
     gotResponse = false;
     waitingForResponse = false;
 }
-bool UsbDevice::transmit(char *buffer, int len, bool _waitForResponse, int timeout)
+bool UsbDevice::transmit(char *buffer, int len, bool _waitForResponse, int timeout, int id)
 {
     if (write(fd, buffer, len) == -1)
     {
-        std::cout << "[USB] Writing to USB Device failed. Device Unavailable!" << std::endl;
+        std::cout << "[USB] Candle " <<  std::to_string(id) <<" Writing to USB Device failed. Device Unavailable!" << std::endl;
         return false;
     }
     if (_waitForResponse)
