@@ -193,6 +193,7 @@ namespace mab
         if (_responseFrame->canId != canId || _responseFrame->fromMd80.data[0] != Md80FrameId_E::RESPONSE_DEFAULT)
             return;
         errorVector = *(uint16_t *)&_responseFrame->fromMd80.data[1];
+        prevPosition = position;
         motorStatus["temperature"] = temperature = _responseFrame->fromMd80.data[3];
         motorStatus["position"] = position = *(float *)&_responseFrame->fromMd80.data[4];
         motorStatus["velocity"] = velocity = *(float *)&_responseFrame->fromMd80.data[8];
@@ -202,8 +203,10 @@ namespace mab
     void Md80::__updateResponseData(StdMd80ResponseFrame_t *_responseFrame, double time, int seq)
     {
         this->__updateResponseData(_responseFrame);
+        motorStatus["our_velocity"] = (position - prevPosition) / (time - prevTime);
         motorStatus["time"] = time;
         motorStatus["seq"] = seq;
+        prevTime = time;
     }
 
     void Md80::__updateRegulatorsAdjusted(bool adjusted)

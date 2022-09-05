@@ -31,6 +31,8 @@ namespace mab
         float position = 0.0f;
         float velocity = 0.0f;
         float torque = 0.0f;
+        float prevPosition = 0.0f;
+        double prevTime = 0.0;
         MotorStatus_T motorStatus;
         uint8_t temperature = 0;
         uint16_t errorVector = 0;

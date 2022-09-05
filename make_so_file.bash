@@ -40,6 +40,9 @@ if [ $compile_py -eq 1 ]; then
     cp pyCandle/pyCandle* ../candle_pip/src/mab/
     cd ../candle_pip/
     pip install .
+else
+    cp Candle/libcandle.so ../../ros2_workspace/candle_ros2/lib/
+    cp -r ../Candle/include/* ../../ros2_workspace/candle_ros2/include/Candle/
 fi
 
 echo "I am DONE"

@@ -144,6 +144,7 @@ namespace mab
                             receiveLogFile << "," << std::to_string(frame->canId) << ":" << std::to_string(motorStatus["position"])
                                            << " " << std::to_string(motorStatus["velocity"])
                                            << " " << std::to_string(motorStatus["torque"])
+                                           << " " << std::to_string(motorStatus["our_velocity"])
                                            << " " << std::to_string(motorStatus["temperature"]);
                         }
                     }
@@ -558,7 +559,7 @@ namespace mab
                 vout << "Candle" << candleId << "transmit log file is: " << transmitFileName << std::endl;
 
                 receiveLogFile.open(receiveFileName, std::fstream::out);
-                receiveLogFile << "frame_id, time, list[poisiton velocity torque temperature]" << std::endl;
+                receiveLogFile << "frame_id, time, list[poisiton velocity torque ourVel temperature]" << std::endl;
                 transmitLogFile.open(transmitFileName, std::fstream::out);
                 transmitLogFile <<"frame_id, time, list[target_poisiton target_velocity target_torque kp kd position velocity effort]" << std::endl;
             }
