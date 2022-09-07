@@ -219,6 +219,13 @@ class Candle
 	@return true if blinking, false otherwise
 	*/
 	bool configMd80Blink(uint16_t canId);
+	/**
+	@brief set torque bandwidth
+	@param canId ID of the drive
+	@param torqueBandwidth torquer bandwidth to be set
+	@return true if change was succesfull, false otherwise
+	*/
+	bool configMd80TorqueBandwidth(uint16_t canId, uint16_t torqueBandwidth);
 
 	/**
 	@brief Sets current motor position as zero position -> reference for any future movements.
@@ -305,6 +312,12 @@ class Candle
 	@return true if the succesfull, false otherwise
 	*/
 	bool setupMd80Diagnostic(uint16_t canId);
+	/**
+	@brief Retrieves extended diagnostic parameters from md80
+	@param canId ID of the drive
+	@return true if the succesfull, false otherwise
+	*/
+	bool setupMd80DiagnosticExtended(uint16_t canId, motorParameters_ut* motorParameters);
 	/**
 	@brief Returns current CAN baudrate
 	@return either mab::CANdleBaudrate_E::1M, mab::CANdleBaudrate_E::2M, mab::CANdleBaudrate_E::5M, or mab::CANdleBaudrate_E::8M

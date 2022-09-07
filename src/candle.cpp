@@ -353,7 +353,7 @@ std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
 	std::vector<uint16_t> ids;
 	if (bus->transfer(tx, 2, true, 2500, 33))  // Scanning 2047 FDCAN ids, takes ~2100ms, thus wait for 2.5 sec
 	{
-		uint16_t* idsPointer = (uint16_t*)&*bus->getRxBuffer(1);
+		uint16_t* idsPointer = (uint16_t*)bus->getRxBuffer(1);
 		for (int i = 0; i < 12; i++)
 		{
 			uint16_t id = idsPointer[i];
@@ -411,7 +411,7 @@ bool Candle::sengGenericFDCanFrame(uint16_t canId, int msgLen, const char* txBuf
 			*bus->getRxBuffer(1) == true &&
 			bus->getBytesReceived() <= 64 + 2)	// response can ID matches
 		{
-			memcpy(rxBuffer, &*bus->getRxBuffer(2), bus->getBytesReceived() - 2);
+			memcpy(rxBuffer, bus->getRxBuffer(2), bus->getBytesReceived() - 2);
 			return true;
 		}
 	}
@@ -538,6 +538,36 @@ bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersio
 		}
 	return false;
 }
+
+bool Candle::configMd80TorqueBandwidth(uint16_t canId, uint16_t torqueBandwidth)
+{
+	if (torqueBandwidth > driverMaxBandwidth)
+	{
+		vout << "Bandwidth setting above limit (" << driverMaxBandwidth << " Hz)! Setting bandwidth to maximum (" << driverMaxBandwidth << " Hz)" << std::endl;
+		torqueBandwidth = driverMaxBandwidth;
+	}
+	else if (torqueBandwidth < driverMinBandwidth)
+	{
+		vout << "Bandwidth setting below limit (" << driverMinBandwidth << " Hz)! Setting bandwidth to minimum (" << driverMinBandwidth << " Hz)" << std::endl;
+		torqueBandwidth = driverMinBandwidth;
+	}
+
+	GenericMd80Frame32 frame = _packMd80Frame(canId, 4, Md80FrameId_E::FRAME_SET_BANDWIDTH);
+	char tx[64];
+	frame.canMsg[2] = (uint8_t)(torqueBandwidth & 0xff);
+	frame.canMsg[3] = (uint8_t)(torqueBandwidth >> 8);
+	int len = sizeof(frame);
+	memcpy(tx, &frame, len);
+	if (bus->transfer(tx, len, true, 500, 66))
+		if (*bus->getRxBuffer(1) == true)
+		{
+			vout << "Bandwidth succesfully changed at ID: " << canId << statusOK << std::endl;
+			return true;
+		}
+	vout << "Bandwidth change failed at ID = " << canId << statusFAIL << std::endl;
+	return false;
+}
+
 Md80& Candle::getMd80FromList(uint16_t id)
 {
 	for (int i = 0; i < (int)md80s.size(); i++)
@@ -745,6 +775,8 @@ bool Candle::setupMd80Calibration(uint16_t canId, uint16_t torqueBandwidth)
 	vout << "Starting calibration failed at ID = " << canId << statusFAIL << std::endl;
 	return false;
 }
+
+/* legacy */
 bool Candle::setupMd80Diagnostic(uint16_t canId)
 {
 	GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_DIAGNOSTIC);
@@ -754,10 +786,24 @@ bool Candle::setupMd80Diagnostic(uint16_t canId)
 	if (bus->transfer(tx, len, true, 50, 66))
 	{
 		vout << "Library version: " << getVersion() << std::endl;
-		vout << "DIAG at ID = " << canId << ": " << std::string(&*bus->getRxBuffer(2)) << std::endl;
+		vout << "DIAG at ID = " << canId << ": " << std::string(bus->getRxBuffer(2)) << std::endl;
 		return true;
 	}
 	vout << "Diagnostic failed at ID = " << canId << std::endl;
+	return false;
+}
+bool Candle::setupMd80DiagnosticExtended(uint16_t canId, motorParameters_ut* motorParameters)
+{
+	GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_DIAGNOSTIC_EXTENDED);
+	char tx[64];
+	int len = sizeof(frame);
+	memcpy(tx, &frame, len);
+	if (bus->transfer(tx, len, true, 50, 66))
+	{
+		memcpy(motorParameters->bytes, bus->getRxBuffer(2), sizeof(motorParameters->bytes));
+		return true;
+	}
+	vout << "Extended diagnostic failed at ID = " << canId << std::endl;
 	return false;
 }
 mab::CANdleBaudrate_E Candle::getCurrentBaudrate()
