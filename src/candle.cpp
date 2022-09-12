@@ -18,8 +18,9 @@ class mystreambuf : public std::streambuf
 mystreambuf nostreambuf;
 std::ostream nocout(&nostreambuf);
 #define vout ((this->printVerbose) ? std::cout << "[CANDLE] " : nocout)
-std::string statusOK = "  [OK]";
-std::string statusFAIL = "  [FAILED]";
+/* note: this will not work on all terminals */
+std::string statusOK = "  \033[1;32m[OK]\033[0m";
+std::string statusFAIL = "  \033[1;31m[FAILED]\033[0m";
 
 uint64_t getTimestamp()
 {
