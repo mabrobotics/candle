@@ -747,23 +747,10 @@ void Candle::transmitNewStdFrame()
 	bus->transfer(tx, length, false, 100, sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1);
 }
 
-bool Candle::setupMd80Calibration(uint16_t canId, uint16_t torqueBandwidth)
+bool Candle::setupMd80Calibration(uint16_t canId)
 {
-	if (torqueBandwidth > driverMaxBandwidth)
-	{
-		vout << "Bandwidth setting above limit (" << driverMaxBandwidth << " Hz)! Setting bandwidth to maximum (" << driverMaxBandwidth << " Hz)" << std::endl;
-		torqueBandwidth = driverMaxBandwidth;
-	}
-	else if (torqueBandwidth < driverMinBandwidth)
-	{
-		vout << "Bandwidth setting below limit (" << driverMinBandwidth << " Hz)! Setting bandwidth to minimum (" << driverMinBandwidth << " Hz)" << std::endl;
-		torqueBandwidth = driverMinBandwidth;
-	}
-
-	GenericMd80Frame32 frame = _packMd80Frame(canId, 4, Md80FrameId_E::FRAME_CALIBRATION);
+	GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CALIBRATION);
 	char tx[64];
-	frame.canMsg[2] = (uint8_t)(torqueBandwidth & 0xff);
-	frame.canMsg[3] = (uint8_t)(torqueBandwidth >> 8);
 	int len = sizeof(frame);
 	memcpy(tx, &frame, len);
 	if (bus->transfer(tx, len, true, 50, 66))

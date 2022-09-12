@@ -300,12 +300,10 @@ class Candle
 
 	/**
 	@brief Triggers a calibration routine of the drive's internal electronics.
-	@note **This method should not be ever used without consultation with MAB Robotics**, it may make drive unusable and
-	prone to fail if used incorrectly.
 	@param canId ID of the drive
 	@return true if the calibration started succesfully, false otherwise
 	*/
-	bool setupMd80Calibration(uint16_t canId, uint16_t torqueBandwidth);
+	bool setupMd80Calibration(uint16_t canId);
 	/**
 	@brief Prints diagnostic message from md80.
 	@param canId ID of the drive
