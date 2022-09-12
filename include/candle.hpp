@@ -68,8 +68,10 @@ class Candle
 
 	Bus* bus;
 
-	int candleDeviceVersion = 10;
-	const int candleCompatibleVersion = 14;
+	uint32_t candleDeviceVersion = 10;
+	const uint32_t candleCompatibleVersion = 14;
+	const uint32_t md80CompatibleVersion = 20;
+
 	int maxDevices = 12;
 	bool shouldStopReceiver;
 	bool shouldStopTransmitter;

@@ -318,7 +318,7 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 	for (auto& d : md80s)
 		if (d.getId() == canId)
 		{
-			vout << "Md80 with ID: " << canId << " is already on the update list." << statusOK << std::endl;
+			vout << "MD80 with ID: " << canId << " is already on the update list." << statusOK << std::endl;
 			return true;
 		}
 	if ((int)md80s.size() >= maxDevices)
@@ -331,7 +331,20 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 		if (*bus->getRxBuffer(0) == BUS_FRAME_MD80_ADD)
 			if (*bus->getRxBuffer(1) == true)
 			{
-				vout << "Added Md80." << statusOK << std::endl;
+				motorParameters_ut motorParam;
+				motorParam.s.firmwareVersion = 0;
+				setupMd80DiagnosticExtended(canId, &motorParam);
+				if (motorParam.s.firmwareVersion < md80CompatibleVersion)
+				{
+					vout << "MD80's firmware with ID: " + std::to_string(canId) + " is outdated. Please update it using MAB_CAN_Flasher." << statusFAIL << std::endl;
+					return false;
+				}
+				else if (motorParam.s.firmwareVersion > md80CompatibleVersion)
+				{
+					vout << "MD80's firmware with ID: " + std::to_string(canId) + " is a future version. Please update your CANdle library." << statusFAIL << std::endl;
+					return false;
+				}
+				vout << "Added MD80 with ID: " + std::to_string(canId) << statusOK << std::endl;
 				md80s.push_back(Md80(canId));
 				mab::Md80& newDrive = md80s.back();
 				sendGetInfoFrame(newDrive);
@@ -339,7 +352,7 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 				newDrive.setTargetPosition(newDrive.getPosition());
 				return true;
 			}
-	if (printFailure) vout << "Failed to add Md80." << statusFAIL << std::endl;
+	if (printFailure) vout << "Failed to add MD80 with ID: " + std::to_string(canId) << statusFAIL << std::endl;
 	return false;
 }
 std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
