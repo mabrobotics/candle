@@ -10,6 +10,7 @@
 #include <cstring>
 #include <iostream>
 
+#include "bus.hpp"
 #include "crc.hpp"
 
 //#define UART_VERBOSE
@@ -17,12 +18,12 @@
 
 static const char* uartDev = "/dev/ttyAMA0";
 
-UartDevice::UartDevice(char* rxBufferPtr, const int rxBufferSize_)
+UartDevice::UartDevice()
 {
 	fd = open(uartDev, O_RDWR);
 
 	if (tcgetattr(fd, &tty) != 0)
-	{	
+	{
 		const char* msg = "[UART] Could not open the UART device... (is UART bus available on your device?)";
 		std::cout << msg << std::endl;
 		throw msg;
@@ -62,9 +63,6 @@ UartDevice::UartDevice(char* rxBufferPtr, const int rxBufferSize_)
 
 	gotResponse = false;
 
-	rxBuffer = rxBufferPtr;
-	rxBufferSize = rxBufferSize_;
-
 	crc = new Crc();
 
 	/* frame used to automatically detect baudrate on Slave device side -> send twice so that it can be easily discarded on the Candle slave device */
@@ -81,18 +79,26 @@ UartDevice::~UartDevice()
 	delete (crc);
 }
 
-bool UartDevice::transmit(char* buffer, int commandLen, bool _waitForResponse, int timeout, bool faultVerbose)
+bool UartDevice::transmit(char* buffer, int len, bool waitForResponse, int timeout, int responseLen, bool faultVerbose)
 {
-	commandLen = crc->addCrcToBuf(buffer, commandLen);
+	len = crc->addCrcToBuf(buffer, len);
 
-	if (write(fd, buffer, commandLen) == -1)
+	if (write(fd, buffer, len) == -1)
 	{
 		std::cout << "[UART] Writing to UART Device failed. Device Unavailable!" << std::endl;
 		return false;
 	}
-	if (_waitForResponse)
+	if (waitForResponse)
 		return receive(timeout, true, faultVerbose);
 	return true;
+}
+
+bool UartDevice::transfer(char* buffer, int commandLen, int responseLen)
+{
+	(void)buffer;
+	(void)commandLen;
+	(void)responseLen;
+	return false;
 }
 
 bool UartDevice::receive(int timeoutMs, bool checkCrc, bool faultVerbose)

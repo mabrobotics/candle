@@ -11,6 +11,8 @@
 #include <cstring>
 #include <iostream>
 
+#include "bus.hpp"
+
 struct termios tty;
 struct termios ti_prev;
 
@@ -21,8 +23,7 @@ bool checkDeviceAvailable(std::string devName, std::string idVendor, std::string
 std::string getDeviceShortId(std::string devName);
 unsigned long hash(const char* str);
 
-UsbDevice::UsbDevice(char* rxBufferPtr, const int rxBufferSize_, const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances)
-	: rxBuffer(rxBufferPtr), rxBufferSize(rxBufferSize_)
+UsbDevice::UsbDevice(const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances)
 {
 	auto listOfDevices = UsbDevice::getConnectedACMDevices(idVendor, idProduct);
 
@@ -52,7 +53,6 @@ UsbDevice::UsbDevice(char* rxBufferPtr, const int rxBufferSize_, const std::stri
 			}
 		}
 		const char* msg = "[USB] Failed to create USB object";
-		std::cout << msg << std::endl;
 		throw msg;
 		return;
 	}
@@ -98,14 +98,16 @@ loopdone:
 		std::cout << "Could not execute command '" << setSerialCommand << "'. Communication in low-speed mode." << std::endl;
 }
 
-bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeout, bool faultVerbose)
+bool UsbDevice::transmit(char* buffer, int len, bool waitForResponse, int timeout, int responseLen, bool faultVerbose)
 {
+	(void)responseLen;
+
 	if (write(fd, buffer, len) == -1)
 	{
 		std::cout << "[USB] Writing to USB Device failed. Device Unavailable!" << std::endl;
 		return false;
 	}
-	if (_waitForResponse)
+	if (waitForResponse)
 	{
 		if (receive(timeout, faultVerbose))
 			return true;
@@ -118,9 +120,18 @@ bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeo
 	return true;
 }
 
-bool UsbDevice::receive(int timeoutMs, bool faultVerbose)
+bool UsbDevice::transfer(char* buffer, int commandLen, int responseLen)
+{
+	(void)buffer;
+	(void)commandLen;
+	(void)responseLen;
+	return false;
+}
+
+bool UsbDevice::receive(int timeoutMs, bool checkCrc, bool faultVerbose)
 {
 	(void)faultVerbose;
+	(void)checkCrc;
 	memset(rxBuffer, 0, rxBufferSize);
 	rxLock.lock();
 	const int delayUs = 10;

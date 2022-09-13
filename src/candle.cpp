@@ -33,21 +33,21 @@ std::vector<Candle*> Candle::instances = std::vector<Candle*>();
 Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::CANdleFastMode_E fastMode, bool printFailure, mab::BusType_E busType)
 	: printVerbose(printVerbose), fastMode(fastMode)
 {
-	bus = std::make_unique<Bus>(Bus(busType));
+	(void)printFailure;
 
 	vout << "CANdle library version: " << getVersion() << std::endl;
 
-	if (bus->getType() == mab::BusType_E::USB)
+	if (busType == mab::BusType_E::USB)
 	{
 		std::vector<unsigned long> a;
 		for (auto& instance : instances)
-			a.push_back(instance->getUsbDeviceId());
-		bus->usb = new UsbDevice(bus->getRxBuffer(), bus->getRxBufferSize(), "MAB_Robotics", "MD_USB-TO-CAN", a);
+			a.push_back(instance->getDeviceId());
+		bus = new UsbDevice("MAB_Robotics", "MD_USB-TO-CAN", a);
 	}
-	else if (bus->getType() == mab::BusType_E::SPI)
-		bus->spi = new SpiDevice(bus->getRxBuffer(), bus->getRxBufferSize());
-	else if (bus->getType() == mab::BusType_E::UART)
-		bus->uart = new UartDevice(bus->getRxBuffer(), bus->getRxBufferSize());
+	else if (busType == mab::BusType_E::SPI)
+		bus = new SpiDevice();
+	else if (busType == mab::BusType_E::UART)
+		bus = new UartDevice();
 
 	this->reset();
 	usleep(5000);
@@ -59,7 +59,7 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::CANdleFastM
 	}
 
 	if (bus->getType() == mab::BusType_E::USB)
-		vout << "CANdle at " << this->bus->usb->getSerialDeviceName() << ", ID: 0x" << std::hex << this->getUsbDeviceId() << std::dec << " ready (USB)" << std::endl;
+		vout << "CANdle at " /*<< this->bus->usb->getSerialDeviceName() */ << ", ID: 0x" << std::hex << this->getDeviceId() << std::dec << " ready (USB)" << std::endl;
 	else if (bus->getType() == mab::BusType_E::SPI)
 		vout << "CANdle ready (SPI)" << std::endl;
 	else if (bus->getType() == mab::BusType_E::UART)
@@ -232,9 +232,9 @@ void Candle::setVebose(bool enable)
 {
 	printVerbose = enable;
 }
-unsigned long Candle::getUsbDeviceId()
+unsigned long Candle::getDeviceId()
 {
-	return bus->usb->getId();
+	return bus->getId();
 }
 GenericMd80Frame32 _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameId)
 {
@@ -250,7 +250,7 @@ GenericMd80Frame32 _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameI
 void Candle::sendGetInfoFrame(mab::Md80& drive)
 {
 	GenericMd80Frame32 getInfoFrame = _packMd80Frame(drive.getId(), 2, Md80FrameId_E::FRAME_GET_INFO);
-	if (bus->transfer((char*)&getInfoFrame, sizeof(getInfoFrame), true, 100, 66))
+	if (bus->transmit((char*)&getInfoFrame, sizeof(getInfoFrame), true, 100, 66))
 	{
 		uint8_t cheaterBuffer[72];
 		memcpy(&cheaterBuffer[1], bus->getRxBuffer(), bus->getBytesReceived());
@@ -265,7 +265,7 @@ void Candle::sendMotionCommand(mab::Md80& drive, float pos, float vel, float tor
 	*(float*)&motionCommandFrame.canMsg[2] = vel;
 	*(float*)&motionCommandFrame.canMsg[6] = pos;
 	*(float*)&motionCommandFrame.canMsg[10] = torque;
-	if (bus->transfer((char*)&motionCommandFrame, sizeof(motionCommandFrame), true, 100, 66))
+	if (bus->transmit((char*)&motionCommandFrame, sizeof(motionCommandFrame), true, 100, 66))
 	{
 		uint8_t cheaterBuffer[72];
 		memcpy(&cheaterBuffer[1], bus->getRxBuffer(), bus->getBytesReceived());
@@ -290,7 +290,7 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 		return false;
 	}
 	AddMd80Frame_t add = {BUS_FRAME_MD80_ADD, canId};
-	if (bus->transfer((char*)&add, sizeof(AddMd80Frame_t), true, 2, 2))
+	if (bus->transmit((char*)&add, sizeof(AddMd80Frame_t), true, 2, 2))
 		if (*bus->getRxBuffer(0) == BUS_FRAME_MD80_ADD)
 			if (*bus->getRxBuffer(1) == true)
 			{
@@ -327,7 +327,7 @@ std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
 	tx[0] = BUS_FRAME_PING_START;
 	tx[1] = 0x00;
 	std::vector<uint16_t> ids;
-	if (bus->transfer(tx, 2, true, 2500, 33))  // Scanning 2047 FDCAN ids, takes ~2100ms, thus wait for 2.5 sec
+	if (bus->transmit(tx, 2, true, 2500, 33))  // Scanning 2047 FDCAN ids, takes ~2100ms, thus wait for 2.5 sec
 	{
 		uint16_t* idsPointer = (uint16_t*)bus->getRxBuffer(1);
 		for (int i = 0; i < 12; i++)
@@ -381,7 +381,7 @@ bool Candle::sengGenericFDCanFrame(uint16_t canId, int msgLen, const char* txBuf
 	char tx[96];
 	int len = sizeof(frame);
 	memcpy(tx, &frame, len);
-	if (bus->transfer(tx, len, true, timeoutMs, 66))  // Got some response
+	if (bus->transmit(tx, len, true, timeoutMs, 66))  // Got some response
 	{
 		if (*bus->getRxBuffer(0) == tx[0] &&  // USB Frame ID matches
 			*bus->getRxBuffer(1) == true &&
@@ -404,7 +404,7 @@ bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newB
 	char tx[63];
 	int len = sizeof(frame);
 	memcpy(tx, &frame, len);
-	if (bus->transfer(tx, len, true, 100, 2))
+	if (bus->transmit(tx, len, true, 100, 2))
 		if (*bus->getRxBuffer(1) == 1)
 		{
 			vout << "CAN config change successful!" << statusOK << std::endl;
@@ -422,7 +422,7 @@ bool Candle::configMd80Save(uint16_t canId)
 	char tx[64];
 	int len = sizeof(frame);
 	memcpy(tx, &frame, len);
-	if (bus->transfer(tx, len, true, 500, 66))
+	if (bus->transmit(tx, len, true, 500, 66))
 		if (*bus->getRxBuffer(1) == true)
 		{
 			vout << "Saving in flash successful at ID = " << canId << statusOK << std::endl;
@@ -437,7 +437,7 @@ bool Candle::configMd80Blink(uint16_t canId)
 	char tx[64];
 	int len = sizeof(frame);
 	memcpy(tx, &frame, len);
-	if (bus->transfer(tx, len, true, 500, 66))
+	if (bus->transmit(tx, len, true, 500, 66))
 		if (*bus->getRxBuffer(1) == true)
 		{
 			vout << "LEDs blining at ID = " << canId << statusOK << std::endl;
@@ -453,7 +453,7 @@ bool Candle::controlMd80SetEncoderZero(uint16_t canId)
 	char tx[64];
 	int len = sizeof(frame);
 	memcpy(tx, &frame, len);
-	if (bus->transfer(tx, len, true, 50, 66))
+	if (bus->transmit(tx, len, true, 50, 66))
 		if (*bus->getRxBuffer(1) == true)
 		{
 			/* set target position to 0.0f to avoid jerk at startup */
@@ -484,7 +484,7 @@ bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
 	char tx[64];
 	int len = sizeof(frame);
 	memcpy(tx, &frame, len);
-	if (bus->transfer(tx, len, true, 50, 66))
+	if (bus->transmit(tx, len, true, 50, 66))
 		if (*bus->getRxBuffer(0) == BUS_FRAME_MD80_GENERIC_FRAME && *bus->getRxBuffer(1) == true)
 		{
 			vout << "Setting new current limit successful at ID = " << canId << statusOK << std::endl;
@@ -500,7 +500,7 @@ bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersio
 	char tx[10];
 	tx[0] = BUS_FRAME_CANDLE_CONFIG_BAUDRATE;
 	tx[1] = (uint8_t)canBaudrate;
-	if (bus->transfer(tx, 2, true, 50, 3))
+	if (bus->transmit(tx, 2, true, 50, 3))
 		if (*bus->getRxBuffer(0) == BUS_FRAME_CANDLE_CONFIG_BAUDRATE && *bus->getRxBuffer(1) == true)
 		{
 			candleDeviceVersion = *bus->getRxBuffer(2);
@@ -534,7 +534,7 @@ bool Candle::configMd80TorqueBandwidth(uint16_t canId, uint16_t torqueBandwidth)
 	frame.canMsg[3] = (uint8_t)(torqueBandwidth >> 8);
 	int len = sizeof(frame);
 	memcpy(tx, &frame, len);
-	if (bus->transfer(tx, len, true, 500, 66))
+	if (bus->transmit(tx, len, true, 500, 66))
 		if (*bus->getRxBuffer(1) == true)
 		{
 			vout << "Bandwidth succesfully changed at ID: " << canId << statusOK << std::endl;
@@ -578,7 +578,7 @@ bool Candle::controlMd80Mode(uint16_t canId, Md80Mode_E mode)
 		char tx[64];
 		int len = sizeof(frame);
 		memcpy(tx, &frame, len);
-		if (bus->transfer(tx, len, true, 50, 66))
+		if (bus->transmit(tx, len, true, 50, 66))
 			if (*bus->getRxBuffer(1) == true)
 			{
 				vout << "Setting control mode successful at ID = " << canId << statusOK << std::endl;
@@ -603,7 +603,7 @@ bool Candle::controlMd80Enable(uint16_t canId, bool enable)
 		char tx[64];
 		int len = sizeof(frame);
 		memcpy(tx, &frame, len);
-		if (bus->transfer(tx, len, true, 50, 66))
+		if (bus->transmit(tx, len, true, 50, 66))
 			if (*bus->getRxBuffer(1) == true)
 			{
 				if (enable)
@@ -634,7 +634,7 @@ bool Candle::begin()
 	char tx[128];
 	tx[0] = BUS_FRAME_BEGIN;
 	tx[1] = 0x00;
-	if (bus->transfer(tx, 2, true, 10, 2))
+	if (bus->transmit(tx, 2, true, 10, 2))
 	{
 		vout << "Beginnig auto update loop mode" << statusOK << std::endl;
 		mode = CANdleMode_E::UPDATE;
@@ -671,15 +671,15 @@ bool Candle::end()
 	tx[1] = 0x00;
 
 	if (bus->getType() == mab::BusType_E::USB)
-		bus->transfer(tx, 2, true, 10, 2);	// Stops update but produces garbage output
+		bus->transmit(tx, 2, true, 10, 2);	// Stops update but produces garbage output
 
 	if (bus->getType() == mab::BusType_E::UART)
 	{
-		bus->transfer(tx, 2, false, 10, 2);	 // ensure there's something to receive
+		bus->transmit(tx, 2, false, 10, 2);	 // ensure there's something to receive
 		bus->receive(100, false);			 // receive remaining bytes and do not check crc cause it will be garbage
 	}
 
-	if (bus->transfer(tx, 2, true, 10, 2))
+	if (bus->transmit(tx, 2, true, 10, 2))
 		if (*bus->getRxBuffer(0) == BUS_FRAME_END && *bus->getRxBuffer(1) == 1)
 			mode = CANdleMode_E::CONFIG;
 
@@ -692,7 +692,7 @@ bool Candle::reset()
 	char tx[128];
 	tx[0] = BUS_FRAME_RESET;
 	tx[1] = 0x00;
-	if (bus->transfer(tx, 2, true, 100, 2))
+	if (bus->transmit(tx, 2, true, 100, 2))
 		return true;
 
 	return false;
@@ -720,7 +720,11 @@ void Candle::transmitNewStdFrame()
 	}
 
 	int length = 1 + md80s.size() * sizeof(StdMd80CommandFrame_t);
-	bus->transfer(tx, length, false, 100, sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1);
+
+	if (bus->getType() == BusType_E::SPI)
+		bus->transfer(tx, length, sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1);
+	else
+		bus->transmit(tx, length, false, 100, sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1);
 }
 
 bool Candle::setupMd80Calibration(uint16_t canId)
@@ -729,7 +733,7 @@ bool Candle::setupMd80Calibration(uint16_t canId)
 	char tx[64];
 	int len = sizeof(frame);
 	memcpy(tx, &frame, len);
-	if (bus->transfer(tx, len, true, 50, 66))
+	if (bus->transmit(tx, len, true, 50, 66))
 		if (*bus->getRxBuffer(1) == true)
 		{
 			vout << "Starting calibration at ID = " << canId << statusOK << std::endl;
@@ -746,7 +750,7 @@ bool Candle::setupMd80Diagnostic(uint16_t canId)
 	char tx[64];
 	int len = sizeof(frame);
 	memcpy(tx, &frame, len);
-	if (bus->transfer(tx, len, true, 50, 66))
+	if (bus->transmit(tx, len, true, 50, 66))
 	{
 		vout << "Library version: " << getVersion() << std::endl;
 		vout << "DIAG at ID = " << canId << ": " << std::string(bus->getRxBuffer(2)) << std::endl;
@@ -761,7 +765,7 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId, motorParameters_ut* mot
 	char tx[64];
 	int len = sizeof(frame);
 	memcpy(tx, &frame, len);
-	if (bus->transfer(tx, len, true, 50, 66))
+	if (bus->transmit(tx, len, true, 50, 66))
 	{
 		memcpy(motorParameters->bytes, bus->getRxBuffer(2), sizeof(motorParameters->bytes));
 		return true;
@@ -779,7 +783,7 @@ bool Candle::checkMd80ForBaudrate(uint16_t canId)
 	char tx[64];
 	int len = sizeof(frame);
 	memcpy(tx, &frame, len);
-	if (bus->transfer(tx, len, true, 10, 66, false))
+	if (bus->transmit(tx, len, true, 10, 66, false))
 		if (*bus->getRxBuffer(1) == true)
 			return true;
 	return false;

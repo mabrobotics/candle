@@ -1,11 +1,13 @@
 #include "spiDevice.hpp"
 
+#include "bus.hpp"
+
 static const char* spiDev = "/dev/spidev0.0";
 
 // #define SPI_VERBOSE
 // #define SPI_VERBOSE_ON_CRC_ERROR
 
-SpiDevice::SpiDevice(char* rxBufferPtr, const int rxBufferSize_)
+SpiDevice::SpiDevice()
 {
 	fd = open(spiDev, O_RDWR);
 	if (fd < 0)
@@ -42,8 +44,6 @@ SpiDevice::SpiDevice(char* rxBufferPtr, const int rxBufferSize_)
 		throw msg;
 	}
 
-	rxBuffer = rxBufferPtr;
-	rxBufferSize = rxBufferSize_;
 	/* set transfer parameters that are constant in each cycle */
 	memset(&trx, 0, sizeof(trx));
 	trx.bits_per_word = 8;
@@ -155,7 +155,7 @@ bool SpiDevice::receive(int timeout, int responseLen, bool faultVerbose)
 	return false;
 }
 
-bool SpiDevice::transmitReceive(char* buffer, int commandLen, int responseLen)
+bool SpiDevice::transfer(char* buffer, int commandLen, int responseLen)
 {
 	memset(rxBuffer, 0, rxBufferSize);
 	rxLock.lock();
@@ -202,6 +202,14 @@ bool SpiDevice::transmitReceive(char* buffer, int commandLen, int responseLen)
 	if (bytesReceived > 0)
 		return true;
 
+	return false;
+}
+
+bool SpiDevice::receive(int timeoutMs, bool checkCrc, bool faultVerbose)
+{
+	(void)timeoutMs;
+	(void)checkCrc;
+	(void)faultVerbose;
 	return false;
 }
 

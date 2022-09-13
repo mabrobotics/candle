@@ -8,6 +8,8 @@
 #include "bus.hpp"
 #include "mab_types.hpp"
 #include "md80.hpp"
+#include "spiDevice.hpp"
+#include "uartDevice.hpp"
 #include "usbDevice.hpp"
 
 /* Turn on benchmarking */
@@ -69,7 +71,7 @@ class Candle
 	CANdleMode_E mode = CANdleMode_E::CONFIG;
 	CANdleFastMode_E fastMode = CANdleFastMode_E::NORMAL;
 
-	std::unique_ptr<Bus> bus;
+	Bus* bus = nullptr;
 
 	uint32_t candleDeviceVersion = 10;
 	const uint32_t candleCompatibleVersion = 14;
@@ -134,10 +136,10 @@ class Candle
 	const std::string getVersion();
 
 	/**
-	 * @brief Getter for USB device ID. Can be used to differentiate between multiple CANdle's connected to one computer.
+	 * @brief Getter for device ID. Can be used to differentiate between multiple CANdle's connected to one computer (USB).
 	 * @return unique 64-bit identified
 	 */
-	unsigned long int getUsbDeviceId();
+	unsigned long int getDeviceId();
 
 	/**
 	 * @brief A vector holding all md80 instances that were succesfully added via `addMd80` method. This vector
