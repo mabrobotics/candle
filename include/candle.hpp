@@ -63,10 +63,13 @@ class Candle
 	const std::string version = "v3.0";
 	std::thread receiverThread;
 	std::thread transmitterThread;
+
+	bool printVerbose = true;
+
 	CANdleMode_E mode = CANdleMode_E::CONFIG;
 	CANdleFastMode_E fastMode = CANdleFastMode_E::NORMAL;
 
-	Bus* bus;
+	std::unique_ptr<Bus> bus;
 
 	uint32_t candleDeviceVersion = 10;
 	const uint32_t candleCompatibleVersion = 14;
@@ -80,8 +83,6 @@ class Candle
 	int msgsReceived = 0;
 	int msgsSent = 0;
 	float usbCommsFreq = 0.0f;
-
-	bool printVerbose = true;
 
 	/* controller limits */
 	const uint16_t driverMinBandwidth = 50;

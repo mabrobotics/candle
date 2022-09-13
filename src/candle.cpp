@@ -30,60 +30,24 @@ uint64_t getTimestamp()
 
 std::vector<Candle*> Candle::instances = std::vector<Candle*>();
 
-Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose, mab::CANdleFastMode_E _fastMode, bool printFailure, mab::BusType_E busType)
+Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::CANdleFastMode_E fastMode, bool printFailure, mab::BusType_E busType)
+	: printVerbose(printVerbose), fastMode(fastMode)
 {
-	bus = new Bus(busType);
-	printVerbose = _printVerbose;
+	bus = std::make_unique<Bus>(Bus(busType));
+
+	vout << "CANdle library version: " << getVersion() << std::endl;
 
 	if (bus->getType() == mab::BusType_E::USB)
 	{
-		auto listOfCANdle = UsbDevice::getConnectedACMDevices("MAB_Robotics", "MD_USB-TO-CAN");
-		if (listOfCANdle.size() == 0)
-		{
-			vout << "No CANdle found!" << std::endl;
-			delete (bus);
-			throw "No Candle found!";
-			return;
-		}
-		if (instances.size() == 0)
-			bus->usb = new UsbDevice(listOfCANdle[0], "MAB_Robotics", "MD_USB-TO-CAN", bus->getRxBuffer(), bus->getRxBufferSize());
-		else
-		{
-			for (auto& entry : listOfCANdle)
-			{
-				unsigned int newIdCount = 0;
-				for (auto instance : instances)
-				{
-					if (UsbDevice::getConnectedDeviceId(entry) != instance->getUsbDeviceId())
-						newIdCount++;
-				}
-				/* only if all instances were different from the current one -> create new device */
-				if (newIdCount == instances.size())
-				{
-					bus->usb = new UsbDevice(entry, "MAB_Robotics", "MD_USB-TO-CAN", bus->getRxBuffer(), bus->getRxBufferSize());
-					goto loopdone;	// Only legit use of goto left in C++
-				}
-			}
-			if (printFailure)
-				vout << "Failed to create CANdle object." << statusFAIL << std::endl;
-			delete (bus);
-			throw "Failed to create CANdle object";
-			return;
-		}
-	loopdone:
-		vout << "CANdle library version: " << getVersion() << std::endl;
-		std::string setSerialCommand = "setserial " + bus->usb->getSerialDeviceName() + " low_latency";
-		if (system(setSerialCommand.c_str()) != 0)
-			std::cout << "Could not execute command '" << setSerialCommand << "'. Communication in low-speed mode." << std::endl;
+		std::vector<unsigned long> a;
+		for (auto& instance : instances)
+			a.push_back(instance->getUsbDeviceId());
+		bus->usb = new UsbDevice(bus->getRxBuffer(), bus->getRxBufferSize(), "MAB_Robotics", "MD_USB-TO-CAN", a);
 	}
 	else if (bus->getType() == mab::BusType_E::SPI)
-	{
 		bus->spi = new SpiDevice(bus->getRxBuffer(), bus->getRxBufferSize());
-	}
 	else if (bus->getType() == mab::BusType_E::UART)
-	{
 		bus->uart = new UartDevice(bus->getRxBuffer(), bus->getRxBufferSize());
-	}
 
 	this->reset();
 	usleep(5000);
@@ -101,7 +65,6 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool _printVerbose, mab::CANdleFast
 	else if (bus->getType() == mab::BusType_E::UART)
 		vout << "CANdle ready (UART)" << std::endl;
 
-	fastMode = _fastMode;
 	switch (fastMode)
 	{
 		case CANdleFastMode_E::FAST1:
@@ -120,7 +83,6 @@ Candle::~Candle()
 {
 	if (this->inUpdateMode())
 		this->end();
-	delete (bus);
 }
 void Candle::updateModeBasedOnMd80List()
 {

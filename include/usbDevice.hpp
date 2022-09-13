@@ -7,7 +7,7 @@
 class UsbDevice
 {
    public:
-	UsbDevice(std::string deviceName, std::string idVendor, std::string idProduct, char* rxBufferPtr, const int rxBufferSize_);
+	UsbDevice(char* rxBufferPtr, const int rxBufferSize_, const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances);
 	~UsbDevice();
 	bool transmit(char* buffer, int len, bool waitForConfirmation = false, int timeout = 100, bool faultVerbose = true);
 	bool receive(int timeout = 100, bool faultVerbose = true);

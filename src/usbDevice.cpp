@@ -21,9 +21,44 @@ bool checkDeviceAvailable(std::string devName, std::string idVendor, std::string
 std::string getDeviceShortId(std::string devName);
 unsigned long hash(const char* str);
 
-UsbDevice::UsbDevice(std::string deviceName, std::string idVendor, std::string idProduct, char* rxBufferPtr, const int rxBufferSize_)
+UsbDevice::UsbDevice(char* rxBufferPtr, const int rxBufferSize_, const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances)
+	: rxBuffer(rxBufferPtr), rxBufferSize(rxBufferSize_)
 {
-	serialDeviceName = deviceName;
+	auto listOfDevices = UsbDevice::getConnectedACMDevices(idVendor, idProduct);
+
+	if (listOfDevices.size() == 0)
+	{
+		std::cout << "[USB] No devices found!" << std::endl;
+		throw "[USB] No devices found!";
+		return;
+	}
+
+	if (instances.size() == 0)
+		serialDeviceName = listOfDevices[0];
+	else
+	{
+		for (auto& entry : listOfDevices)
+		{
+			unsigned int newIdCount = 0;
+			for (auto& instance : instances)
+				if (UsbDevice::getConnectedDeviceId(entry) != instance)
+					newIdCount++;
+
+			/* only if all instances were different from the current one -> create new device */
+			if (newIdCount == instances.size())
+			{
+				serialDeviceName = entry;
+				goto loopdone;
+			}
+		}
+		const char* msg = "[USB] Failed to create USB object";
+		std::cout << msg << std::endl;
+		throw msg;
+		return;
+	}
+
+loopdone:
+
 	int device_descriptor = open_device(serialDeviceName, idVendor, idProduct);
 	serialDeviceId = getConnectedDeviceId(serialDeviceName);
 
@@ -32,7 +67,6 @@ UsbDevice::UsbDevice(std::string deviceName, std::string idVendor, std::string i
 		const char* msg = "[USB] Device not found! Try re-plugging the device!";
 		std::cout << msg << std::endl;
 		throw msg;
-		
 	}
 
 	tcgetattr(device_descriptor, &ti_prev);										  // Save the previous serial config
@@ -51,18 +85,17 @@ UsbDevice::UsbDevice(std::string deviceName, std::string idVendor, std::string i
 	tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL);  // Disable special chars on RX
 	tty.c_oflag &= ~OPOST;														  // Prevent special interpretation of output bytes
 	tty.c_oflag &= ~ONLCR;														  // Prevent conversion of newline to carriage return/line feed
-
-	tty.c_cc[VTIME] = 0;  // Wait for up to 0.1s (1 decisecond), returning as soon as any data is received.
+	tty.c_cc[VTIME] = 0;														  // Wait for up to 0.1s (1 decisecond), returning as soon as any data is received.
 	tty.c_cc[VMIN] = 0;
 
-	// cfmakeraw(&tty);
 	tcsetattr(device_descriptor, TCSANOW, &tty);  // Set the new serial config
 
 	this->fd = device_descriptor;
 	gotResponse = false;
 
-	rxBuffer = rxBufferPtr;
-	rxBufferSize = rxBufferSize_;
+	std::string setSerialCommand = "setserial " + getSerialDeviceName() + " low_latency";
+	if (system(setSerialCommand.c_str()) != 0)
+		std::cout << "Could not execute command '" << setSerialCommand << "'. Communication in low-speed mode." << std::endl;
 }
 
 bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeout, bool faultVerbose)
