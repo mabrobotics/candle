@@ -140,7 +140,7 @@ class Md80
 	float getTorque() { return torque; };
 	/**
 	 * @brief Get the exteral thermistor temperature reading
-	 * @return uint8_t internally computed temperature value in *C 
+	 * @return uint8_t internally computed temperature value in *C
 	 */
 	uint8_t getTemperature() { return temperature; };
 
@@ -170,4 +170,10 @@ class Md80
 	 */
 	void __setControlMode(Md80Mode_E mode);
 };
+/**
+ * @brief For internal use by CANdle only.
+ * @private
+ */
+uint16_t __getRegisterSize(uint16_t regId);
+
 }  // namespace mab

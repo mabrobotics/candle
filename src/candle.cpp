@@ -788,6 +788,26 @@ bool Candle::checkMd80ForBaudrate(uint16_t canId)
 			return true;
 	return false;
 }
+/* recursive variatic function writeMd80Register calls this function at the end:*/
+void Candle::writeMd80Register(uint16_t canId)
+{
+	sengGenericFDCanFrame(canId, sizeof(regTxBuffer), regTxBuffer, regRxBuffer, 100);
+	regTxPtr = nullptr;
+	std::cout << "END" << std::endl;
+}
+
+uint16_t Candle::packRegister(uint16_t regId, char* value, char* buffer)
+{
+	uint8_t len = __getRegisterSize(regId);
+	*(uint16_t*)buffer = regId;
+	buffer += sizeof(regId);
+	/* in case it's a string */
+	if (len > sizeof(float))
+		memcpy(buffer, value, strlen(value));
+	else
+		memcpy(buffer, value, len);
+	return (len + sizeof(regId));
+}
 
 #if BENCHMARKING == 1
 bool Candle::benchGetFlagRx()

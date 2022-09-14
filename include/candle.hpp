@@ -93,6 +93,10 @@ class Candle
 	const float driverMaxCurrent = 40.0f;
 	const float driverMinCurrent = 1.0f;
 
+	char regTxBuffer[64];
+	char regRxBuffer[64];
+	char* regTxPtr = nullptr;
+
 #ifdef BENCHMARKING
 	long long txTimestamp = 0;
 	bool flag_glob_tx = false;
@@ -332,8 +336,33 @@ class Candle
 	@return true if drive was successfully contacted, false otherwise
 	*/
 	bool checkMd80ForBaudrate(uint16_t canId);
+	/**
+	@brief writes a single-field register
+	@param canId ID of the drive
+	@param regId register's ID
+	@param value value to be written
+	@return true if register was written
+	*/
+	void writeMd80Register(uint16_t canId);
 
-#ifdef BENCHMARKING
+	template <typename T2, typename... Ts>
+	void writeMd80Register(uint16_t canId, int regId, const T2& value, const Ts&... vs)
+	{
+		if (regTxPtr == nullptr)
+		{
+			memset(regTxBuffer, 0, sizeof(regTxBuffer));
+			regTxBuffer[0] = mab::Md80FrameId_E::FRAME_WRITE_REGISTER;
+			regTxBuffer[1] = 0;
+			regTxPtr = &regTxBuffer[2];
+		}
+
+		regTxPtr += packRegister(regId, ((char*)&value), regTxPtr);
+		writeMd80Register(canId, vs...);
+	}
+
+	uint16_t packRegister(uint16_t regId, char* value, char* buffer);
+
+#if BENCHMARKING == 1
 	bool benchGetFlagRx();
 	bool benchGetFlagTx();
 	void benchSetFlagRx(bool state);

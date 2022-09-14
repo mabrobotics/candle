@@ -153,4 +153,17 @@ void Md80::packMotionTargetsFrame()
 	*(float*)&commandFrame.toMd80.data[6] = positionTarget;
 	*(float*)&commandFrame.toMd80.data[10] = torqueSet;
 }
+
+uint16_t __getRegisterSize(uint16_t regId)
+{
+	switch (regId)
+	{
+		case Md80Register_E::canId:
+		case Md80Register_E::canBaudrate:
+			return 4;
+		case Md80Register_E::motorName:
+			return 24;
+	}
+}
+
 }  // namespace mab

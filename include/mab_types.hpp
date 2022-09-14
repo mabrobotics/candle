@@ -55,6 +55,8 @@ enum Md80FrameId_E : uint8_t
 	FRAME_SET_MOTION_TARGETS = 0x14,
 	FRAME_CAN_CONFIG = 0x20,
 	FRAME_CAN_SAVE = 0x21,
+	FRAME_WRITE_REGISTER = 0x40,
+	FRAME_READ_REGISTER = 0x41,
 	FRAME_DIAGNOSTIC = 0x69,
 	FRAME_CALIBRATION = 0x70,
 	FRAME_MOTOR_CONFIG = 0x71,
@@ -99,5 +101,26 @@ typedef union
 	motorParameters_t s;
 	uint8_t bytes[sizeof(motorParameters_t)];
 } motorParameters_ut;
+
+enum Md80Register_E : uint16_t
+{
+	canId = 0x001,
+	canBaudrate = 0x002,
+
+	motorName = 0x010,
+	motorPolePairs = 0x011,
+	motorKt = 0x012,
+	motorKt_a = 0x013,
+	motorKt_b = 0x014,
+	motorKt_c = 0x015,
+	motorIMax = 0x016,
+	motorGearRatio = 0x017,
+	motorTorgueBandwidth = 0x018,
+	motorFriction = 0x019,
+	motorStiction = 0x01A,
+
+	outputEncoder = 0x020,
+	outputEncoderDir = 0x021,
+};
 
 }  // namespace mab
