@@ -158,23 +158,34 @@ uint16_t getRegisterSize(uint16_t regId)
 {
 	switch (regId)
 	{
-		case Md80Register_E::motorTorgueBandwidth:
+		case Md80Reg_E::motorTorgueBandwidth:
 			return 2;
-		case Md80Register_E::motorFriction:
-		case Md80Register_E::motorStiction:
-		case Md80Register_E::outputEncoder:
-		case Md80Register_E::outputEncoderDir:
-		case Md80Register_E::canId:
-		case Md80Register_E::canBaudrate:
-		case Md80Register_E::motorGearRatio:
-		case Md80Register_E::motorPolePairs:
-		case Md80Register_E::motorKt:
-		case Md80Register_E::motorKt_a:
-		case Md80Register_E::motorKt_b:
-		case Md80Register_E::motorKt_c:
-		case Md80Register_E::motorIMax:
+		case mab::Md80Reg_E::motorImpPidKp:
+		case Md80Reg_E::motorImpPidKd:
+		case Md80Reg_E::motorImpPidOutMax:
+		case Md80Reg_E::motorPosPidKp:
+		case Md80Reg_E::motorPosPidKi:
+		case Md80Reg_E::motorPosPidKd:
+		case Md80Reg_E::motorPosPidOutMax:
+		case Md80Reg_E::motorVelPidKp:
+		case Md80Reg_E::motorVelPidKi:
+		case Md80Reg_E::motorVelPidKd:
+		case Md80Reg_E::motorVelPidOutMax:
+		case Md80Reg_E::motorFriction:
+		case Md80Reg_E::motorStiction:
+		case Md80Reg_E::outputEncoder:
+		case Md80Reg_E::outputEncoderDir:
+		case Md80Reg_E::canId:
+		case Md80Reg_E::canBaudrate:
+		case Md80Reg_E::motorGearRatio:
+		case Md80Reg_E::motorPolePairs:
+		case Md80Reg_E::motorKt:
+		case Md80Reg_E::motorKt_a:
+		case Md80Reg_E::motorKt_b:
+		case Md80Reg_E::motorKt_c:
+		case Md80Reg_E::motorIMax:
 			return 4;
-		case Md80Register_E::motorName:
+		case Md80Reg_E::motorName:
 			return 24;
 		default:
 			return 0;

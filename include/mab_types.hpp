@@ -102,7 +102,7 @@ typedef union
 	uint8_t bytes[sizeof(motorParameters_t)];
 } motorParameters_ut;
 
-enum Md80Register_E : uint16_t
+enum Md80Reg_E : uint16_t
 {
 	canId = 0x001,
 	canBaudrate = 0x002,
@@ -121,6 +121,20 @@ enum Md80Register_E : uint16_t
 
 	outputEncoder = 0x020,
 	outputEncoderDir = 0x021,
+
+	motorPosPidKp = 0x030,
+	motorPosPidKi = 0x031,
+	motorPosPidKd = 0x032,
+	motorPosPidOutMax = 0x033,
+
+	motorVelPidKp = 0x040,
+	motorVelPidKi = 0x041,
+	motorVelPidKd = 0x042,
+	motorVelPidOutMax = 0x043,
+
+	motorImpPidKp = 0x050,
+	motorImpPidKd = 0x051,
+	motorImpPidOutMax = 0x052,
 };
 
 }  // namespace mab

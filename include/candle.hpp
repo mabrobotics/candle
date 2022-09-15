@@ -122,7 +122,7 @@ class Candle
 	uint32_t packRegister(uint16_t regId, char* regValue, char* buffer);
 	uint32_t unPackRegister(uint16_t regId, char* regValue, char* regDataPos);
 	uint32_t copyRegister(char* dest, char* source, uint32_t size, uint32_t freeSpace);
-	bool prepareFrameMd80Register(mab::Md80FrameId_E frameId, mab::Md80Register_E regId, char* regValue);
+	bool prepareFrameMd80Register(mab::Md80FrameId_E frameId, mab::Md80Reg_E regId, char* regValue);
 
    public:
 	/**
@@ -360,7 +360,7 @@ class Candle
 	};
 
 	template <typename T2, typename... Ts>
-	bool interpretMd80Register(uint16_t canId, mab::Md80Register_E regId, const T2& regValue, const Ts&... vs)
+	bool interpretMd80Register(uint16_t canId, mab::Md80Reg_E regId, const T2& regValue, const Ts&... vs)
 	{
 		/* if new frame */
 		if (regRxPtr == nullptr)
@@ -380,7 +380,7 @@ class Candle
 	}
 
 	template <typename T2, typename... Ts>
-	bool prepareMd80Register(uint16_t canId, mab::Md80FrameId_E frameType, mab::Md80Register_E regId, const T2& regValue, const Ts&... vs)
+	bool prepareMd80Register(uint16_t canId, mab::Md80FrameId_E frameType, mab::Md80Reg_E regId, const T2& regValue, const Ts&... vs)
 	{
 		static_assert(!std::is_same<double, T2>::value, "register value should be float not double");
 
@@ -392,7 +392,7 @@ class Candle
 	}
 
 	template <typename T2, typename... Ts>
-	bool readMd80Register(uint16_t canId, mab::Md80Register_E regId, const T2& regValue, const Ts&... vs)
+	bool readMd80Register(uint16_t canId, mab::Md80Reg_E regId, const T2& regValue, const Ts&... vs)
 	{
 		/* prepare and send the request frame */
 		if (!prepareMd80Register(canId, mab::Md80FrameId_E::FRAME_READ_REGISTER, regId, regValue, vs...))
@@ -402,7 +402,7 @@ class Candle
 	}
 
 	template <typename T2, typename... Ts>
-	bool writeMd80Register(uint16_t canId, mab::Md80Register_E regId, const T2& regValue, const Ts&... vs)
+	bool writeMd80Register(uint16_t canId, mab::Md80Reg_E regId, const T2& regValue, const Ts&... vs)
 	{
 		return prepareMd80Register(canId, mab::Md80FrameId_E::FRAME_WRITE_REGISTER, regId, regValue, vs...);
 	}

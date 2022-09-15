@@ -827,7 +827,7 @@ uint32_t Candle::copyRegister(char* dest, char* source, uint32_t size, uint32_t 
 	return size + 2;
 }
 
-bool Candle::prepareFrameMd80Register(mab::Md80FrameId_E frameId, mab::Md80Register_E regId, char* value)
+bool Candle::prepareFrameMd80Register(mab::Md80FrameId_E frameId, mab::Md80Reg_E regId, char* value)
 {
 	/* if new frame */
 	if (regTxPtr == nullptr)
