@@ -93,7 +93,7 @@ loopdone:
 	this->fd = device_descriptor;
 	gotResponse = false;
 
-	std::string setSerialCommand = "setserial " + getSerialDeviceName() + " low_latency";
+	std::string setSerialCommand = "setserial " + getDeviceName() + " low_latency";
 	if (system(setSerialCommand.c_str()) != 0)
 		std::cout << "Could not execute command '" << setSerialCommand << "'. Communication in low-speed mode." << std::endl;
 }

@@ -17,8 +17,8 @@ class UsbDevice : public mab::Bus
 	bool receive(int timeoutMs = 100, bool checkCrc = true, bool faultVerbose = true) override;
 	int getBytesReceived() override { return bytesReceived; }
 	unsigned long getId() override { return serialDeviceId; }
+	std::string getDeviceName() override { return serialDeviceName; }
 
-	std::string getSerialDeviceName() { return serialDeviceName; }
 	static std::vector<std::string> getConnectedACMDevices(std::string idVendor, std::string idProduct);
 	static unsigned long getConnectedDeviceId(std::string devName);
 

@@ -20,6 +20,7 @@ class Bus
 	virtual bool receive(int timeoutMs = 100, bool checkCrc = true, bool faultVerbose = true) = 0;
 	virtual int getBytesReceived() = 0;
 	virtual unsigned long getId() = 0;
+	virtual std::string getDeviceName() { return ""; }
 
 	mab::BusType_E getType() { return busType; };
 	char* getRxBuffer(int index = 0) { return (char*)&rxBuffer[index]; };

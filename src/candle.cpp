@@ -59,7 +59,7 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::CANdleFastM
 	}
 
 	if (bus->getType() == mab::BusType_E::USB)
-		vout << "CANdle at " /*<< this->bus->usb->getSerialDeviceName() */ << ", ID: 0x" << std::hex << this->getDeviceId() << std::dec << " ready (USB)" << std::endl;
+		vout << "CANdle at " << bus->getDeviceName() << ", ID: 0x" << std::hex << this->getDeviceId() << std::dec << " ready (USB)" << std::endl;
 	else if (bus->getType() == mab::BusType_E::SPI)
 		vout << "CANdle ready (SPI)" << std::endl;
 	else if (bus->getType() == mab::BusType_E::UART)

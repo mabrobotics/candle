@@ -81,6 +81,8 @@ UartDevice::~UartDevice()
 
 bool UartDevice::transmit(char* buffer, int len, bool waitForResponse, int timeout, int responseLen, bool faultVerbose)
 {
+	(void)responseLen;
+
 	len = crc->addCrcToBuf(buffer, len);
 
 	if (write(fd, buffer, len) == -1)
