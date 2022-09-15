@@ -118,6 +118,8 @@ enum Md80Reg_E : uint16_t
 	motorTorgueBandwidth = 0x018,
 	motorFriction = 0x019,
 	motorStiction = 0x01A,
+	motorResistance = 0x01B,
+	motorInductance = 0x01C,
 
 	outputEncoder = 0x020,
 	outputEncoderDir = 0x021,
@@ -126,15 +128,22 @@ enum Md80Reg_E : uint16_t
 	motorPosPidKi = 0x031,
 	motorPosPidKd = 0x032,
 	motorPosPidOutMax = 0x033,
+	motorPosPidWindup = 0x034,
 
 	motorVelPidKp = 0x040,
 	motorVelPidKi = 0x041,
 	motorVelPidKd = 0x042,
 	motorVelPidOutMax = 0x043,
+	motorVelPidWindup = 0x044,
 
 	motorImpPidKp = 0x050,
 	motorImpPidKd = 0x051,
 	motorImpPidOutMax = 0x052,
+
+	buildDate = 0x100,
+	comitHash = 0x101,
+	firmwareVersion = 0x102,
+	bridgeType = 0x103,
 };
 
 }  // namespace mab
