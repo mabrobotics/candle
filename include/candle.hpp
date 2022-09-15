@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <type_traits>
 #include <vector>
 
 #include "bus.hpp"
@@ -87,15 +88,17 @@ class Candle
 	float usbCommsFreq = 0.0f;
 
 	/* controller limits */
-	const uint16_t driverMinBandwidth = 50;
-	const uint16_t driverMaxBandwidth = 2500;
-
+	static const uint16_t driverMinBandwidth = 50;
+	static const uint16_t driverMaxBandwidth = 2500;
 	const float driverMaxCurrent = 40.0f;
 	const float driverMinCurrent = 1.0f;
 
-	char regTxBuffer[64];
-	char regRxBuffer[64];
+	/* register data */
+	static const uint32_t maxCanFramelen = 64;
+	char regTxBuffer[maxCanFramelen];
+	char regRxBuffer[maxCanFramelen];
 	char* regTxPtr = nullptr;
+	char* regRxPtr = nullptr;
 
 #ifdef BENCHMARKING
 	long long txTimestamp = 0;
@@ -114,6 +117,12 @@ class Candle
 
 	void sendGetInfoFrame(mab::Md80& drive);
 	void sendMotionCommand(mab::Md80& drive, float pos, float vel, float torque);
+
+	/* register actions private functions */
+	uint32_t packRegister(uint16_t regId, char* regValue, char* buffer);
+	uint32_t unPackRegister(uint16_t regId, char* regValue, char* regDataPos);
+	uint32_t copyRegister(char* dest, char* source, uint32_t size, uint32_t freeSpace);
+	bool prepareFrameMd80Register(mab::Md80FrameId_E frameId, mab::Md80Register_E regId, char* regValue);
 
    public:
 	/**
@@ -343,24 +352,60 @@ class Candle
 	@param value value to be written
 	@return true if register was written
 	*/
-	void writeMd80Register(uint16_t canId);
+
+	bool interpretMd80Register(uint16_t canId)
+	{
+		(void)canId;
+		return true;
+	};
 
 	template <typename T2, typename... Ts>
-	void writeMd80Register(uint16_t canId, int regId, const T2& value, const Ts&... vs)
+	bool interpretMd80Register(uint16_t canId, mab::Md80Register_E regId, const T2& regValue, const Ts&... vs)
 	{
-		if (regTxPtr == nullptr)
-		{
-			memset(regTxBuffer, 0, sizeof(regTxBuffer));
-			regTxBuffer[0] = mab::Md80FrameId_E::FRAME_WRITE_REGISTER;
-			regTxBuffer[1] = 0;
-			regTxPtr = &regTxBuffer[2];
-		}
+		/* if new frame */
+		if (regRxPtr == nullptr)
+			regRxPtr = &regRxBuffer[2];
 
-		regTxPtr += packRegister(regId, ((char*)&value), regTxPtr);
-		writeMd80Register(canId, vs...);
+		regRxPtr += unPackRegister(regId, (char*)&regValue, regRxPtr);
+		return interpretMd80Register(canId, vs...);
 	}
 
-	uint16_t packRegister(uint16_t regId, char* value, char* buffer);
+	bool prepareMd80Register(uint16_t canId, mab::Md80FrameId_E frameType)
+	{
+		(void)frameType;
+		/* clear the RX buffer and send register request */
+		memset(regRxBuffer, 0, sizeof(regRxBuffer));
+		regTxPtr = nullptr;
+		return sengGenericFDCanFrame(canId, sizeof(regTxBuffer), regTxBuffer, regRxBuffer, 100);
+	}
+
+	template <typename T2, typename... Ts>
+	bool prepareMd80Register(uint16_t canId, mab::Md80FrameId_E frameType, mab::Md80Register_E regId, const T2& regValue, const Ts&... vs)
+	{
+		static_assert(!std::is_same<double, T2>::value, "register value should be float not double");
+
+		// std::cout << typeid(regValue).name() << std::endl;
+
+		if (!prepareFrameMd80Register(frameType, regId, (char*)&regValue))
+			return false;
+		return prepareMd80Register(canId, frameType, vs...);
+	}
+
+	template <typename T2, typename... Ts>
+	bool readMd80Register(uint16_t canId, mab::Md80Register_E regId, const T2& regValue, const Ts&... vs)
+	{
+		/* prepare and send the request frame */
+		if (!prepareMd80Register(canId, mab::Md80FrameId_E::FRAME_READ_REGISTER, regId, regValue, vs...))
+			return false;
+		/* interpret the frame */
+		return interpretMd80Register(canId, regId, regValue, vs...);
+	}
+
+	template <typename T2, typename... Ts>
+	bool writeMd80Register(uint16_t canId, mab::Md80Register_E regId, const T2& regValue, const Ts&... vs)
+	{
+		return prepareMd80Register(canId, mab::Md80FrameId_E::FRAME_WRITE_REGISTER, regId, regValue, vs...);
+	}
 
 #if BENCHMARKING == 1
 	bool benchGetFlagRx();

@@ -788,25 +788,66 @@ bool Candle::checkMd80ForBaudrate(uint16_t canId)
 			return true;
 	return false;
 }
-/* recursive variatic function writeMd80Register calls this function at the end:*/
-void Candle::writeMd80Register(uint16_t canId)
-{
-	sengGenericFDCanFrame(canId, sizeof(regTxBuffer), regTxBuffer, regRxBuffer, 100);
-	regTxPtr = nullptr;
-	std::cout << "END" << std::endl;
-}
 
-uint16_t Candle::packRegister(uint16_t regId, char* value, char* buffer)
+uint32_t Candle::packRegister(uint16_t regId, char* value, char* buffer)
 {
-	uint8_t len = __getRegisterSize(regId);
+	uint32_t len = getRegisterSize(regId);
+	/* in case no place is left in the buffer */
+	if (len > sizeof(regTxBuffer) - (buffer - &regTxBuffer[2])) return 0;
+	/* place register ID at the beginning */
 	*(uint16_t*)buffer = regId;
+	/* move the pointer forward by 2 bytes */
 	buffer += sizeof(regId);
-	/* in case it's a string */
-	if (len > sizeof(float))
-		memcpy(buffer, value, strlen(value));
+	/* in case we're just preparing a read frame */
+	if (value == nullptr)
+		memset(buffer, 0, len);
 	else
 		memcpy(buffer, value, len);
+
 	return (len + sizeof(regId));
+}
+
+uint32_t Candle::unPackRegister(uint16_t regId, char* value, char* buffer)
+{
+	/* place register ID at the beginning */
+	*(uint16_t*)buffer = regId;
+	/* move the pointer forward by 2 bytes */
+	buffer += sizeof(regId);
+
+	uint32_t len = getRegisterSize(regId);
+
+	return copyRegister(value, buffer, len, sizeof(regTxBuffer) - (buffer - &regTxBuffer[2]));
+}
+
+uint32_t Candle::copyRegister(char* dest, char* source, uint32_t size, uint32_t freeSpace)
+{
+	/* return two so that we move by the reg ID and find a zero reg ID which terminates reception/transmission */
+	if (freeSpace < size) return 2;
+	memcpy(dest, source, size);
+	return size + 2;
+}
+
+bool Candle::prepareFrameMd80Register(mab::Md80FrameId_E frameId, mab::Md80Register_E regId, char* value)
+{
+	/* if new frame */
+	if (regTxPtr == nullptr)
+	{ /* clear the buffer */
+		memset(regTxBuffer, 0, sizeof(regTxBuffer));
+		regTxBuffer[0] = frameId;
+		regTxBuffer[1] = 0;
+		regTxPtr = &regTxBuffer[2];
+	}
+	/* let packRegister know to fill data space with zeros */
+	if (frameId == mab::Md80FrameId_E::FRAME_READ_REGISTER)
+		value = nullptr;
+	/* add value's data to tx buffer */
+	uint32_t offset = packRegister(regId, value, regTxPtr);
+
+	if (offset == 0)
+		return false;
+
+	regTxPtr += offset;
+	return true;
 }
 
 #if BENCHMARKING == 1

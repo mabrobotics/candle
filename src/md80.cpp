@@ -154,15 +154,30 @@ void Md80::packMotionTargetsFrame()
 	*(float*)&commandFrame.toMd80.data[10] = torqueSet;
 }
 
-uint16_t __getRegisterSize(uint16_t regId)
+uint16_t getRegisterSize(uint16_t regId)
 {
 	switch (regId)
 	{
+		case Md80Register_E::motorTorgueBandwidth:
+			return 2;
+		case Md80Register_E::motorFriction:
+		case Md80Register_E::motorStiction:
+		case Md80Register_E::outputEncoder:
+		case Md80Register_E::outputEncoderDir:
 		case Md80Register_E::canId:
 		case Md80Register_E::canBaudrate:
+		case Md80Register_E::motorGearRatio:
+		case Md80Register_E::motorPolePairs:
+		case Md80Register_E::motorKt:
+		case Md80Register_E::motorKt_a:
+		case Md80Register_E::motorKt_b:
+		case Md80Register_E::motorKt_c:
+		case Md80Register_E::motorIMax:
 			return 4;
 		case Md80Register_E::motorName:
 			return 24;
+		default:
+			return 0;
 	}
 }
 

@@ -174,6 +174,6 @@ class Md80
  * @brief For internal use by CANdle only.
  * @private
  */
-uint16_t __getRegisterSize(uint16_t regId);
+uint16_t getRegisterSize(uint16_t regId);
 
 }  // namespace mab
