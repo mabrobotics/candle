@@ -38,6 +38,9 @@ class Md80
 	StdMd80CommandFrame_t commandFrame;
 	StdMd80ResponseFrame_t responseFrame;
 
+	regRead_st regRead;
+	regWrite_st regWrite;
+
 	void packImpedanceFrame();
 	void packPositionFrame();
 	void packVelocityFrame();
@@ -143,6 +146,18 @@ class Md80
 	 * @return uint8_t internally computed temperature value in *C
 	 */
 	uint8_t getTemperature() { return temperature; };
+
+	/**
+	 * @brief Get the read register struct
+	 * @return reference to read register struct
+	 */
+	regRead_st& getReadReg() { return regRead; };
+
+	/**
+	 * @brief Get the write register struct
+	 * @return reference to write register struct
+	 */
+	regWrite_st& getWriteReg() { return regWrite; };
 
 	/**
 	 * @brief For internal use by CANdle only.

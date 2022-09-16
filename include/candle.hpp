@@ -333,7 +333,7 @@ class Candle
 	@param canId ID of the drive
 	@return true if the succesfull, false otherwise
 	*/
-	bool setupMd80DiagnosticExtended(uint16_t canId, motorParameters_ut* motorParameters);
+	bool setupMd80DiagnosticExtended(uint16_t canId);
 	/**
 	@brief Returns current CAN baudrate
 	@return either mab::CANdleBaudrate_E::1M, mab::CANdleBaudrate_E::2M, mab::CANdleBaudrate_E::5M, or mab::CANdleBaudrate_E::8M
@@ -366,7 +366,11 @@ class Candle
 		if (regRxPtr == nullptr)
 			regRxPtr = &regRxBuffer[2];
 
-		regRxPtr += unPackRegister(regId, (char*)&regValue, regRxPtr);
+		uint32_t offset = unPackRegister(regId, (char*)&regValue, regRxPtr);
+		if (offset == 0)
+			return false;
+
+		regRxPtr += offset;
 		return interpretMd80Register(canId, vs...);
 	}
 
@@ -376,6 +380,7 @@ class Candle
 		/* clear the RX buffer and send register request */
 		memset(regRxBuffer, 0, sizeof(regRxBuffer));
 		regTxPtr = nullptr;
+		regRxPtr = nullptr;
 		return sengGenericFDCanFrame(canId, sizeof(regTxBuffer), regTxBuffer, regRxBuffer, 100);
 	}
 
@@ -383,9 +388,6 @@ class Candle
 	bool prepareMd80Register(uint16_t canId, mab::Md80FrameId_E frameType, mab::Md80Reg_E regId, const T2& regValue, const Ts&... vs)
 	{
 		static_assert(!std::is_same<double, T2>::value, "register value should be float not double");
-
-		// std::cout << typeid(regValue).name() << std::endl;
-
 		if (!prepareFrameMd80Register(frameType, regId, (char*)&regValue))
 			return false;
 		return prepareMd80Register(canId, frameType, vs...);

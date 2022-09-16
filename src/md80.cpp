@@ -1,5 +1,7 @@
 #include "md80.hpp"
 
+#include <string.h>
+
 #include <iostream>
 
 #include "mab_types.hpp"
@@ -13,6 +15,8 @@ Md80::Md80(uint16_t _canID)
 {
 	canId = _canID;
 	commandFrame.canId = _canID;
+	memset(&regRead, 0, sizeof(regRead));
+	memset(&regWrite, 0, sizeof(regWrite));
 }
 Md80::~Md80()
 {
@@ -158,11 +162,17 @@ uint16_t getRegisterSize(uint16_t regId)
 {
 	switch (regId)
 	{
+		case Md80Reg_E::bridgeType:
+		case Md80Reg_E::outputEncoder:
+			return 1;
 		case Md80Reg_E::motorTorgueBandwidth:
+		case Md80Reg_E::canWatchdog:
+		case Md80Reg_E::errorVector:
 			return 2;
+		case Md80Reg_E::temperature:
+		case Md80Reg_E::temperatureAux:
 		case Md80Reg_E::motorInductance:
 		case Md80Reg_E::motorResistance:
-		case Md80Reg_E::bridgeType:
 		case Md80Reg_E::firmwareVersion:
 		case Md80Reg_E::buildDate:
 		case Md80Reg_E::motorImpPidKp:
@@ -180,9 +190,7 @@ uint16_t getRegisterSize(uint16_t regId)
 		case Md80Reg_E::motorVelPidWindup:
 		case Md80Reg_E::motorFriction:
 		case Md80Reg_E::motorStiction:
-		case Md80Reg_E::outputEncoder:
 		case Md80Reg_E::outputEncoderDir:
-		case Md80Reg_E::canId:
 		case Md80Reg_E::canBaudrate:
 		case Md80Reg_E::motorGearRatio:
 		case Md80Reg_E::motorPolePairs:
@@ -192,7 +200,7 @@ uint16_t getRegisterSize(uint16_t regId)
 		case Md80Reg_E::motorKt_c:
 		case Md80Reg_E::motorIMax:
 			return 4;
-		case Md80Reg_E::comitHash:
+		case Md80Reg_E::commitHash:
 			return 8;
 		case Md80Reg_E::motorName:
 			return 24;

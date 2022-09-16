@@ -80,32 +80,78 @@ struct StdMd80ResponseFrame_t
 	CanFrame_t fromMd80;
 };
 
-#pragma pack(push, 1)
+// ########################3
+
+typedef struct
+{
+	float kp;
+	float kd;
+	float outMax;
+} ImpedanceControllerGains_t;
+
+typedef struct
+{
+	float kp;
+	float ki;
+	float kd;
+	float intWindup;
+	float outMax;
+} PidControllerGains_t;
+
+/* READ ONLY PARAMS */
 typedef struct
 {
 	uint32_t firmwareVersion;
 	uint32_t buildDate;
 	char commitHash[8];
-	float iMax;
-	uint8_t DRVType;
+	uint8_t bridgeType;
 	float resistance;
 	float inductance;
-	uint16_t torqueBandwidth;
-	char motorName[20];
+	uint16_t errorVector;
+	float temperature;
+	float temperatureAux;
+} regRO_st;
 
-} motorParameters_t;
-
-#pragma pack(pop)
-typedef union
+/* READ WRITE PARAMS */
+typedef struct
 {
-	motorParameters_t s;
-	uint8_t bytes[sizeof(motorParameters_t)];
-} motorParameters_ut;
+	char motorName[24];
+	uint32_t canId;
+	uint32_t canBaudrate;
+	uint16_t canWatchdog;
+	uint32_t polePairs;
+	float motorKt;
+	float motorKt_a;
+	float motorKt_b;
+	float motorKt_c;
+	float iMax;
+	float gearRatio;
+	uint8_t outputEncoder;
+	float outputEncoderDir;
+	uint16_t torqueBandwidth;
+	float friction;
+	float stiction;
+	ImpedanceControllerGains_t impedancePdGains;
+	PidControllerGains_t velocityPidGains;
+	PidControllerGains_t positionPidGains;
+} regRW_st;
+
+typedef struct
+{
+	regRO_st RO;
+	regRW_st RW;
+} regRead_st;
+
+typedef struct
+{
+	regRW_st RW;
+} regWrite_st;
 
 enum Md80Reg_E : uint16_t
 {
 	canId = 0x001,
 	canBaudrate = 0x002,
+	canWatchdog = 0x003,
 
 	motorName = 0x010,
 	motorPolePairs = 0x011,
@@ -140,10 +186,13 @@ enum Md80Reg_E : uint16_t
 	motorImpPidKd = 0x051,
 	motorImpPidOutMax = 0x052,
 
-	buildDate = 0x100,
-	comitHash = 0x101,
-	firmwareVersion = 0x102,
-	bridgeType = 0x103,
+	buildDate = 0x800,
+	commitHash = 0x801,
+	firmwareVersion = 0x802,
+	bridgeType = 0x803,
+	errorVector = 0x0804,
+	temperature = 0x805,
+	temperatureAux = 0x806,
 };
 
 }  // namespace mab
