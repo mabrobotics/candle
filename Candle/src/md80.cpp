@@ -30,6 +30,25 @@ namespace mab
         softMaxPosition = maxMotorPosition * softLimitFactor;
         watchdogPosPercentage = config["pos_percent_wanted"];
 
+        // Initialize high pid params
+        auto it = config.find("high_p_gain");
+        useHighPid = (it != config.end());
+        if (useHighPid){
+            std::cout << "[MD80] ########### Notice you are using High PID controle ##########" << std::endl;
+            h_kp = config["high_p_gain"];
+            h_kd = config["high_d_gain"];
+            h_ki = config["high_i_gain"];
+            h_maxAggError = config["high_max_agg"];
+            h_limit_scale = config["high_limit_scale"];
+            if (config["agg_window"] < 0)
+                h_aggError[0] = 0.0;
+            else
+            {
+                h_aggError.resize(int(config["agg_window"]));
+                std::fill(h_aggError.begin(), h_aggError.end(), 0.0);
+            }
+        }
+
         std::cout << "[MD80]: Watcdog params for motor " << std::to_string(canId) << " are: " << std::endl
                   << " min pos" << std::to_string(minMotorPosition) << " max pos: " << std::to_string(maxMotorPosition) << std::endl
                   << " soft min pos" << std::to_string(softMinPosition) << " soft max pos: " << std::to_string(softMaxPosition) << " percentage is: " << std::to_string(watchdogPosPercentage) << std::endl;
@@ -50,25 +69,49 @@ namespace mab
     Md80::~Md80()
     {
     }
+    void Md80::setTargetPosition(float target)
+    {
+        requestedPosition = target;
+    }
 
     void Md80::updateTargets()
     {
         positionTarget = requestedPosition;
-        velocity = requestedVelocity;
+        velocityTarget = requestedVelocity;
         torqueSet = requestorqueSet;
+    }
+
+    void Md80::pid()
+    {
+        float currPos = position;
+        float posError = requestedPosition - currPos;
+        if (h_aggError.size() == 1)
+        {
+            h_aggError[0] += posError;
+        }
+        else
+        {
+            h_aggError[aggErrCurrIndex] = posError;
+            if (aggErrCurrIndex != int(h_aggError.size()))
+                aggErrCurrIndex++;
+        }
+        float agg_err = std::accumulate(h_aggError.begin(), h_aggError.end(), 0.0);
+        agg_err = std::clamp(agg_err, -h_maxAggError, h_maxAggError);
+        float newPidPos = h_kp*posError - h_kd*velocity + h_ki*agg_err + currPos;
+        pidPos = std::clamp(newPidPos, softMinPosition, softMaxPosition);
+
     }
 
     void Md80::watchdog()
     {
         float curr_pos = position;
+        // If motor position within range
         if (curr_pos > softMinPosition && curr_pos < softMaxPosition)
         {
             printWatchdog = true;
-            if (requestedPosition < minMotorPosition || requestedPosition > maxMotorPosition)
-            {
-                positionTarget = std::clamp(requestedPosition, minMotorPosition, maxMotorPosition);
-                std::cout << "[md80 WATCHDOG]  Requested position " << std::to_string(requestedPosition) << " for motor: " << std::to_string(canId) << " was out of bounds: " << std::to_string(minMotorPosition) << " - " << std::to_string(maxMotorPosition) << " new position is " << std::to_string(positionTarget) << std::endl;
-            }
+
+            if (useHighPid)
+                positionTarget = pidPos;
             else
                 positionTarget = requestedPosition;
 
@@ -80,9 +123,9 @@ namespace mab
             if (requestKpKdAdjusted)
                 setImpedanceControllerParams(requestedImpedanceController.kp, requestedImpedanceController.kd);
         }
+        // If motor position is out of range then force it back into the range
         else
         {
-            velocityTarget = 0.0;
             setImpedanceControllerParams(watchdogKP, watchdogKD);
             if (softMinPosition > curr_pos)
             {
@@ -153,6 +196,8 @@ namespace mab
             commandFrame.toMd80.data[1] = 0;
             break;
         case Md80Mode_E::IMPEDANCE:
+            if (useHighPid)
+                pid();
             watchdog();
             if (regulatorsAdjusted)
                 packImpedanceFrame();

@@ -8,6 +8,7 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <numeric>
 
 
 typedef std::map<std::string, double> MotorStatus_T;
@@ -72,13 +73,25 @@ namespace mab
         StdMd80CommandFrame_t commandFrame;
         StdMd80ResponseFrame_t responseFrame;
 
+        // high_pid_params
+        bool useHighPid = false;
+        float h_kp = 0.0f;
+        float h_kd = 0.0f;
+        float h_ki = 0.0f;
+        float h_maxAggError = 0.0f;
+        float h_limit_scale = 0.0f;
+        std::vector<float> h_aggError;
+        float pidPos = 0.0f;
+        int aggErrCurrIndex = 0;
+
         void packImpedanceFrame();
         void packPositionFrame();
         void packVelocityFrame();
         void packMotionTargetsFrame();
-        void updateTargets();
         void watchdog();
+        void updateTargets();
         void setImpedanceControllerParams(float kp, float kd);
+        void pid();
     
     public:
         /**
@@ -137,7 +150,7 @@ namespace mab
          * @brief Set the Target Position for Position PID and Impedance modes.
          * @param target target position in radians
          */
-        void setTargetPosition(float target) { requestedPosition = target; };
+        void setTargetPosition(float target);
         /**
          * @brief Set the frame id of the transmit
          * @param target target position in radians
