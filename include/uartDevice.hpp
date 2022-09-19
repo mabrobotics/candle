@@ -26,18 +26,15 @@ class UartDevice : public mab::Bus
 	int getBytesReceived() override { return bytesReceived; }
 	unsigned long getId() override { return 0; }
 
-	uint32_t getErrorCnt() { return errorCnt; };
-
    private:
 	Crc* crc;
-	uint32_t errorCnt;
 
+	/* UART settings */
 	const uint32_t uartSpeed = B2000000;
 
 	int fd;
 	struct termios tty;
 	int bytesReceived;
-	bool gotResponse;
 	std::mutex rxLock;
 
 	void displayDebugMsg(char* buffer, int bytesReceived);

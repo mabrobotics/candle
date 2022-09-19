@@ -25,12 +25,11 @@ class SpiDevice : public mab::Bus
 	int getBytesReceived() override { return bytesReceived; }
 	unsigned long getId() override { return 0; }
 
-	uint32_t getErrorCnt() { return errorCnt; }
 	bool receive(int timeout, int responseLen, bool faultVerbose);
 
    private:
 	Crc* crc;
-	uint32_t errorCnt;
+
 	/* SPI settings */
 	const uint8_t bits = 8;
 	const uint32_t spiSpeed = 20000000;

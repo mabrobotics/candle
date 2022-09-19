@@ -9,6 +9,8 @@ static const char* spiDev = "/dev/spidev0.0";
 
 SpiDevice::SpiDevice()
 {
+	busType = mab::BusType_E::SPI;
+
 	fd = open(spiDev, O_RDWR);
 	if (fd < 0)
 	{

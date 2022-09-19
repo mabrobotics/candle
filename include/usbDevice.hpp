@@ -27,7 +27,5 @@ class UsbDevice : public mab::Bus
 	int fd;
 	std::string serialDeviceName;
 	unsigned long serialDeviceId = 0;
-	int timeouttRx;
-	bool gotResponse;
 	std::mutex rxLock;
 };

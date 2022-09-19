@@ -27,6 +27,8 @@ UsbDevice::UsbDevice(const std::string idVendor, const std::string idProduct, st
 {
 	auto listOfDevices = UsbDevice::getConnectedACMDevices(idVendor, idProduct);
 
+	busType = mab::BusType_E::USB;
+
 	if (listOfDevices.size() == 0)
 	{
 		std::cout << "[USB] No devices found!" << std::endl;
@@ -91,7 +93,6 @@ loopdone:
 	tcsetattr(device_descriptor, TCSANOW, &tty);  // Set the new serial config
 
 	this->fd = device_descriptor;
-	gotResponse = false;
 
 	std::string setSerialCommand = "setserial " + getDeviceName() + " low_latency";
 	if (system(setSerialCommand.c_str()) != 0)
@@ -169,10 +170,8 @@ bool UsbDevice::receive(int timeoutMs, bool checkCrc, bool faultVerbose)
 	}
 #endif
 	if (bytesReceived > 0)
-	{
-		gotResponse = true;
 		return true;
-	}
+
 	return false;
 }
 

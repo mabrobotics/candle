@@ -20,6 +20,8 @@ static const char* uartDev = "/dev/ttyAMA0";
 
 UartDevice::UartDevice()
 {
+	busType = mab::BusType_E::UART;
+
 	fd = open(uartDev, O_RDWR);
 
 	if (tcgetattr(fd, &tty) != 0)
@@ -60,8 +62,6 @@ UartDevice::UartDevice()
 		std::cout << "[UART] Error " << errno << " from tcgetattr: " << strerror(errno) << std::endl;
 		return;
 	}
-
-	gotResponse = false;
 
 	crc = new Crc();
 
@@ -153,10 +153,7 @@ bool UartDevice::receive(int timeoutMs, bool checkCrc, bool faultVerbose)
 	displayDebugMsg(rxBuffer, bytesReceived);
 #endif
 	if (bytesReceived > 0)
-	{
-		gotResponse = true;
 		return true;
-	}
 	return false;
 }
 
