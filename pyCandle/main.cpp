@@ -53,7 +53,8 @@ PYBIND11_MODULE(pyCandle, m)
       .def("getVelocity", &mab::Md80::getVelocity)
       .def("getTorque", &mab::Md80::getTorque)
       .def("getMotorStatus", &mab::Md80::getMotorStatus)
-      .def("getTemperature", &mab::Md80::getTemperature);
+      .def("getTemperature", &mab::Md80::getTemperature)
+      .def("setSavgolCoeffs", &mab::Md80::setSavgolCoeffs);
 
   py::class_<mab::Candle>(m, "Candle")
       .def(py::init<mab::CANdleBaudrate_E, bool>())
@@ -99,6 +100,7 @@ PYBIND11_MODULE(pyCandle, m)
       .def("getAllMotorsData", &mab::MultipleCandles::getAllMotorsData)
       .def("sendMotorCommand", &mab::MultipleCandles::sendMotorCommand)
       .def("setImpedanceParameters", &mab::MultipleCandles::setImpedanceParameters)
-      .def("setPositionPIDParameters", &mab::MultipleCandles::setPositionPIDParameters);
+      .def("setPositionPIDParameters", &mab::MultipleCandles::setPositionPIDParameters)
+      .def("setSavgol", &mab::MultipleCandles::setSavgol);
 
 }

@@ -284,6 +284,21 @@ namespace mab
         }
     }
 
+    void MultipleCandles::setSavgol(IdList_T idList, SavgolVector coeffs)
+    {
+        for (auto &id : idList)
+        {
+            auto candle = findCandleByMd80Id(id);
+            if (candle != NULL)
+            {
+                auto &md = candle->md80s.at(id);
+                md.setSavgolCoeffs(coeffs);
+            }
+            else
+                candleHandlerOut << " [getMotorData] Drive with ID: " << id << " doesn't exist" << std::endl;
+        }
+    }
+
     void MultipleCandles::setImpedanceParameters(MotorCommands_T impedanceParams)
     {
         for (auto const &[motorId, motorCommand] : impedanceParams)

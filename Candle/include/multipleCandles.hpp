@@ -38,6 +38,7 @@ namespace mab
         CandleResponse_T disableSomeMotors(IdList_T idList);
         MultipleMotorsStatus_T getMotorsData(IdList_T idList);
         MultipleMotorsStatus_T getAllMotorsData();
+        void setSavgol(IdList_T idList, SavgolVector coeffs);
 
         void sendMotorCommand(int frameId, MotorCommands_T motorCommands);
         void setImpedanceParameters(MotorCommands_T impedanceParams);

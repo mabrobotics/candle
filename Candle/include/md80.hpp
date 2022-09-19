@@ -13,6 +13,7 @@
 
 typedef std::map<std::string, double> MotorStatus_T;
 typedef std::map<std::string, float> MotorCommand_T;
+typedef std::vector<float>  SavgolVector;
 
 
 #define mdout std::cout << "[MD] "
@@ -84,6 +85,14 @@ namespace mab
         float pidPos = 0.0f;
         int aggErrCurrIndex = 0;
 
+        // Savgol filter
+        bool do_savgol = false;
+        SavgolVector savgolCoeffs;
+        int savgolSizeOfBuffer = 0;
+        SavgolVector savgolPosBuffer;
+        float savgolVelocity = 0.0f;
+
+        // Private functions
         void packImpedanceFrame();
         void packPositionFrame();
         void packVelocityFrame();
@@ -92,6 +101,7 @@ namespace mab
         void updateTargets();
         void setImpedanceControllerParams(float kp, float kd);
         void pid();
+        float savgol(double newPos);
     
     public:
         /**
@@ -129,6 +139,12 @@ namespace mab
          * @param kd Damping coefficient (analogin to 'b' parameter of the spring-damper equation)
          */
         void setImpedanceRequestedControllerParams(float kp, float kd);
+
+        /**
+         * @brief Set the coeffs for savgol filter vel compute
+         * @param coeef a vector of float coeffeciants for savgol filter
+         */
+        void setSavgolCoeffs(SavgolVector coeffs);
 
         // simple setters
         /**
@@ -265,7 +281,5 @@ namespace mab
         void __setControlMode(Md80Mode_E mode);
     };
 }
-
-
 
 

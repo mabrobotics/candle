@@ -14,6 +14,7 @@ namespace mab
         commandFrame.canId = _canID;
         motorStatus["position"] = 0.0;
         motorStatus["velocity"] = 0.0;
+        motorStatus["savgol_vel"] = 0.0;
         motorStatus["torque"] = 0.0;
         motorStatus["time"] = 0.0;
         motorStatus["seq"] = 0.0;
@@ -63,6 +64,7 @@ namespace mab
         motorStatus["torque"] = 0.0;
         motorStatus["time"] = 0.0;
         motorStatus["seq"] = 0.0;
+        motorStatus["savgol_vel"] = 0.0;
         motorStatus["temperature"] = 0.0;
     }
 
@@ -79,6 +81,44 @@ namespace mab
         positionTarget = requestedPosition;
         velocityTarget = requestedVelocity;
         torqueSet = requestorqueSet;
+    }
+
+    void Md80::setSavgolCoeffs(SavgolVector coeffs)
+    {
+
+        do_savgol = true;
+        savgolCoeffs = coeffs;
+        for (int i=0; i < int(coeffs.size()); i++)
+            savgolPosBuffer.push_back(0); 
+        savgolSizeOfBuffer = coeffs.size();
+        std::cout<<"[MD80] coeffs are ############";
+        for (float x: savgolCoeffs)
+            std::cout << x << " ";
+        std::cout << std::endl;
+    }
+
+
+    float Md80::savgol(double newPos)
+    {
+        bool allzero = true;
+        for (int i = 0; i < savgolSizeOfBuffer; ++i)
+            allzero &= savgolPosBuffer[i] == 0;
+        if (allzero) {
+            // If all filter values are zero, initialize the signal array with the current pos value
+            for (int i = 0; i < savgolSizeOfBuffer; ++i)
+                savgolPosBuffer[i] = newPos;
+        }
+
+        // Shift and update unfiltered signal array
+        for (int i = savgolSizeOfBuffer - 1; i > 0; --i)
+            savgolPosBuffer[i] = savgolPosBuffer[i - 1];
+        savgolPosBuffer[0] = newPos;
+
+        // Compute filter value
+        float y = 0;
+        for (int i = 0; i < savgolSizeOfBuffer; ++i)
+            y += savgolPosBuffer[i] * savgolCoeffs[i];
+        return y;
     }
 
     void Md80::pid()
@@ -248,6 +288,8 @@ namespace mab
     void Md80::__updateResponseData(StdMd80ResponseFrame_t *_responseFrame, double time, int seq)
     {
         this->__updateResponseData(_responseFrame);
+        if (do_savgol)
+            motorStatus["savgol_vel"] = savgolVelocity = savgol(position);
         motorStatus["our_velocity"] = (position - prevPosition) / (time - prevTime);
         motorStatus["time"] = time;
         motorStatus["seq"] = seq;
