@@ -101,6 +101,8 @@ PYBIND11_MODULE(pyCandle, m)
       .def("sendMotorCommand", &mab::MultipleCandles::sendMotorCommand)
       .def("setImpedanceParameters", &mab::MultipleCandles::setImpedanceParameters)
       .def("setPositionPIDParameters", &mab::MultipleCandles::setPositionPIDParameters)
-      .def("setSavgol", &mab::MultipleCandles::setSavgol);
+      .def("setSavgol", &mab::MultipleCandles::setSavgol)
+      .def("setKalmanFilter", &mab::MultipleCandles::setKalmanFilter);
+
 
 }

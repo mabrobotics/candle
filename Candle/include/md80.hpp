@@ -9,11 +9,12 @@
 #include <map>
 #include <algorithm>
 #include <numeric>
-
+#include <Eigen/Dense>
+#include <kalman_filter.hpp>
 
 typedef std::map<std::string, double> MotorStatus_T;
 typedef std::map<std::string, float> MotorCommand_T;
-typedef std::vector<float>  SavgolVector;
+typedef std::vector<float>  FilterVector;
 
 
 #define mdout std::cout << "[MD] "
@@ -87,10 +88,22 @@ namespace mab
 
         // Savgol filter
         bool do_savgol = false;
-        SavgolVector savgolCoeffs;
+        FilterVector savgolCoeffs;
         int savgolSizeOfBuffer = 0;
-        SavgolVector savgolPosBuffer;
+        FilterVector savgolPosBuffer;
         float savgolVelocity = 0.0f;
+
+        // Kalman filter vars
+        bool do_kalman_filter = false;
+        int number_of_states = 2;
+        int number_of_mesurments = 2;
+        double dt = 1.0/500;
+        Eigen::MatrixXd A; // System dynamics matrix
+        Eigen::MatrixXd C; // Output matrix
+        Eigen::MatrixXd Q; // Process noise covariance
+        Eigen::MatrixXd R; // Measurement noise covariance
+        Eigen::MatrixXd P; // Estimate error covariance
+        KalmanFilter kf;
 
         // Private functions
         void packImpedanceFrame();
@@ -102,6 +115,7 @@ namespace mab
         void setImpedanceControllerParams(float kp, float kd);
         void pid();
         float savgol(double newPos);
+        float kalman_filter();
     
     public:
         /**
@@ -144,7 +158,8 @@ namespace mab
          * @brief Set the coeffs for savgol filter vel compute
          * @param coeef a vector of float coeffeciants for savgol filter
          */
-        void setSavgolCoeffs(SavgolVector coeffs);
+        void setSavgolCoeffs(FilterVector coeffs);
+        void setKalmanFilter(FilterVector processNoiseCov, FilterVector measurmentNoiseCov, FilterVector initailStateError);
 
         // simple setters
         /**

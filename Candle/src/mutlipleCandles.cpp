@@ -284,7 +284,7 @@ namespace mab
         }
     }
 
-    void MultipleCandles::setSavgol(IdList_T idList, SavgolVector coeffs)
+    void MultipleCandles::setSavgol(IdList_T idList, FilterVector coeffs)
     {
         for (auto &id : idList)
         {
@@ -299,6 +299,21 @@ namespace mab
         }
     }
 
+    void MultipleCandles::setKalmanFilter(FilterConfig_T processNoiseCov, FilterConfig_T measurmentNoiseCov, FilterConfig_T initailStateError)
+    {
+        
+        for (auto const &[motorId, m_processNoiseCov]: processNoiseCov)
+        {
+            auto candle = findCandleByMd80Id(motorId);
+            if (candle != NULL)
+            {
+                auto &md = candle->md80s.at(motorId);
+                md.setKalmanFilter(m_processNoiseCov, measurmentNoiseCov.at(motorId), initailStateError.at(motorId));
+            }
+            else
+                candleHandlerOut << " [getMotorData] Drive with ID: " << motorId << " doesn't exist" << std::endl;
+        }
+    }
     void MultipleCandles::setImpedanceParameters(MotorCommands_T impedanceParams)
     {
         for (auto const &[motorId, motorCommand] : impedanceParams)

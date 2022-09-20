@@ -1,7 +1,7 @@
 #include "md80.hpp"
 #include "mab_types.hpp"
 #include <iostream>
-#include <assert.h>     /* assert */
+#include <assert.h> /* assert */
 
 namespace mab
 {
@@ -31,10 +31,15 @@ namespace mab
         softMaxPosition = maxMotorPosition * softLimitFactor;
         watchdogPosPercentage = config["pos_percent_wanted"];
 
+        std::cout << "[MD80]: Watcdog params for motor " << std::to_string(canId) << " are: " << std::endl
+                  << " min pos" << std::to_string(minMotorPosition) << " max pos: " << std::to_string(maxMotorPosition) << std::endl
+                  << " soft min pos" << std::to_string(softMinPosition) << " soft max pos: " << std::to_string(softMaxPosition) << " percentage is: " << std::to_string(watchdogPosPercentage) << std::endl;
+
         // Initialize high pid params
         auto it = config.find("high_p_gain");
         useHighPid = (it != config.end());
-        if (useHighPid){
+        if (useHighPid)
+        {
             std::cout << "[MD80] ########### Notice you are using High PID controle ##########" << std::endl;
             h_kp = config["high_p_gain"];
             h_kd = config["high_d_gain"];
@@ -49,10 +54,6 @@ namespace mab
                 std::fill(h_aggError.begin(), h_aggError.end(), 0.0);
             }
         }
-
-        std::cout << "[MD80]: Watcdog params for motor " << std::to_string(canId) << " are: " << std::endl
-                  << " min pos" << std::to_string(minMotorPosition) << " max pos: " << std::to_string(maxMotorPosition) << std::endl
-                  << " soft min pos" << std::to_string(softMinPosition) << " soft max pos: " << std::to_string(softMaxPosition) << " percentage is: " << std::to_string(watchdogPosPercentage) << std::endl;
     }
 
     Md80::Md80(uint16_t _canID)
@@ -83,27 +84,27 @@ namespace mab
         torqueSet = requestorqueSet;
     }
 
-    void Md80::setSavgolCoeffs(SavgolVector coeffs)
+    void Md80::setSavgolCoeffs(FilterVector coeffs)
     {
 
         do_savgol = true;
         savgolCoeffs = coeffs;
-        for (int i=0; i < int(coeffs.size()); i++)
-            savgolPosBuffer.push_back(0); 
+        for (int i = 0; i < int(coeffs.size()); i++)
+            savgolPosBuffer.push_back(0);
         savgolSizeOfBuffer = coeffs.size();
-        std::cout<<"[MD80] coeffs are ############";
-        for (float x: savgolCoeffs)
+        std::cout << "[MD80] coeffs are ############";
+        for (float x : savgolCoeffs)
             std::cout << x << " ";
         std::cout << std::endl;
     }
-
 
     float Md80::savgol(double newPos)
     {
         bool allzero = true;
         for (int i = 0; i < savgolSizeOfBuffer; ++i)
             allzero &= savgolPosBuffer[i] == 0;
-        if (allzero) {
+        if (allzero)
+        {
             // If all filter values are zero, initialize the signal array with the current pos value
             for (int i = 0; i < savgolSizeOfBuffer; ++i)
                 savgolPosBuffer[i] = newPos;
@@ -119,6 +120,54 @@ namespace mab
         for (int i = 0; i < savgolSizeOfBuffer; ++i)
             y += savgolPosBuffer[i] * savgolCoeffs[i];
         return y;
+    }
+
+    void Md80::setKalmanFilter(FilterVector processNoiseCov, FilterVector measurmentNoiseCov, FilterVector initailStateError)
+    {
+
+        do_kalman_filter = true;
+        // Kalman filter
+        A = Eigen::MatrixXd(number_of_states, number_of_states);         // System dynamics matrix
+        C = Eigen::MatrixXd(number_of_mesurments, number_of_states);     // Output matrix
+        Q = Eigen::MatrixXd(number_of_states, number_of_states);         // Process noise covariance
+        R = Eigen::MatrixXd(number_of_mesurments, number_of_mesurments); // Measurement noise covariance
+        P = Eigen::MatrixXd(number_of_mesurments, number_of_mesurments); // Initial state error
+                                                                         // Discrete LTI projectile motion, measuring position only
+        A << 1, dt, 0, 1;
+        C << 1, 0, 0, 1;
+
+        // Reasonable covariance matrices
+        Q << processNoiseCov[0], processNoiseCov[1], processNoiseCov[2], processNoiseCov[3];
+        R << measurmentNoiseCov[0], measurmentNoiseCov[1], measurmentNoiseCov[2], measurmentNoiseCov[3];
+        P << initailStateError[0], initailStateError[1], initailStateError[2], initailStateError[3];
+        
+        std::cout << "[MD80] A: \n"
+                  << A << std::endl;
+        std::cout << "[MD80] C: \n"
+                  << C << std::endl;
+        std::cout << "[MD80] Q: \n"
+                  << Q << std::endl;
+        std::cout << "[MD80] R: \n"
+                  << R << std::endl;
+        std::cout << "[MD80] P: \n"
+                  << P << std::endl;
+        kf = KalmanFilter(dt, A, C, Q, R, P);
+    }
+
+    float Md80::kalman_filter()
+    {
+        if (!kf.isIntialized())
+        {
+            // Best guess of initial states
+            Eigen::VectorXd x0(number_of_states);
+            double t = 0;
+            x0 << position, velocity;
+            kf.init(t, x0);
+        }
+        Eigen::VectorXd y(number_of_mesurments);
+        y << position, velocity;
+        kf.update(y);
+        return kf.state()(1);
     }
 
     void Md80::pid()
@@ -137,9 +186,8 @@ namespace mab
         }
         float agg_err = std::accumulate(h_aggError.begin(), h_aggError.end(), 0.0);
         agg_err = std::clamp(agg_err, -h_maxAggError, h_maxAggError);
-        float newPidPos = h_kp*posError - h_kd*velocity + h_ki*agg_err + currPos;
+        float newPidPos = h_kp * posError - h_kd * velocity + h_ki * agg_err + currPos;
         pidPos = std::clamp(newPidPos, softMinPosition, softMaxPosition);
-
     }
 
     void Md80::watchdog()
@@ -179,14 +227,14 @@ namespace mab
             }
             if (printWatchdog)
             {
-                std::cout << "[md80 WATCHDOG ] position of motor " << std::to_string(canId) 
-                << " is out of range. Current Position " << std::to_string(curr_pos) 
-                << " not in range " << std::to_string(softMinPosition) << " - " << std::to_string(softMaxPosition) << std::endl
-                << "[md80 Watchdog] new targets: " << std::endl
-                << "position: " << std::to_string(positionTarget) << std::endl
-                << "torque: " << std::to_string(torqueSet) << std::endl
-                << "kp: " << std::to_string(impedanceController.kp) << std::endl
-                << "kd: " << std::to_string(impedanceController.kd) << std::endl;
+                std::cout << "[md80 WATCHDOG ] position of motor " << std::to_string(canId)
+                          << " is out of range. Current Position " << std::to_string(curr_pos)
+                          << " not in range " << std::to_string(softMinPosition) << " - " << std::to_string(softMaxPosition) << std::endl
+                          << "[md80 Watchdog] new targets: " << std::endl
+                          << "position: " << std::to_string(positionTarget) << std::endl
+                          << "torque: " << std::to_string(torqueSet) << std::endl
+                          << "kp: " << std::to_string(impedanceController.kp) << std::endl
+                          << "kd: " << std::to_string(impedanceController.kd) << std::endl;
                 printWatchdog = false;
             }
         }
@@ -220,7 +268,7 @@ namespace mab
 
     void Md80::setImpedanceControllerParams(float kp, float kd)
     {
-        assert(kp == kd  && kp == 0);
+        assert(kp == kd && kp == 0);
         regulatorsAdjusted = true;
         impedanceController.kp = kp;
         impedanceController.kd = kd;
@@ -290,6 +338,8 @@ namespace mab
         this->__updateResponseData(_responseFrame);
         if (do_savgol)
             motorStatus["savgol_vel"] = savgolVelocity = savgol(position);
+        if (do_kalman_filter)
+            motorStatus["kalman_vel"] = kalman_filter();
         motorStatus["our_velocity"] = (position - prevPosition) / (time - prevTime);
         motorStatus["time"] = time;
         motorStatus["seq"] = seq;
