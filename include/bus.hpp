@@ -14,6 +14,7 @@ enum class BusType_E
 class Bus
 {
    public:
+	Bus() = default;
 	virtual ~Bus() = default;
 	virtual bool transmit(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0, bool faultVerbose = true) = 0;
 	virtual bool transfer(char* buffer, int commandLen, int responseLen) = 0;
@@ -22,7 +23,6 @@ class Bus
 	virtual unsigned long getId() = 0;
 	virtual std::string getDeviceName() { return ""; }
 
-	/* public non-virtual functions */
 	mab::BusType_E getType() { return busType; };
 	char* getRxBuffer(int index = 0) { return (char*)&rxBuffer[index]; };
 
@@ -31,7 +31,7 @@ class Bus
 	static const int msgCntThreshold = 1000;
 
    protected:
-	BusType_E busType;
+	BusType_E busType = mab::BusType_E::USB;
 
 	static const uint32_t rxBufferSize = 1024;
 	static const uint32_t txBufferSize = 1024;

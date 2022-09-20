@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 20)
 project(md80)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 add_compile_options(-Wall -Wextra -Wpedantic)
 
 if(ARCH STREQUAL "armhf")
@@ -34,6 +34,13 @@ message(STATUS "\nCANDLE_BUILD_SHARED: ${CANDLE_BUILD_SHARED}\nCANDLE_BUILD_STAT
 target_include_directories(candle PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(candle pthread)
 set_target_properties(candle PROPERTIES PUBLIC_HEADER candle.hpp)
+
+if(MAKE_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+endif()
+
+set(CANDLE_OMIT_EXAMPLES ON)
 
 if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
     add_executable(example1 examples_cpp/example1.cpp)

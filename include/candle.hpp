@@ -72,7 +72,7 @@ class Candle
 	CANdleMode_E mode = CANdleMode_E::CONFIG;
 	CANdleFastMode_E fastMode = CANdleFastMode_E::NORMAL;
 
-	Bus* bus = nullptr;
+	Bus* bus;
 
 	uint32_t candleDeviceVersion = 10;
 	const uint32_t candleCompatibleVersion = 14;
@@ -133,11 +133,17 @@ class Candle
 	 * @param printFailure if false the constructor will not display terminal messages when something fails
 	 * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
 	 */
-	Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false, mab::CANdleFastMode_E fastMode = mab::CANdleFastMode_E::NORMAL, bool printFailure = true, mab::BusType_E busType = mab::BusType_E::USB);
+	explicit Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::CANdleFastMode_E fastMode, bool printFailure, mab::BusType_E busType);
+	/* TODO */
+	explicit Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::CANdleFastMode_E fastMode, bool printFailure, mab::Bus* bus);
 	/**
 	 * @brief A destructor of Candle class. Takes care of all started threads that need to be stopped before clean exit
 	 */
 	~Candle();
+
+	// std::unique_ptr<Bus> makeBus(mab::BusType_E busType);
+	Bus* makeBus(mab::BusType_E busType);
+
 	/**
 	 * @brief Updates the current communication speed mode, based on the number of md80s
 	 */
@@ -408,6 +414,11 @@ class Candle
 	{
 		return prepareMd80Register(canId, mab::Md80FrameId_E::FRAME_WRITE_REGISTER, regId, regValue, vs...);
 	}
+
+	/* virtual methods for testing purposes */
+	virtual Bus* createSpi() { return new SpiDevice(); }
+	virtual Bus* createUart() { return new UartDevice(); }
+	virtual Bus* createUsb(const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances) { return new UsbDevice(idVendor, idProduct, instances); }
 
 #if BENCHMARKING == 1
 	bool benchGetFlagRx();
