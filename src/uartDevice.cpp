@@ -81,8 +81,6 @@ UartDevice::~UartDevice()
 
 bool UartDevice::transmit(char* buffer, int len, bool waitForResponse, int timeout, int responseLen, bool faultVerbose)
 {
-	(void)responseLen;
-
 	len = crc->addCrcToBuf(buffer, len);
 
 	if (write(fd, buffer, len) == -1)
@@ -91,12 +89,14 @@ bool UartDevice::transmit(char* buffer, int len, bool waitForResponse, int timeo
 		return manageMsgErrors(false);
 	}
 	if (waitForResponse)
-		return manageMsgErrors(receive(timeout, true, faultVerbose));
+		return manageMsgErrors(receive(responseLen, timeout, true, faultVerbose));
 	return manageMsgErrors(true);
 }
 
-bool UartDevice::receive(int timeoutMs, bool checkCrc, bool faultVerbose)
+bool UartDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faultVerbose)
 {
+	(void)responseLen;
+
 	memset(rxBuffer, 0, rxBufferSize);
 	rxLock.lock();
 	const int delayUs = 10;
@@ -143,8 +143,8 @@ bool UartDevice::receive(int timeoutMs, bool checkCrc, bool faultVerbose)
 	displayDebugMsg(rxBuffer, bytesReceived);
 #endif
 	if (bytesReceived > 0)
-		return manageMsgErrors(true);
-	return manageMsgErrors(false);
+		return true;
+	return false;
 }
 
 void UartDevice::displayDebugMsg(char* buffer, int bytesReceived)

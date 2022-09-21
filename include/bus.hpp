@@ -23,8 +23,9 @@ class Bus
 		(void)responseLen;
 		return false;
 	}
-	virtual bool receive(int timeoutMs = 100, bool checkCrc = true, bool faultVerbose = true)
+	virtual bool receive(int responseLen, int timeoutMs = 100, bool checkCrc = true, bool faultVerbose = true)
 	{
+		(void)responseLen;
 		(void)timeoutMs;
 		(void)checkCrc;
 		(void)faultVerbose;

@@ -68,4 +68,7 @@ if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
 
     add_executable(example11 examples_cpp/example11.cpp)
     target_link_libraries(example11 candle)
+
+    add_executable(latency examples_cpp/latency.cpp)
+    target_link_libraries(latency candle)
 endif()

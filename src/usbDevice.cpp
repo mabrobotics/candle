@@ -101,8 +101,6 @@ loopdone:
 
 bool UsbDevice::transmit(char* buffer, int len, bool waitForResponse, int timeout, int responseLen, bool faultVerbose)
 {
-	(void)responseLen;
-
 	if (write(fd, buffer, len) == -1)
 	{
 		std::cout << "[USB] Writing to USB Device failed. Device Unavailable!" << std::endl;
@@ -110,7 +108,7 @@ bool UsbDevice::transmit(char* buffer, int len, bool waitForResponse, int timeou
 	}
 	if (waitForResponse)
 	{
-		if (receive(timeout, faultVerbose))
+		if (receive(responseLen, timeout, faultVerbose))
 			return manageMsgErrors(true);
 		else
 		{
@@ -121,34 +119,30 @@ bool UsbDevice::transmit(char* buffer, int len, bool waitForResponse, int timeou
 	return manageMsgErrors(true);
 }
 
-bool UsbDevice::receive(int timeoutMs, bool checkCrc, bool faultVerbose)
+bool UsbDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faultVerbose)
 {
 	(void)faultVerbose;
 	(void)checkCrc;
+
 	memset(rxBuffer, 0, rxBufferSize);
 	rxLock.lock();
 	const int delayUs = 10;
-	const int timeoutUs = 100;
 	int timeoutBusOutUs = timeoutMs * 1000;
-	int usTimestamp = 0;
 	bytesReceived = 0;
-	bool firstByteReceived = false;
-	while (usTimestamp < timeoutUs && timeoutBusOutUs > 0)
+
+	while (timeoutBusOutUs > 0 && responseLen > bytesReceived)
 	{
 		char newByte;
 		int bytesRead = read(fd, &newByte, 1);
 		if (bytesRead > 0)
 		{
-			firstByteReceived = true;
 			rxBuffer[bytesReceived++] = newByte;
 			continue;
 		}
-		if (firstByteReceived && bytesRead == 0)
-			usTimestamp += delayUs;	 // If receiving wait for 100us idle state on the bus
-		else
-			timeoutBusOutUs -= delayUs;	 // If not receiving wait for 100ms and return false
+		timeoutBusOutUs -= delayUs;	 // If not receiving wait for 100ms and return false
 		usleep(delayUs);
 	}
+
 	rxLock.unlock();
 #ifdef USB_VERBOSE
 	if (bytesReceived > 0)

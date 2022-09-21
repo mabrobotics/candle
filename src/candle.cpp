@@ -115,7 +115,7 @@ void Candle::receive()
 {
 	while (!shouldStopReceiver)
 	{
-		if (bus->receive())
+		if (bus->receive(sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1))
 		{
 			if (*bus->getRxBuffer() == BUS_FRAME_UPDATE)
 			{
@@ -211,19 +211,19 @@ void Candle::transmit()
 				if (bus->getType() == mab::BusType_E::SPI)
 					usleep(200);
 				else
-					usleep(1990 * 2);
+					usleep(500);
 				break;
 			case CANdleFastMode_E::FAST2:
 				if (bus->getType() == mab::BusType_E::SPI)
 					usleep(50);
 				else
-					usleep(1950);
+					usleep(200);
 				break;
 			default:
 				if (bus->getType() == mab::BusType_E::SPI)
 					usleep(400);
 				else
-					usleep(10000);
+					usleep(1000);
 				break;
 		}
 	}
@@ -331,7 +331,7 @@ std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
 	tx[0] = BUS_FRAME_PING_START;
 	tx[1] = 0x00;
 	std::vector<uint16_t> ids;
-	if (bus->transmit(tx, 2, true, 2500, 33))
+	if (bus->transmit(tx, 2, true, 2000, 33))
 	{
 		uint16_t* idsPointer = (uint16_t*)bus->getRxBuffer(1);
 		for (int i = 0; i < 12; i++)
@@ -675,12 +675,16 @@ bool Candle::end()
 	tx[1] = 0x00;
 
 	if (bus->getType() == mab::BusType_E::USB)
+	{
+		bus->receive(1024, 1, false);
+		bus->receive(1024, 1, false);
 		bus->transmit(tx, 2, true, 10, 2);	// Stops update but produces garbage output
+	}
 
 	if (bus->getType() == mab::BusType_E::UART)
 	{
 		bus->transmit(tx, 2, false, 10, 2);	 // ensure there's something to receive
-		bus->receive(100, false);			 // receive remaining bytes and do not check crc cause it will be garbage
+		bus->receive(512, 100, false);		 // receive remaining bytes and do not check crc cause it will be garbage
 	}
 
 	if (bus->transmit(tx, 2, true, 10, 2))

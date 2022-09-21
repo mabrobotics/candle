@@ -13,7 +13,7 @@ class UsbDevice : public mab::Bus
 	UsbDevice(const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances);
 	~UsbDevice();
 	bool transmit(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0, bool faultVerbose = true) override;
-	bool receive(int timeoutMs = 100, bool checkCrc = true, bool faultVerbose = true) override;
+	bool receive(int responseLen, int timeoutMs = 100, bool checkCrc = true, bool faultVerbose = true) override;
 	int getBytesReceived() override { return bytesReceived; }
 	unsigned long getId() override { return serialDeviceId; }
 	std::string getDeviceName() override { return serialDeviceName; }

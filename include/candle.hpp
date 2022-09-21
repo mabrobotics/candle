@@ -14,7 +14,7 @@
 #include "usbDevice.hpp"
 
 /* Turn on benchmarking */
-#define BENCHMARKING 0
+#define BENCHMARKING 1
 /* Turn on RX and TX timestamps */
 #define BENCHMARKING_VERBOSE 0
 
