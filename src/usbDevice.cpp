@@ -106,27 +106,19 @@ bool UsbDevice::transmit(char* buffer, int len, bool waitForResponse, int timeou
 	if (write(fd, buffer, len) == -1)
 	{
 		std::cout << "[USB] Writing to USB Device failed. Device Unavailable!" << std::endl;
-		return false;
+		return manageMsgErrors(false);
 	}
 	if (waitForResponse)
 	{
 		if (receive(timeout, faultVerbose))
-			return true;
+			return manageMsgErrors(true);
 		else
 		{
 			if (faultVerbose) std::cout << "[USB] Did not receive response from USB Device." << std::endl;
-			return false;
+			return manageMsgErrors(false);
 		}
 	}
-	return true;
-}
-
-bool UsbDevice::transfer(char* buffer, int commandLen, int responseLen)
-{
-	(void)buffer;
-	(void)commandLen;
-	(void)responseLen;
-	return false;
+	return manageMsgErrors(true);
 }
 
 bool UsbDevice::receive(int timeoutMs, bool checkCrc, bool faultVerbose)

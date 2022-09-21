@@ -88,19 +88,11 @@ bool UartDevice::transmit(char* buffer, int len, bool waitForResponse, int timeo
 	if (write(fd, buffer, len) == -1)
 	{
 		std::cout << "[UART] Writing to UART Device failed. Device Unavailable!" << std::endl;
-		return false;
+		return manageMsgErrors(false);
 	}
 	if (waitForResponse)
-		return receive(timeout, true, faultVerbose);
-	return true;
-}
-
-bool UartDevice::transfer(char* buffer, int commandLen, int responseLen)
-{
-	(void)buffer;
-	(void)commandLen;
-	(void)responseLen;
-	return false;
+		return manageMsgErrors(receive(timeout, true, faultVerbose));
+	return manageMsgErrors(true);
 }
 
 bool UartDevice::receive(int timeoutMs, bool checkCrc, bool faultVerbose)
@@ -139,8 +131,6 @@ bool UartDevice::receive(int timeoutMs, bool checkCrc, bool faultVerbose)
 #ifdef UART_VERBOSE_ON_CRC_ERROR
 		displayDebugMsg(rxBuffer, bytesReceived);
 #endif
-
-		errorCnt++;
 		/* clear the command byte -> the frame will be rejected */
 		rxBuffer[0] = 0;
 		bytesReceived = 0;
@@ -153,8 +143,8 @@ bool UartDevice::receive(int timeoutMs, bool checkCrc, bool faultVerbose)
 	displayDebugMsg(rxBuffer, bytesReceived);
 #endif
 	if (bytesReceived > 0)
-		return true;
-	return false;
+		return manageMsgErrors(true);
+	return manageMsgErrors(false);
 }
 
 void UartDevice::displayDebugMsg(char* buffer, int bytesReceived)

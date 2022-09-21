@@ -76,10 +76,10 @@ bool SpiDevice::transmit(char* buffer, int commandLen, bool waitForResponse, int
 	{
 		/* allow for SPI reinit on the slave side */
 		usleep(10);
-		return receive(timeout, responseLen, faultVerbose);
+		return manageMsgErrors(receive(timeout, responseLen, faultVerbose));
 	}
 
-	return true;
+	return manageMsgErrors(true);
 }
 
 bool SpiDevice::receive(int timeout, int responseLen, bool faultVerbose)
@@ -136,7 +136,6 @@ bool SpiDevice::receive(int timeout, int responseLen, bool faultVerbose)
 		bytesReceived = responseLen;
 		displayDebugMsg(rxBuffer, bytesReceived);
 #endif
-		errorCnt++;
 		/* clear the command byte -> the frame will be rejected */
 		rxBuffer[0] = 0;
 		bytesReceived = 0;
@@ -185,8 +184,6 @@ bool SpiDevice::transfer(char* buffer, int commandLen, int responseLen)
 		bytesReceived = responseLen;
 		displayDebugMsg(rxBuffer, bytesReceived);
 #endif
-
-		errorCnt++;
 		/* clear the command byte -> the frame will be rejected */
 		rxBuffer[0] = 0;
 		bytesReceived = 0;
@@ -204,14 +201,6 @@ bool SpiDevice::transfer(char* buffer, int commandLen, int responseLen)
 	if (bytesReceived > 0)
 		return true;
 
-	return false;
-}
-
-bool SpiDevice::receive(int timeoutMs, bool checkCrc, bool faultVerbose)
-{
-	(void)timeoutMs;
-	(void)checkCrc;
-	(void)faultVerbose;
 	return false;
 }
 

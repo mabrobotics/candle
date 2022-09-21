@@ -16,8 +16,20 @@ class Bus
    public:
 	virtual ~Bus() = default;
 	virtual bool transmit(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0, bool faultVerbose = true) = 0;
-	virtual bool transfer(char* buffer, int commandLen, int responseLen) = 0;
-	virtual bool receive(int timeoutMs = 100, bool checkCrc = true, bool faultVerbose = true) = 0;
+	virtual bool transfer(char* buffer, int commandLen, int responseLen)
+	{
+		(void)buffer;
+		(void)commandLen;
+		(void)responseLen;
+		return false;
+	}
+	virtual bool receive(int timeoutMs = 100, bool checkCrc = true, bool faultVerbose = true)
+	{
+		(void)timeoutMs;
+		(void)checkCrc;
+		(void)faultVerbose;
+		return false;
+	}
 	virtual int getBytesReceived() = 0;
 	virtual unsigned long getId() = 0;
 	virtual std::string getDeviceName() { return ""; }
@@ -26,9 +38,29 @@ class Bus
 	mab::BusType_E getType() { return busType; };
 	char* getRxBuffer(int index = 0) { return (char*)&rxBuffer[index]; };
 
+	bool manageMsgErrors(bool ret)
+	{
+		msgCnt++;
+		if (ret == false) errorCnt++;
+		if (errorCnt > errorThreshold)
+		{
+			const char* msg = "Fatal communication error!";
+			std::cout << msg << std::endl;
+			throw msg;
+		}
+		if (msgCnt > msgCntThreshold)
+		{
+			errorCnt = 0;
+			msgCnt = 0;
+		}
+		return ret;
+	}
+
    private:
-	static const int errorThreshold = 5;
-	static const int msgCntThreshold = 1000;
+	static const uint32_t errorThreshold = 5;
+	static const uint32_t msgCntThreshold = 1000;
+	uint32_t msgCnt = 0;
+	uint32_t errorCnt = 0;
 
    protected:
 	BusType_E busType;
@@ -37,7 +69,5 @@ class Bus
 	static const uint32_t txBufferSize = 1024;
 	char rxBuffer[rxBufferSize];
 	char txBuffer[txBufferSize];
-
-	int errorCnt = 0;
 };
 }  // namespace mab
