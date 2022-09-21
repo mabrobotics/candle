@@ -15,6 +15,7 @@ namespace mab
         motorStatus["position"] = 0.0;
         motorStatus["velocity"] = 0.0;
         motorStatus["savgol_vel"] = 0.0;
+        motorStatus["kalman_vel"] = 0.0;
         motorStatus["torque"] = 0.0;
         motorStatus["time"] = 0.0;
         motorStatus["seq"] = 0.0;
@@ -67,6 +68,7 @@ namespace mab
         motorStatus["seq"] = 0.0;
         motorStatus["savgol_vel"] = 0.0;
         motorStatus["temperature"] = 0.0;
+        motorStatus["kalman_vel"] = 0.0;
     }
 
     Md80::~Md80()
