@@ -128,7 +128,7 @@ bool UsbDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faul
 
 	memset(rxBuffer, 0, rxBufferSize);
 	rxLock.lock();
-	const int delayUs = 10;
+	const int delayUs = 200;
 	int timeoutBusOutUs = timeoutMs * 1000;
 	bytesReceived = 0;
 
@@ -144,9 +144,6 @@ bool UsbDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faul
 		timeoutBusOutUs -= delayUs;	 // If not receiving wait for 100ms and return false
 		usleep(delayUs);
 	}
-
-	// std::cout << "SHOULD RECEIVE BYTES: " + std::to_string(responseLen) << std::endl;
-	// std::cout << "RECEIVED BYTES: " + std::to_string(bytesReceived) << std::endl;
 
 	rxLock.unlock();
 #ifdef USB_VERBOSE
@@ -168,9 +165,9 @@ bool UsbDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faul
 
 void UsbDevice::flushReceiveBuffer()
 {
-	/*required to make flush work https://lkml.iu.edu/hypermail/linux/kernel/0707.3/1776.html*/
-	sleep(2);
-	tcflush(fd, TCIOFLUSH);
+	/* the delay is required to make flush work */
+	usleep(1000);
+	tcflush(fd, TCOFLUSH);
 }
 
 UsbDevice::~UsbDevice()
@@ -279,7 +276,7 @@ bool checkDeviceAvailable(std::string devName, std::string idVendor, std::string
 int open_device(std::string devName, std::string idVendor, std::string idProduct)
 {
 	if (checkDeviceAvailable(devName, idVendor, idProduct))
-		return open(devName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+		return open(devName.c_str(), O_RDWR | O_NOCTTY);
 
 	return -1;
 }

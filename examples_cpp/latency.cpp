@@ -12,7 +12,7 @@ const bool changePriority = true;
 /* communication bus */
 mab::BusType_E bus = mab::BusType_E::SPI;
 /* communication speed mode */
-mab::CANdleFastMode_E mode = mab::CANdleFastMode_E::FAST1;
+int mode = 2;
 /* how many tests to conduct for averaging purposes */
 const int tests = 10;
 
@@ -51,11 +51,11 @@ int main(int argc, char* argv[])
 	}
 
 	if (strcmp(argv[2], "NORMAL") == 0)
-		mode = mab::CANdleFastMode_E::NORMAL;
+		mode = 0;
 	else if (strcmp(argv[2], "FAST1") == 0)
-		mode = mab::CANdleFastMode_E::FAST1;
+		mode = 1;
 	else if (strcmp(argv[2], "FAST2") == 0)
-		mode = mab::CANdleFastMode_E::FAST2;
+		mode = 2;
 	else
 	{
 		std::cout << "mode parameter not recognised!" << std::endl;
@@ -74,20 +74,20 @@ int main(int argc, char* argv[])
 	}
 
 	/* Create CANdle object and set FDCAN baudrate to 8Mbps */
-	mab::Candle candle(mab::CAN_BAUD_8M, false, mode, true, bus);
+	mab::Candle candle(mab::CAN_BAUD_8M, false, true, bus);
 
 	std::vector<uint16_t> ids;
 
 	switch (mode)
 	{
-		case mab::CANdleFastMode_E::FAST2:
+		case 2:
 		{
 			ids.push_back(300);
 			ids.push_back(301);
 			ids.push_back(304);
 			break;
 		}
-		case mab::CANdleFastMode_E::FAST1:
+		case 1:
 		{
 			ids.push_back(300);
 			ids.push_back(301);
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 			ids.push_back(309);
 			break;
 		}
-		case mab::CANdleFastMode_E::NORMAL:
+		case 0:
 		{
 			ids.push_back(200);
 			ids.push_back(301);

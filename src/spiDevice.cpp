@@ -86,26 +86,23 @@ bool SpiDevice::receive(int timeout, int responseLen, bool faultVerbose)
 {
 	memset(rxBuffer, 0, rxBufferSize);
 	rxLock.lock();
-	int delayUs = 10;
+	int delayUs = 200;
 	int timeoutBusOutUs = timeout * 1000;
 	uint8_t dummyTx = 0;
 	uint8_t byteRx = 0;
-	bool firstByteReceived = false;
 	bytesReceived = 0;
 	int usTimestamp = 0;
-	const int timeoutUs = 100;
 
-	while (usTimestamp < timeoutUs && timeoutBusOutUs > 0 && bytesReceived < responseLen)
+	while (timeoutBusOutUs > 0 && bytesReceived < responseLen)
 	{
 		trx.tx_buf = (unsigned long)&dummyTx;
 		trx.rx_buf = (unsigned long)&byteRx;
 		trx.len = 1;
 
 		sendMessage(SPI_IOC_MESSAGE(1), &trx);
-		timeoutBusOutUs -= delayUs;	 // If not receiving wait for 100ms and return false
+		timeoutBusOutUs -= delayUs;
 		/* if the received byte is non-zero, continue with a larger transfer for the rest (responseLen -1) */
-		if (byteRx != 0) firstByteReceived = true;
-		if (firstByteReceived)
+		if (byteRx != 0)
 		{
 			responseLen += crc->getCrcLen();
 			rxBuffer[bytesReceived++] = byteRx;
@@ -121,10 +118,7 @@ bool SpiDevice::receive(int timeout, int responseLen, bool faultVerbose)
 			break;
 		}
 
-		if (firstByteReceived && bytesReceived == 0)
-			usTimestamp += delayUs;	 // If receiving wait for 100us idle state on the bus
-		else
-			timeoutBusOutUs -= delayUs;	 // If not receiving wait for 100ms and return false
+		timeoutBusOutUs -= delayUs;	 // If not receiving wait for 100ms and return false
 		usleep(delayUs);
 	}
 
@@ -199,9 +193,9 @@ bool SpiDevice::transfer(char* buffer, int commandLen, int responseLen)
 #endif
 
 	if (bytesReceived > 0)
-		return true;
+		return manageMsgErrors(true);
 
-	return false;
+	return manageMsgErrors(false);
 }
 
 void SpiDevice::displayDebugMsg(char* buffer, int bytesReceived)

@@ -24,6 +24,7 @@ class UartDevice : public mab::Bus
 	bool receive(int responseLen, int timeoutMs = 100, bool checkCrc = true, bool faultVerbose = true) override;
 	int getBytesReceived() override { return bytesReceived; }
 	unsigned long getId() override { return 0; }
+	void flushReceiveBuffer() override;
 
    private:
 	Crc* crc;

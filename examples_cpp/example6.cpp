@@ -39,7 +39,6 @@ int main()
 		// a nice synchronized movement.
 		for (auto& md : candle.md80s)
 			md.setTargetPosition(sin(t) * 2.0f);
-		std::cout << "NEW DATA XXXXX" << std::endl;
 		t += dt;
 		usleep(10000);
 	}

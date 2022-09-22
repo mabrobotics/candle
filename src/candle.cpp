@@ -30,8 +30,8 @@ uint64_t getTimestamp()
 
 std::vector<Candle*> Candle::instances = std::vector<Candle*>();
 
-Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::CANdleFastMode_E fastMode, bool printFailure, mab::BusType_E busType)
-	: printVerbose(printVerbose), fastMode(fastMode)
+Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, bool printFailure, mab::BusType_E busType)
+	: printVerbose(printVerbose)
 {
 	(void)printFailure;
 
@@ -65,18 +65,18 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::CANdleFastM
 	else if (bus->getType() == mab::BusType_E::UART)
 		vout << "CANdle ready (UART)" << std::endl;
 
-	switch (fastMode)
-	{
-		case CANdleFastMode_E::FAST1:
-			maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_FAST1;
-			break;
-		case CANdleFastMode_E::FAST2:
-			maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_FAST2;
-			break;
-		default:
-			maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_NORMAL;
-			break;
-	}
+	// switch (fastMode)
+	// {
+	// 	case CANdleFastMode_E::FAST1:
+	// 		maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_FAST1;
+	// 		break;
+	// 	case CANdleFastMode_E::FAST2:
+	// 		maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_FAST2;
+	// 		break;
+	// 	default:
+	// 		maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_NORMAL;
+	// 		break;
+	// }
 
 	Candle::instances.push_back(this);
 }
@@ -85,24 +85,24 @@ Candle::~Candle()
 	if (this->inUpdateMode())
 		this->end();
 }
-void Candle::updateModeBasedOnMd80List()
-{
-	if (md80s.size() <= (int)CANdleMaxDevices_E::MAX_DEV_FAST2)
-	{
-		fastMode = CANdleFastMode_E::FAST2;
-		vout << "Set current speed mode to FAST2" << std::endl;
-	}
-	else if (md80s.size() <= (int)CANdleMaxDevices_E::MAX_DEV_FAST1)
-	{
-		fastMode = CANdleFastMode_E::FAST1;
-		vout << "Set current speed mode to FAST1" << std::endl;
-	}
-	else if (md80s.size() <= (int)CANdleMaxDevices_E::MAX_DEV_NORMAL)
-	{
-		fastMode = CANdleFastMode_E::NORMAL;
-		vout << "Set current speed mode to NORMAL" << std::endl;
-	}
-}
+// void Candle::updateModeBasedOnMd80List()
+// {
+// 	if (md80s.size() <= (int)CANdleMaxDevices_E::MAX_DEV_FAST2)
+// 	{
+// 		fastMode = CANdleFastMode_E::FAST2;
+// 		vout << "Set current speed mode to FAST2" << std::endl;
+// 	}
+// 	else if (md80s.size() <= (int)CANdleMaxDevices_E::MAX_DEV_FAST1)
+// 	{
+// 		fastMode = CANdleFastMode_E::FAST1;
+// 		vout << "Set current speed mode to FAST1" << std::endl;
+// 	}
+// 	else if (md80s.size() <= (int)CANdleMaxDevices_E::MAX_DEV_NORMAL)
+// 	{
+// 		fastMode = CANdleFastMode_E::NORMAL;
+// 		vout << "Set current speed mode to NORMAL" << std::endl;
+// 	}
+// }
 const std::string Candle::getVersion()
 {
 	return version;
@@ -114,14 +114,13 @@ int Candle::getActualCommunicationFrequency()
 
 void Candle::receive()
 {
-	// std::cout << "CREATED RX" << std::endl;
 	while (!shouldStopReceiver)
 	{
-		// std::cout << "E%%%%%%%%" << std::endl;
 		transmitted->wait();
-		// std::cout << "GOT PERMISSION TO RECEIVE!" << std ::endl;
-		if (bus->receive(sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1))
+
+		if (!shouldStopReceiver && bus->receive(sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1, 50))
 		{
+			received->notify();
 			if (*bus->getRxBuffer() == BUS_FRAME_UPDATE)
 			{
 #if BENCHMARKING == 1
@@ -150,13 +149,7 @@ void Candle::receive()
 				}
 #endif
 			}
-			else
-			{
-				std::cout << "ERROR _--------------------" << std::endl;
-			}
 		}
-		received->notify();
-		// std::cout << "L%%%%%%%%" << std::endl;
 	}
 }
 void Candle::transmit()
@@ -175,7 +168,8 @@ void Candle::transmit()
 		}
 
 		transmitNewStdFrame();
-		transmitted->notify();
+		if (bus->getType() != mab::BusType_E::SPI)
+			transmitted->notify();
 		/* transmit thread is also the receive thread for SPI in update mode */
 		if (bus->getType() == mab::BusType_E::SPI && *bus->getRxBuffer() == BUS_FRAME_UPDATE)
 		{
@@ -221,29 +215,14 @@ void Candle::transmit()
 #endif
 		msgsSent++;
 
-		received->wait();
-		// std::cout << "L********" << std::endl;
-		// switch (fastMode)
-		// {
-		// 	case CANdleFastMode_E::FAST1:
-		// 		if (bus->getType() == mab::BusType_E::SPI)
-		// 			usleep(200);
-		// 		else
-		// 			usleep(500);
-		// 		break;
-		// 	case CANdleFastMode_E::FAST2:
-		// 		if (bus->getType() == mab::BusType_E::SPI)
-		// usleep(50);
-		// 		else
-		// 			usleep(250);
-		// 		break;
-		// 	default:
-		// 		if (bus->getType() == mab::BusType_E::SPI)
-		// 			usleep(400);
-		// 		else
-		// 			usleep(1000);
-		// 		break;
-		// }
+		if (bus->getType() != mab::BusType_E::SPI)
+			received->wait();
+		else
+		{
+			for (int i = 1; i < (int)md80s.size(); i++)
+				usleep(20);
+		}
+		usleep(20);
 	}
 }
 void Candle::setVebose(bool enable)
@@ -683,39 +662,28 @@ bool Candle::end()
 	if (mode == CANdleMode_E::CONFIG)
 		return false;
 
-	std::cout << "FINISHING TX THREAD" << std::endl;
-	transmitted->notify();
 	shouldStopTransmitter = true;
 	if (transmitterThread.joinable())
 		transmitterThread.join();
 
-	std::cout << "FINISHING RX THREAD" << std::endl;
+	shouldStopReceiver = true;
+	/* this is to make the receiver thread exit cleanly */
+	transmitted->notify();
+	received->notify();
+
 	if (bus->getType() != mab::BusType_E::SPI)
 	{
-		shouldStopReceiver = true;
-		// if (receiverThread.joinable())
-		receiverThread.join();
+		if (receiverThread.joinable())
+			receiverThread.join();
 	}
 
 	char tx[128];
 	tx[0] = BUS_FRAME_END;
 	tx[1] = 0x00;
 
-	if (bus->getType() == mab::BusType_E::USB)
-	{
-		bus->receive(1024, 1, false);
-		bus->receive(1024, 1, false);
-		// bus->flushReceiveBuffer();
-		bus->transmit(tx, 2, true, 10, 2);	// Stops update but produces garbage output
-	}
+	bus->flushReceiveBuffer();
 
-	if (bus->getType() == mab::BusType_E::UART)
-	{
-		bus->transmit(tx, 2, false, 10, 2);	 // ensure there's something to receive
-		bus->receive(512, 100, false);		 // receive remaining bytes and do not check crc cause it will be garbage
-	}
-
-	if (bus->transmit(tx, 2, true, 10, 2))
+	if (bus->transmit(tx, 2, true, 100, 2))
 		if (*bus->getRxBuffer(0) == BUS_FRAME_END && *bus->getRxBuffer(1) == 1)
 			mode = CANdleMode_E::CONFIG;
 

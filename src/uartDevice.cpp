@@ -95,30 +95,23 @@ bool UartDevice::transmit(char* buffer, int len, bool waitForResponse, int timeo
 
 bool UartDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faultVerbose)
 {
-	(void)responseLen;
-
 	memset(rxBuffer, 0, rxBufferSize);
 	rxLock.lock();
-	const int delayUs = 10;
-	const int timeoutUs = 100;
+	const int delayUs = 200;
 	int timeoutBusOutUs = timeoutMs * 1000;
-	int usTimestamp = 0;
+	// int usTimestamp = 0;
 	bytesReceived = 0;
-	bool firstByteReceived = false;
-	while (usTimestamp < timeoutUs && timeoutBusOutUs > 0)
+
+	while (timeoutBusOutUs > 0 && bytesReceived < (responseLen + crc->getCrcLen()))
 	{
 		char newByte;
 		int bytesRead = read(fd, &newByte, 1);
 		if (bytesRead > 0)
 		{
-			firstByteReceived = true;
 			rxBuffer[bytesReceived++] = newByte;
 			continue;
 		}
-		if (firstByteReceived && bytesRead == 0)
-			usTimestamp += delayUs;	 // If receiving wait for 100us idle state on the bus
-		else
-			timeoutBusOutUs -= delayUs;	 // If not receiving wait for 100ms and return false
+		timeoutBusOutUs -= delayUs;	 // If not receiving wait for 100ms and return false
 		usleep(delayUs);
 	}
 	rxLock.unlock();
@@ -145,6 +138,13 @@ bool UartDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool fau
 	if (bytesReceived > 0)
 		return true;
 	return false;
+}
+
+void UartDevice::flushReceiveBuffer()
+{
+	/* the delay is required to make flush work */
+	usleep(1000);
+	tcflush(fd, TCOFLUSH);
 }
 
 void UartDevice::displayDebugMsg(char* buffer, int bytesReceived)
