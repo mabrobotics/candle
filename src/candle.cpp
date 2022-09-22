@@ -86,12 +86,12 @@ void Candle::receive()
 {
 	while (!shouldStopReceiver)
 	{
-		// transmitted->wait();
+		/* wait for a frame to be transmitted */
 		sem_wait(&transmitted);
 
-		if (!shouldStopReceiver && bus->receive(sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1))
+		if (!shouldStopReceiver && bus->receive(sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1, 50))
 		{
-			// received->notify();
+			/* notify a frame was received */
 			sem_post(&received);
 
 			if (*bus->getRxBuffer() == BUS_FRAME_UPDATE)
@@ -139,9 +139,11 @@ void Candle::transmit()
 		}
 
 		transmitNewStdFrame();
+
+		/* notify a frame was sent */
 		if (bus->getType() != mab::BusType_E::SPI)
-			// transmitted->notify();
 			sem_post(&transmitted);
+
 		/* transmit thread is also the receive thread for SPI in update mode */
 		if (bus->getType() == mab::BusType_E::SPI && *bus->getRxBuffer() == BUS_FRAME_UPDATE)
 		{
@@ -192,10 +194,10 @@ void Candle::transmit()
 			for (int i = 1; i < (int)md80s.size(); i++)
 				usleep(20);
 		}
+		/* wait for a frame to be received */
 		else
-			// received->wait();
 			sem_wait(&received);
-		usleep(20);
+		// usleep(20);
 	}
 }
 void Candle::setVebose(bool enable)
@@ -617,8 +619,6 @@ bool Candle::begin()
 		msgsSent = 0;
 		msgsReceived = 0;
 
-		// transmitted = new Semaphore();
-		// received = new Semaphore();
 		sem_init(&transmitted, 0, 1);
 		sem_init(&received, 0, 1);
 
@@ -643,9 +643,6 @@ bool Candle::end()
 
 	shouldStopReceiver = true;
 	/* this is to make the receiver thread exit cleanly */
-	// transmitted->notify();
-	// received->notify();
-
 	sem_post(&transmitted);
 	sem_post(&received);
 
