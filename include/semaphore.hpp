@@ -13,7 +13,7 @@ class Semaphore
 		std::unique_lock<std::mutex> lock(mtx);
 		count++;
 		cv.notify_one();
-		std::cout << "SEM: " << count << std::endl;
+		// std::cout << "SEM: " << count << std::endl;
 	}
 
 	inline void wait()

@@ -50,9 +50,8 @@ if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
 
     # add_executable(example5 examples_cpp/example5.cpp)
     # target_link_libraries(example5 candle)
-
-    # add_executable(example6 examples_cpp/example6.cpp)
-    # target_link_libraries(example6 candle)
+    add_executable(example6 examples_cpp/example6.cpp)
+    target_link_libraries(example6 candle)
 
     # add_executable(example7 examples_cpp/example7.cpp)
     # target_link_libraries(example7 candle)
@@ -68,7 +67,6 @@ if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
 
     # add_executable(example11 examples_cpp/example11.cpp)
     # target_link_libraries(example11 candle)
-
     add_executable(latency examples_cpp/latency.cpp)
     target_link_libraries(latency candle)
 endif()

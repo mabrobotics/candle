@@ -114,11 +114,12 @@ int Candle::getActualCommunicationFrequency()
 
 void Candle::receive()
 {
-	std::cout << "CREATED RX" << std::endl;
+	// std::cout << "CREATED RX" << std::endl;
 	while (!shouldStopReceiver)
 	{
-		std::cout << "E%%%%%%%%" << std::endl;
-		transmitted.wait();
+		// std::cout << "E%%%%%%%%" << std::endl;
+		transmitted->wait();
+		// std::cout << "GOT PERMISSION TO RECEIVE!" << std ::endl;
 		if (bus->receive(sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1))
 		{
 			if (*bus->getRxBuffer() == BUS_FRAME_UPDATE)
@@ -149,19 +150,23 @@ void Candle::receive()
 				}
 #endif
 			}
+			else
+			{
+				std::cout << "ERROR _--------------------" << std::endl;
+			}
 		}
-		received.notify();
-		std::cout << "L%%%%%%%%" << std::endl;
+		received->notify();
+		// std::cout << "L%%%%%%%%" << std::endl;
 	}
 }
 void Candle::transmit()
 {
-	std::cout << "CREATED TX" << std::endl;
+	// std::cout << "CREATED TX" << std::endl;
 	int txCounter = 0;
 	uint64_t freqCheckStart = getTimestamp();
 	while (!shouldStopTransmitter)
 	{
-		std::cout << "E********" << std::endl;
+		// std::cout << "E********" << std::endl;
 		if (++txCounter == 250)
 		{
 			this->usbCommsFreq = 250.0 / (float)(getTimestamp() - freqCheckStart) * 1000.0f;
@@ -170,7 +175,7 @@ void Candle::transmit()
 		}
 
 		transmitNewStdFrame();
-		transmitted.notify();
+		transmitted->notify();
 		/* transmit thread is also the receive thread for SPI in update mode */
 		if (bus->getType() == mab::BusType_E::SPI && *bus->getRxBuffer() == BUS_FRAME_UPDATE)
 		{
@@ -216,8 +221,8 @@ void Candle::transmit()
 #endif
 		msgsSent++;
 
-		received.wait();
-		std::cout << "L********" << std::endl;
+		received->wait();
+		// std::cout << "L********" << std::endl;
 		// switch (fastMode)
 		// {
 		// 	case CANdleFastMode_E::FAST1:
@@ -228,7 +233,7 @@ void Candle::transmit()
 		// 		break;
 		// 	case CANdleFastMode_E::FAST2:
 		// 		if (bus->getType() == mab::BusType_E::SPI)
-		usleep(50);
+		// usleep(50);
 		// 		else
 		// 			usleep(250);
 		// 		break;
@@ -660,8 +665,8 @@ bool Candle::begin()
 		msgsSent = 0;
 		msgsReceived = 0;
 
-		transmitted.reset();
-		received.reset();
+		transmitted = new Semaphore();
+		received = new Semaphore();
 
 		if (bus->getType() != mab::BusType_E::SPI)
 			receiverThread = std::thread(&Candle::receive, this);
@@ -678,17 +683,18 @@ bool Candle::end()
 	if (mode == CANdleMode_E::CONFIG)
 		return false;
 
+	std::cout << "FINISHING TX THREAD" << std::endl;
+	transmitted->notify();
 	shouldStopTransmitter = true;
 	if (transmitterThread.joinable())
 		transmitterThread.join();
 
-	transmitted.notify();
-
+	std::cout << "FINISHING RX THREAD" << std::endl;
 	if (bus->getType() != mab::BusType_E::SPI)
 	{
 		shouldStopReceiver = true;
-		if (receiverThread.joinable())
-			receiverThread.join();
+		// if (receiverThread.joinable())
+		receiverThread.join();
 	}
 
 	char tx[128];
@@ -699,7 +705,7 @@ bool Candle::end()
 	{
 		bus->receive(1024, 1, false);
 		bus->receive(1024, 1, false);
-		bus->flushReceiveBuffer();
+		// bus->flushReceiveBuffer();
 		bus->transmit(tx, 2, true, 10, 2);	// Stops update but produces garbage output
 	}
 
@@ -755,8 +761,6 @@ void Candle::transmitNewStdFrame()
 		bus->transfer(tx, length, sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1);
 	else
 		bus->transmit(tx, length, false, 100, sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1);
-
-	std::cout << "send frame!!!!" << std::endl;
 }
 
 bool Candle::setupMd80Calibration(uint16_t canId)

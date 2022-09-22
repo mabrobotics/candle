@@ -101,8 +101,8 @@ class Candle
 	char* regTxPtr = nullptr;
 	char* regRxPtr = nullptr;
 
-	Semaphore transmitted;
-	Semaphore received;
+	Semaphore* transmitted;
+	Semaphore* received;
 
 #ifdef BENCHMARKING
 	long long txTimestamp = 0;

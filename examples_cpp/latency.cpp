@@ -14,7 +14,7 @@ mab::BusType_E bus = mab::BusType_E::SPI;
 /* communication speed mode */
 mab::CANdleFastMode_E mode = mab::CANdleFastMode_E::FAST1;
 /* how many tests to conduct for averaging purposes */
-const int tests = 500;
+const int tests = 10;
 
 /* sequence that triggers error bit EMPTY7 */
 const uint32_t seq = 0xdeadbeef;
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 	}
 
 	/* Create CANdle object and set FDCAN baudrate to 8Mbps */
-	mab::Candle candle(mab::CAN_BAUD_8M, true, mode, true, bus);
+	mab::Candle candle(mab::CAN_BAUD_8M, false, mode, true, bus);
 
 	std::vector<uint16_t> ids;
 
@@ -115,14 +115,14 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	for (auto& id : ids)
-		candle.addMd80(id);
-
 	/* measured time delta vector */
 	std::vector<long long> deltaTimes;
 
 	for (int i = 0; i < tests; i++)
 	{
+		for (auto& id : ids)
+			candle.addMd80(id);
+
 		for (auto& id : ids)
 		{
 			candle.controlMd80SetEncoderZero(id);					 // Reset encoder at current position
@@ -166,6 +166,8 @@ int main(int argc, char* argv[])
 
 		std::cout << "candle end" << std::endl;
 		deltaTimes.push_back(candle.benchGetTimeDelta());
+
+		// sleep(5);
 	}
 
 	/* cout the measured delta times vector */

@@ -122,6 +122,7 @@ bool UsbDevice::transmit(char* buffer, int len, bool waitForResponse, int timeou
 
 bool UsbDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faultVerbose)
 {
+	// std::cout << "trying to receive!" << std::endl;
 	(void)faultVerbose;
 	(void)checkCrc;
 
@@ -144,7 +145,8 @@ bool UsbDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faul
 		usleep(delayUs);
 	}
 
-	std::cout << bytesReceived << std::endl;
+	// std::cout << "SHOULD RECEIVE BYTES: " + std::to_string(responseLen) << std::endl;
+	// std::cout << "RECEIVED BYTES: " + std::to_string(bytesReceived) << std::endl;
 
 	rxLock.unlock();
 #ifdef USB_VERBOSE
