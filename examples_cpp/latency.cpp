@@ -14,7 +14,7 @@ mab::BusType_E bus = mab::BusType_E::SPI;
 /* communication speed mode */
 int mode = 2;
 /* how many tests to conduct for averaging purposes */
-const int tests = 10;
+const int tests = 500;
 
 /* sequence that triggers error bit EMPTY7 */
 const uint32_t seq = 0xdeadbeef;
@@ -115,14 +115,14 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	for (auto& id : ids)
+		candle.addMd80(id);
+
 	/* measured time delta vector */
 	std::vector<long long> deltaTimes;
 
 	for (int i = 0; i < tests; i++)
 	{
-		for (auto& id : ids)
-			candle.addMd80(id);
-
 		for (auto& id : ids)
 		{
 			candle.controlMd80SetEncoderZero(id);					 // Reset encoder at current position
@@ -166,8 +166,6 @@ int main(int argc, char* argv[])
 
 		std::cout << "candle end" << std::endl;
 		deltaTimes.push_back(candle.benchGetTimeDelta());
-
-		// sleep(5);
 	}
 
 	/* cout the measured delta times vector */

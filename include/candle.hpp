@@ -1,5 +1,7 @@
 #pragma once
 
+#include <semaphore.h>
+
 #include <iostream>
 #include <string>
 #include <thread>
@@ -9,7 +11,6 @@
 #include "bus.hpp"
 #include "mab_types.hpp"
 #include "md80.hpp"
-#include "semaphore.hpp"
 #include "spiDevice.hpp"
 #include "uartDevice.hpp"
 #include "usbDevice.hpp"
@@ -54,6 +55,8 @@ class Candle
 	const std::string version = "v3.0";
 	std::thread receiverThread;
 	std::thread transmitterThread;
+	sem_t transmitted;
+	sem_t received;
 
 	bool printVerbose = true;
 
@@ -86,9 +89,6 @@ class Candle
 	char regRxBuffer[maxCanFramelen];
 	char* regTxPtr = nullptr;
 	char* regRxPtr = nullptr;
-
-	Semaphore* transmitted;
-	Semaphore* received;
 
 #ifdef BENCHMARKING
 	long long txTimestamp = 0;

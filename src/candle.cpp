@@ -65,19 +65,6 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, bool printFailur
 	else if (bus->getType() == mab::BusType_E::UART)
 		vout << "CANdle ready (UART)" << std::endl;
 
-	// switch (fastMode)
-	// {
-	// 	case CANdleFastMode_E::FAST1:
-	// 		maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_FAST1;
-	// 		break;
-	// 	case CANdleFastMode_E::FAST2:
-	// 		maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_FAST2;
-	// 		break;
-	// 	default:
-	// 		maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_NORMAL;
-	// 		break;
-	// }
-
 	Candle::instances.push_back(this);
 }
 Candle::~Candle()
@@ -85,24 +72,7 @@ Candle::~Candle()
 	if (this->inUpdateMode())
 		this->end();
 }
-// void Candle::updateModeBasedOnMd80List()
-// {
-// 	if (md80s.size() <= (int)CANdleMaxDevices_E::MAX_DEV_FAST2)
-// 	{
-// 		fastMode = CANdleFastMode_E::FAST2;
-// 		vout << "Set current speed mode to FAST2" << std::endl;
-// 	}
-// 	else if (md80s.size() <= (int)CANdleMaxDevices_E::MAX_DEV_FAST1)
-// 	{
-// 		fastMode = CANdleFastMode_E::FAST1;
-// 		vout << "Set current speed mode to FAST1" << std::endl;
-// 	}
-// 	else if (md80s.size() <= (int)CANdleMaxDevices_E::MAX_DEV_NORMAL)
-// 	{
-// 		fastMode = CANdleFastMode_E::NORMAL;
-// 		vout << "Set current speed mode to NORMAL" << std::endl;
-// 	}
-// }
+
 const std::string Candle::getVersion()
 {
 	return version;
@@ -116,11 +86,14 @@ void Candle::receive()
 {
 	while (!shouldStopReceiver)
 	{
-		transmitted->wait();
+		// transmitted->wait();
+		sem_wait(&transmitted);
 
-		if (!shouldStopReceiver && bus->receive(sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1, 50))
+		if (!shouldStopReceiver && bus->receive(sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1))
 		{
-			received->notify();
+			// received->notify();
+			sem_post(&received);
+
 			if (*bus->getRxBuffer() == BUS_FRAME_UPDATE)
 			{
 #if BENCHMARKING == 1
@@ -154,12 +127,10 @@ void Candle::receive()
 }
 void Candle::transmit()
 {
-	// std::cout << "CREATED TX" << std::endl;
 	int txCounter = 0;
 	uint64_t freqCheckStart = getTimestamp();
 	while (!shouldStopTransmitter)
 	{
-		// std::cout << "E********" << std::endl;
 		if (++txCounter == 250)
 		{
 			this->usbCommsFreq = 250.0 / (float)(getTimestamp() - freqCheckStart) * 1000.0f;
@@ -169,7 +140,8 @@ void Candle::transmit()
 
 		transmitNewStdFrame();
 		if (bus->getType() != mab::BusType_E::SPI)
-			transmitted->notify();
+			// transmitted->notify();
+			sem_post(&transmitted);
 		/* transmit thread is also the receive thread for SPI in update mode */
 		if (bus->getType() == mab::BusType_E::SPI && *bus->getRxBuffer() == BUS_FRAME_UPDATE)
 		{
@@ -215,13 +187,14 @@ void Candle::transmit()
 #endif
 		msgsSent++;
 
-		if (bus->getType() != mab::BusType_E::SPI)
-			received->wait();
-		else
+		if (bus->getType() == mab::BusType_E::SPI)
 		{
 			for (int i = 1; i < (int)md80s.size(); i++)
 				usleep(20);
 		}
+		else
+			// received->wait();
+			sem_wait(&received);
 		usleep(20);
 	}
 }
@@ -644,8 +617,10 @@ bool Candle::begin()
 		msgsSent = 0;
 		msgsReceived = 0;
 
-		transmitted = new Semaphore();
-		received = new Semaphore();
+		// transmitted = new Semaphore();
+		// received = new Semaphore();
+		sem_init(&transmitted, 0, 1);
+		sem_init(&received, 0, 1);
 
 		if (bus->getType() != mab::BusType_E::SPI)
 			receiverThread = std::thread(&Candle::receive, this);
@@ -668,8 +643,11 @@ bool Candle::end()
 
 	shouldStopReceiver = true;
 	/* this is to make the receiver thread exit cleanly */
-	transmitted->notify();
-	received->notify();
+	// transmitted->notify();
+	// received->notify();
+
+	sem_post(&transmitted);
+	sem_post(&received);
 
 	if (bus->getType() != mab::BusType_E::SPI)
 	{
