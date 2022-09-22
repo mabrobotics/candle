@@ -77,6 +77,7 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::CANdleFastM
 			maxDevices = (int)CANdleMaxDevices_E::MAX_DEV_NORMAL;
 			break;
 	}
+
 	Candle::instances.push_back(this);
 }
 Candle::~Candle()
@@ -113,8 +114,11 @@ int Candle::getActualCommunicationFrequency()
 
 void Candle::receive()
 {
+	std::cout << "CREATED RX" << std::endl;
 	while (!shouldStopReceiver)
 	{
+		std::cout << "E%%%%%%%%" << std::endl;
+		transmitted.wait();
 		if (bus->receive(sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1))
 		{
 			if (*bus->getRxBuffer() == BUS_FRAME_UPDATE)
@@ -146,21 +150,27 @@ void Candle::receive()
 #endif
 			}
 		}
+		received.notify();
+		std::cout << "L%%%%%%%%" << std::endl;
 	}
 }
 void Candle::transmit()
 {
+	std::cout << "CREATED TX" << std::endl;
 	int txCounter = 0;
 	uint64_t freqCheckStart = getTimestamp();
 	while (!shouldStopTransmitter)
 	{
+		std::cout << "E********" << std::endl;
 		if (++txCounter == 250)
 		{
 			this->usbCommsFreq = 250.0 / (float)(getTimestamp() - freqCheckStart) * 1000.0f;
 			freqCheckStart = getTimestamp();
 			txCounter = 0;
 		}
+
 		transmitNewStdFrame();
+		transmitted.notify();
 		/* transmit thread is also the receive thread for SPI in update mode */
 		if (bus->getType() == mab::BusType_E::SPI && *bus->getRxBuffer() == BUS_FRAME_UPDATE)
 		{
@@ -205,27 +215,30 @@ void Candle::transmit()
 		}
 #endif
 		msgsSent++;
-		switch (fastMode)
-		{
-			case CANdleFastMode_E::FAST1:
-				if (bus->getType() == mab::BusType_E::SPI)
-					usleep(200);
-				else
-					usleep(500);
-				break;
-			case CANdleFastMode_E::FAST2:
-				if (bus->getType() == mab::BusType_E::SPI)
-					usleep(50);
-				else
-					usleep(200);
-				break;
-			default:
-				if (bus->getType() == mab::BusType_E::SPI)
-					usleep(400);
-				else
-					usleep(1000);
-				break;
-		}
+
+		received.wait();
+		std::cout << "L********" << std::endl;
+		// switch (fastMode)
+		// {
+		// 	case CANdleFastMode_E::FAST1:
+		// 		if (bus->getType() == mab::BusType_E::SPI)
+		// 			usleep(200);
+		// 		else
+		// 			usleep(500);
+		// 		break;
+		// 	case CANdleFastMode_E::FAST2:
+		// 		if (bus->getType() == mab::BusType_E::SPI)
+		usleep(50);
+		// 		else
+		// 			usleep(250);
+		// 		break;
+		// 	default:
+		// 		if (bus->getType() == mab::BusType_E::SPI)
+		// 			usleep(400);
+		// 		else
+		// 			usleep(1000);
+		// 		break;
+		// }
 	}
 }
 void Candle::setVebose(bool enable)
@@ -646,9 +659,15 @@ bool Candle::begin()
 		shouldStopReceiver = false;
 		msgsSent = 0;
 		msgsReceived = 0;
-		transmitterThread = std::thread(&Candle::transmit, this);
+
+		transmitted.reset();
+		received.reset();
+
 		if (bus->getType() != mab::BusType_E::SPI)
 			receiverThread = std::thread(&Candle::receive, this);
+
+		transmitterThread = std::thread(&Candle::transmit, this);
+
 		return true;
 	}
 	vout << "Failed to begin auto update loop mode" << statusFAIL << std::endl;
@@ -659,16 +678,18 @@ bool Candle::end()
 	if (mode == CANdleMode_E::CONFIG)
 		return false;
 
+	shouldStopTransmitter = true;
+	if (transmitterThread.joinable())
+		transmitterThread.join();
+
+	transmitted.notify();
+
 	if (bus->getType() != mab::BusType_E::SPI)
 	{
 		shouldStopReceiver = true;
 		if (receiverThread.joinable())
 			receiverThread.join();
 	}
-
-	shouldStopTransmitter = true;
-	if (transmitterThread.joinable())
-		transmitterThread.join();
 
 	char tx[128];
 	tx[0] = BUS_FRAME_END;
@@ -678,6 +699,7 @@ bool Candle::end()
 	{
 		bus->receive(1024, 1, false);
 		bus->receive(1024, 1, false);
+		bus->flushReceiveBuffer();
 		bus->transmit(tx, 2, true, 10, 2);	// Stops update but produces garbage output
 	}
 
@@ -733,6 +755,8 @@ void Candle::transmitNewStdFrame()
 		bus->transfer(tx, length, sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1);
 	else
 		bus->transmit(tx, length, false, 100, sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1);
+
+	std::cout << "send frame!!!!" << std::endl;
 }
 
 bool Candle::setupMd80Calibration(uint16_t canId)

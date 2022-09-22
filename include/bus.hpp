@@ -34,6 +34,7 @@ class Bus
 	virtual int getBytesReceived() = 0;
 	virtual unsigned long getId() = 0;
 	virtual std::string getDeviceName() { return ""; }
+	virtual void flushReceiveBuffer(){};
 
 	/* public non-virtual functions */
 	mab::BusType_E getType() { return busType; };

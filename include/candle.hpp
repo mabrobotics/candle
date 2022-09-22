@@ -9,6 +9,7 @@
 #include "bus.hpp"
 #include "mab_types.hpp"
 #include "md80.hpp"
+#include "semaphore.hpp"
 #include "spiDevice.hpp"
 #include "uartDevice.hpp"
 #include "usbDevice.hpp"
@@ -99,6 +100,9 @@ class Candle
 	char regRxBuffer[maxCanFramelen];
 	char* regTxPtr = nullptr;
 	char* regRxPtr = nullptr;
+
+	Semaphore transmitted;
+	Semaphore received;
 
 #ifdef BENCHMARKING
 	long long txTimestamp = 0;
@@ -417,4 +421,5 @@ class Candle
 	long long benchGetTimeDelta();
 #endif
 };
+
 }  // namespace mab

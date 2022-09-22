@@ -36,38 +36,38 @@ target_link_libraries(candle pthread)
 set_target_properties(candle PROPERTIES PUBLIC_HEADER candle.hpp)
 
 if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
-    add_executable(example1 examples_cpp/example1.cpp)
-    target_link_libraries(example1 candle)
+    # add_executable(example1 examples_cpp/example1.cpp)
+    # target_link_libraries(example1 candle)
 
-    add_executable(example2 examples_cpp/example2.cpp)
-    target_link_libraries(example2 candle)
+    # add_executable(example2 examples_cpp/example2.cpp)
+    # target_link_libraries(example2 candle)
 
-    add_executable(example3 examples_cpp/example3.cpp)
-    target_link_libraries(example3 candle)
+    # add_executable(example3 examples_cpp/example3.cpp)
+    # target_link_libraries(example3 candle)
 
-    add_executable(example4 examples_cpp/example4.cpp)
-    target_link_libraries(example4 candle)
+    # add_executable(example4 examples_cpp/example4.cpp)
+    # target_link_libraries(example4 candle)
 
-    add_executable(example5 examples_cpp/example5.cpp)
-    target_link_libraries(example5 candle)
+    # add_executable(example5 examples_cpp/example5.cpp)
+    # target_link_libraries(example5 candle)
 
-    add_executable(example6 examples_cpp/example6.cpp)
-    target_link_libraries(example6 candle)
+    # add_executable(example6 examples_cpp/example6.cpp)
+    # target_link_libraries(example6 candle)
 
-    add_executable(example7 examples_cpp/example7.cpp)
-    target_link_libraries(example7 candle)
+    # add_executable(example7 examples_cpp/example7.cpp)
+    # target_link_libraries(example7 candle)
 
-    add_executable(example8 examples_cpp/example8.cpp)
-    target_link_libraries(example8 candle)
+    # add_executable(example8 examples_cpp/example8.cpp)
+    # target_link_libraries(example8 candle)
 
-    add_executable(example9 examples_cpp/example9.cpp)
-    target_link_libraries(example9 candle)
+    # add_executable(example9 examples_cpp/example9.cpp)
+    # target_link_libraries(example9 candle)
 
-    add_executable(example10 examples_cpp/example10.cpp)
-    target_link_libraries(example10 candle)
+    # add_executable(example10 examples_cpp/example10.cpp)
+    # target_link_libraries(example10 candle)
 
-    add_executable(example11 examples_cpp/example11.cpp)
-    target_link_libraries(example11 candle)
+    # add_executable(example11 examples_cpp/example11.cpp)
+    # target_link_libraries(example11 candle)
 
     add_executable(latency examples_cpp/latency.cpp)
     target_link_libraries(latency candle)

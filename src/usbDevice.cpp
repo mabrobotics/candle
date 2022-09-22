@@ -101,9 +101,10 @@ loopdone:
 
 bool UsbDevice::transmit(char* buffer, int len, bool waitForResponse, int timeout, int responseLen, bool faultVerbose)
 {
+	errno = 0;
 	if (write(fd, buffer, len) == -1)
 	{
-		std::cout << "[USB] Writing to USB Device failed. Device Unavailable!" << std::endl;
+		std::cout << "[USB] Writing to USB Device failed. Device Unavailable! Error " << errno << " from tcgetattr: " << strerror(errno) << std::endl;
 		return manageMsgErrors(false);
 	}
 	if (waitForResponse)
@@ -143,6 +144,8 @@ bool UsbDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faul
 		usleep(delayUs);
 	}
 
+	std::cout << bytesReceived << std::endl;
+
 	rxLock.unlock();
 #ifdef USB_VERBOSE
 	if (bytesReceived > 0)
@@ -159,6 +162,13 @@ bool UsbDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faul
 		return true;
 
 	return false;
+}
+
+void UsbDevice::flushReceiveBuffer()
+{
+	/*required to make flush work https://lkml.iu.edu/hypermail/linux/kernel/0707.3/1776.html*/
+	sleep(2);
+	tcflush(fd, TCIOFLUSH);
 }
 
 UsbDevice::~UsbDevice()

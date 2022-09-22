@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 	}
 
 	/* Create CANdle object and set FDCAN baudrate to 8Mbps */
-	mab::Candle candle(mab::CAN_BAUD_8M, false, mode, true, bus);
+	mab::Candle candle(mab::CAN_BAUD_8M, true, mode, true, bus);
 
 	std::vector<uint16_t> ids;
 
@@ -134,7 +134,11 @@ int main(int argc, char* argv[])
 		candle.md80s[0].setTargetVelocity(0.0f);
 		candle.benchSetFlagTx(false);
 		std::cout << "candle begin" << std::endl;
-		candle.begin();
+		if (!candle.begin())
+		{
+			std::cout << "Begin Failed!" << std::endl;
+			return -1;
+		}
 		usleep(5000);
 
 		std::cout << "flag deployed" << std::endl;
