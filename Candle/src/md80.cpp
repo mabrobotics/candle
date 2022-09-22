@@ -72,21 +72,18 @@ namespace mab
     {
 
         useHighPid = true;
-        if (useHighPid)
+        std::cout << "[MD80] ########### Notice motor: " << canId << " is using High PID controle ##########" << std::endl;
+        h_kp = pidParams["high_p_gain"];
+        h_kd = pidParams["high_d_gain"];
+        h_ki = pidParams["high_i_gain"];
+        h_maxAggError = pidParams["high_max_agg"];
+        h_limit_scale = pidParams["high_limit_scale"];
+        if (pidParams["agg_window"] < 0)
+            h_aggError.push_back(0.0);
+        else
         {
-            std::cout << "[MD80] ########### Notice you are using High PID controle ##########" << std::endl;
-            h_kp = pidParams["high_p_gain"];
-            h_kd = pidParams["high_d_gain"];
-            h_ki = pidParams["high_i_gain"];
-            h_maxAggError = pidParams["high_max_agg"];
-            h_limit_scale = pidParams["high_limit_scale"];
-            if (pidParams["agg_window"] < 0)
-                h_aggError.push_back(0.0);
-            else
-            {
-                h_aggError.resize(int(pidParams["agg_window"]));
-                std::fill(h_aggError.begin(), h_aggError.end(), 0.0);
-            }
+            h_aggError.resize(int(pidParams["agg_window"]));
+            std::fill(h_aggError.begin(), h_aggError.end(), 0.0);
         }
     }
 
@@ -98,7 +95,7 @@ namespace mab
         for (int i = 0; i < int(coeffs.size()); i++)
             savgolPosBuffer.push_back(0);
         savgolSizeOfBuffer = coeffs.size();
-        std::cout << "[MD80] coeffs are ############";
+        std::cout << "[MD80] Motor: " << canId << " is calculating savgol filter with coeffs: ";
         for (float x : savgolCoeffs)
             std::cout << x << " ";
         std::cout << std::endl;
@@ -131,6 +128,7 @@ namespace mab
     void Md80::setKalmanFilter(FilterVector processNoiseCov, FilterVector measurmentNoiseCov, FilterVector initailStateError)
     {
 
+        std::cout << "[MD80] Motor: " << canId << " is calculating kalman filter" << std::endl;
         do_kalman_filter = true;
         // Kalman filter
         A = Eigen::MatrixXd(number_of_states, number_of_states);         // System dynamics matrix
@@ -146,17 +144,17 @@ namespace mab
         Q << processNoiseCov[0], processNoiseCov[1], processNoiseCov[2], processNoiseCov[3];
         R << measurmentNoiseCov[0], measurmentNoiseCov[1], measurmentNoiseCov[2], measurmentNoiseCov[3];
         P << initailStateError[0], initailStateError[1], initailStateError[2], initailStateError[3];
-        
-        std::cout << "[MD80] A: \n"
-                  << A << std::endl;
-        std::cout << "[MD80] C: \n"
-                  << C << std::endl;
-        std::cout << "[MD80] Q: \n"
-                  << Q << std::endl;
-        std::cout << "[MD80] R: \n"
-                  << R << std::endl;
-        std::cout << "[MD80] P: \n"
-                  << P << std::endl;
+
+        // std::cout << "[MD80] A: \n"
+        //           << A << std::endl;
+        // std::cout << "[MD80] C: \n"
+        //           << C << std::endl;
+        // std::cout << "[MD80] Q: \n"
+        //           << Q << std::endl;
+        // std::cout << "[MD80] R: \n"
+        //           << R << std::endl;
+        // std::cout << "[MD80] P: \n"
+        //           << P << std::endl;
         kf = KalmanFilter(dt, A, C, Q, R, P);
     }
 
