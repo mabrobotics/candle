@@ -122,17 +122,18 @@ bool UsbDevice::transmit(char* buffer, int len, bool waitForResponse, int timeou
 
 bool UsbDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faultVerbose)
 {
-	// std::cout << "trying to receive!" << std::endl;
 	(void)faultVerbose;
 	(void)checkCrc;
 
 	memset(rxBuffer, 0, rxBufferSize);
 	rxLock.lock();
-	const int delayUs = 200;
-	int timeoutBusOutUs = timeoutMs * 1000;
 	bytesReceived = 0;
 
-	while (timeoutBusOutUs > 0 && responseLen > bytesReceived)
+	using namespace std::chrono;
+	long long timestampStart = duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
+	long long timestampAct = timestampStart;
+
+	while ((timestampAct - timestampStart) < (timeoutMs * 1000) && responseLen > bytesReceived)
 	{
 		char newByte;
 		int bytesRead = read(fd, &newByte, 1);
@@ -141,8 +142,8 @@ bool UsbDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faul
 			rxBuffer[bytesReceived++] = newByte;
 			continue;
 		}
-		timeoutBusOutUs -= delayUs;	 // If not receiving wait for 100ms and return false
-		usleep(delayUs);
+		usleep(1);
+		timestampAct = duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
 	}
 
 	rxLock.unlock();
@@ -276,7 +277,7 @@ bool checkDeviceAvailable(std::string devName, std::string idVendor, std::string
 int open_device(std::string devName, std::string idVendor, std::string idProduct)
 {
 	if (checkDeviceAvailable(devName, idVendor, idProduct))
-		return open(devName.c_str(), O_RDWR | O_NOCTTY);
+		return open(devName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
 
 	return -1;
 }

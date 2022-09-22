@@ -99,7 +99,6 @@ bool UartDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool fau
 	rxLock.lock();
 	const int delayUs = 200;
 	int timeoutBusOutUs = timeoutMs * 1000;
-	// int usTimestamp = 0;
 	bytesReceived = 0;
 
 	while (timeoutBusOutUs > 0 && bytesReceived < (responseLen + crc->getCrcLen()))
