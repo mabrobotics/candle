@@ -34,7 +34,7 @@ pos_var = 1.5e-7  #lhy - 1.5e-7 ; lar - 4.166e-9 ;
 kalman_proccess_noise = {101: [0.1*pos_var, 0.0, 0.0 , 0.1*vel_var]}
 kalman_measurment_noise = {101: [pos_var, 0.0, 0.0, vel_var]}
 kalman_initial_state_noise = {101: [pos_var, 0.0, 0.0, vel_var]}
-handler.setKalmanFilter(kalman_proccess_noise, kalman_measurment_noise, kalman_initial_state_noise)
+handler.setKalmanFilter(kalman_proccess_noise, kalman_measurment_noise, kalman_initial_state_noise, 500)
 
 # set pid
 pid_config = {101: {"high_p_gain": 1.0 , "high_d_gain": 0.0, "high_i_gain": 0.0,"high_max_agg": 1.91, "high_limit_scale": 1.3, "agg_window": -1}}

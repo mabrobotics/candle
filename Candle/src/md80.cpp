@@ -125,11 +125,12 @@ namespace mab
         return y;
     }
 
-    void Md80::setKalmanFilter(FilterVector processNoiseCov, FilterVector measurmentNoiseCov, FilterVector initailStateError)
+    void Md80::setKalmanFilter(FilterVector processNoiseCov, FilterVector measurmentNoiseCov, FilterVector initailStateError, int frequency)
     {
 
-        std::cout << "[MD80] Motor: " << canId << " is calculating kalman filter" << std::endl;
+        dt = 1.0 / double(frequency);
         do_kalman_filter = true;
+        std::cout << "[MD80] Motor: " << canId << " is calculating kalman filter. Frequency is " << frequency << "dt is " << dt << std::endl;
         // Kalman filter
         A = Eigen::MatrixXd(number_of_states, number_of_states);         // System dynamics matrix
         C = Eigen::MatrixXd(number_of_mesurments, number_of_states);     // Output matrix

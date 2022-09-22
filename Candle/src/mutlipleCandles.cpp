@@ -299,7 +299,7 @@ namespace mab
         }
     }
 
-    void MultipleCandles::setKalmanFilter(FilterConfig_T processNoiseCov, FilterConfig_T measurmentNoiseCov, FilterConfig_T initailStateError)
+    void MultipleCandles::setKalmanFilter(FilterConfig_T processNoiseCov, FilterConfig_T measurmentNoiseCov, FilterConfig_T initailStateError, int frequency)
     {
         for (auto const &[motorId, m_processNoiseCov]: processNoiseCov)
         {
@@ -307,7 +307,7 @@ namespace mab
             if (candle != NULL)
             {
                 auto &md = candle->md80s.at(motorId);
-                md.setKalmanFilter(m_processNoiseCov, measurmentNoiseCov[motorId], initailStateError[motorId]);
+                md.setKalmanFilter(m_processNoiseCov, measurmentNoiseCov[motorId], initailStateError[motorId], frequency);
             }
             else
                 candleHandlerOut << " [setKalmanFilter] Drive with ID: " << motorId << " doesn't exist" << std::endl;

@@ -160,7 +160,7 @@ namespace mab
          */
         void setSavgolCoeffs(FilterVector coeffs);
 
-        void setKalmanFilter(FilterVector processNoiseCov, FilterVector measurmentNoiseCov, FilterVector initailStateError);
+        void setKalmanFilter(FilterVector processNoiseCov, FilterVector measurmentNoiseCov, FilterVector initailStateError, int frequency);
 
         // simple setters
         /**

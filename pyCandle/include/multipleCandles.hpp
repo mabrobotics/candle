@@ -41,7 +41,7 @@ namespace mab
         MultipleMotorsStatus_T getAllMotorsData();
         void setPIDParams(MotorCommands_T pidParams);
         void setSavgol(IdList_T idList, FilterVector coeffs);
-        void setKalmanFilter(FilterConfig_T processNoiseCov, FilterConfig_T measurmentNoiseCov, FilterConfig_T initailStateError);
+        void setKalmanFilter(FilterConfig_T processNoiseCov, FilterConfig_T measurmentNoiseCov, FilterConfig_T initailStateError, int frequency);
 
         void sendMotorCommand(int frameId, MotorCommands_T motorCommands);
         void setImpedanceParameters(MotorCommands_T impedanceParams);
