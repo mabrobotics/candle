@@ -313,6 +313,29 @@ namespace mab
                 candleHandlerOut << " [setKalmanFilter] Drive with ID: " << motorId << " doesn't exist" << std::endl;
         }
     }
+
+    void MultipleCandles::setPIDParams(MotorCommands_T pidParams)
+    {
+        for (auto const &[motorId, motorCommand] : pidParams)
+        {
+            try
+            {
+                auto candle = findCandleByMd80Id(motorId);
+                if (candle != NULL)
+                {
+                    auto &md = candle->md80s.at(motorId);
+                    md.setPIDParams(motorCommand);
+                }
+                else
+                    candleHandlerOut << " [setPidParams] Drive with ID: " << motorId << " doesn't exist" << std::endl;
+            }
+            catch (const char *eMsg)
+            {
+                candleHandlerOut << eMsg << std::endl;
+            }
+        }
+    }
+    
     void MultipleCandles::setImpedanceParameters(MotorCommands_T impedanceParams)
     {
         for (auto const &[motorId, motorCommand] : impedanceParams)

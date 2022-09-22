@@ -37,24 +37,6 @@ namespace mab
                   << " soft min pos" << std::to_string(softMinPosition) << " soft max pos: " << std::to_string(softMaxPosition) << " percentage is: " << std::to_string(watchdogPosPercentage) << std::endl;
 
         // Initialize high pid params
-        auto it = config.find("high_p_gain");
-        useHighPid = (it != config.end());
-        if (useHighPid)
-        {
-            std::cout << "[MD80] ########### Notice you are using High PID controle ##########" << std::endl;
-            h_kp = config["high_p_gain"];
-            h_kd = config["high_d_gain"];
-            h_ki = config["high_i_gain"];
-            h_maxAggError = config["high_max_agg"];
-            h_limit_scale = config["high_limit_scale"];
-            if (config["agg_window"] < 0)
-                h_aggError[0] = 0.0;
-            else
-            {
-                h_aggError.resize(int(config["agg_window"]));
-                std::fill(h_aggError.begin(), h_aggError.end(), 0.0);
-            }
-        }
     }
 
     Md80::Md80(uint16_t _canID)
@@ -84,6 +66,28 @@ namespace mab
         positionTarget = requestedPosition;
         velocityTarget = requestedVelocity;
         torqueSet = requestorqueSet;
+    }
+
+    void Md80::setPIDParams(MotorCommand_T pidParams)
+    {
+
+        useHighPid = true;
+        if (useHighPid)
+        {
+            std::cout << "[MD80] ########### Notice you are using High PID controle ##########" << std::endl;
+            h_kp = pidParams["high_p_gain"];
+            h_kd = pidParams["high_d_gain"];
+            h_ki = pidParams["high_i_gain"];
+            h_maxAggError = pidParams["high_max_agg"];
+            h_limit_scale = pidParams["high_limit_scale"];
+            if (pidParams["agg_window"] < 0)
+                h_aggError.push_back(0.0);
+            else
+            {
+                h_aggError.resize(int(pidParams["agg_window"]));
+                std::fill(h_aggError.begin(), h_aggError.end(), 0.0);
+            }
+        }
     }
 
     void Md80::setSavgolCoeffs(FilterVector coeffs)
@@ -176,9 +180,11 @@ namespace mab
     {
         float currPos = position;
         float posError = requestedPosition - currPos;
+        // std::cout << "error: "<< posError << std::endl;
         if (h_aggError.size() == 1)
         {
             h_aggError[0] += posError;
+            // std::cout << "agg error: "<< h_aggError[0] << std::endl;
         }
         else
         {
@@ -187,15 +193,18 @@ namespace mab
                 aggErrCurrIndex++;
         }
         float agg_err = std::accumulate(h_aggError.begin(), h_aggError.end(), 0.0);
+        // std::cout << "agg error accumlate: "<< agg_err << std::endl;
         agg_err = std::clamp(agg_err, -h_maxAggError, h_maxAggError);
         float newPidPos = h_kp * posError - h_kd * velocity + h_ki * agg_err + currPos;
         pidPos = std::clamp(newPidPos, softMinPosition, softMaxPosition);
+        // std::cout << "pid_pos: "<< pidPos << std::endl;
     }
 
     void Md80::watchdog()
     {
         float curr_pos = position;
         // If motor position within range
+
         if (curr_pos > softMinPosition && curr_pos < softMaxPosition)
         {
             printWatchdog = true;

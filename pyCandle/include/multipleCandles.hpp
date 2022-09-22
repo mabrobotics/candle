@@ -39,6 +39,7 @@ namespace mab
         CandleResponse_T disableSomeMotors(IdList_T idList);
         MultipleMotorsStatus_T getMotorsData(IdList_T idList);
         MultipleMotorsStatus_T getAllMotorsData();
+        void setPIDParams(MotorCommands_T pidParams);
         void setSavgol(IdList_T idList, FilterVector coeffs);
         void setKalmanFilter(FilterConfig_T processNoiseCov, FilterConfig_T measurmentNoiseCov, FilterConfig_T initailStateError);
 

@@ -153,7 +153,7 @@ namespace mab
          * @param kd Damping coefficient (analogin to 'b' parameter of the spring-damper equation)
          */
         void setImpedanceRequestedControllerParams(float kp, float kd);
-
+        void setPIDParams(MotorCommand_T pidParams);
         /**
          * @brief Set the coeffs for savgol filter vel compute
          * @param coeef a vector of float coeffeciants for savgol filter
@@ -161,6 +161,7 @@ namespace mab
         void setSavgolCoeffs(FilterVector coeffs);
 
         void setKalmanFilter(FilterVector processNoiseCov, FilterVector measurmentNoiseCov, FilterVector initailStateError);
+
         // simple setters
         /**
          * @brief Set the Max Torque object
