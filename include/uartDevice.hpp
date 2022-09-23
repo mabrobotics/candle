@@ -30,7 +30,7 @@ class UartDevice : public mab::Bus
 	Crc* crc;
 
 	/* UART settings */
-	const uint32_t uartSpeed = B2000000;
+	const uint32_t uartSpeed = B1000000;
 
 	int fd;
 	struct termios tty;

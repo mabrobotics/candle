@@ -97,11 +97,13 @@ bool UartDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool fau
 {
 	memset(rxBuffer, 0, rxBufferSize);
 	rxLock.lock();
-	const int delayUs = 200;
-	int timeoutBusOutUs = timeoutMs * 1000;
 	bytesReceived = 0;
 
-	while (timeoutBusOutUs > 0 && bytesReceived < (responseLen + crc->getCrcLen()))
+	using namespace std::chrono;
+	long long timestampStart = duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
+	long long timestampAct = timestampStart;
+
+	while ((timestampAct - timestampStart) < (timeoutMs * 1000) && bytesReceived < (int)(responseLen + crc->getCrcLen()))
 	{
 		char newByte;
 		int bytesRead = read(fd, &newByte, 1);
@@ -110,8 +112,8 @@ bool UartDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool fau
 			rxBuffer[bytesReceived++] = newByte;
 			continue;
 		}
-		timeoutBusOutUs -= delayUs;	 // If not receiving wait for 100ms and return false
-		usleep(delayUs);
+		usleep(1);
+		timestampAct = duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
 	}
 	rxLock.unlock();
 
