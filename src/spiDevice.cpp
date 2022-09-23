@@ -91,7 +91,6 @@ bool SpiDevice::receive(int timeout, int responseLen, bool faultVerbose)
 	uint8_t dummyTx = 0;
 	uint8_t byteRx = 0;
 	bytesReceived = 0;
-	int usTimestamp = 0;
 
 	while (timeoutBusOutUs > 0 && bytesReceived < responseLen)
 	{
