@@ -197,7 +197,7 @@ void Candle::transmit()
 		/* wait for a frame to be received */
 		else
 			sem_wait(&received);
-		// usleep(20);
+		usleep(20);
 	}
 }
 void Candle::setVebose(bool enable)
@@ -619,8 +619,8 @@ bool Candle::begin()
 		msgsSent = 0;
 		msgsReceived = 0;
 
-		sem_init(&transmitted, 0, 1);
-		sem_init(&received, 0, 1);
+		sem_init(&transmitted, 0, 0);
+		sem_init(&received, 0, 0);
 
 		if (bus->getType() != mab::BusType_E::SPI)
 			receiverThread = std::thread(&Candle::receive, this);
