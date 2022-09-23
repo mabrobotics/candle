@@ -58,7 +58,7 @@ class Candle
 	 * @param printFailure if false the constructor will not display terminal messages when something fails
 	 * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
 	 */
-	Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false, bool printFailure = true, mab::BusType_E busType = mab::BusType_E::USB);
+	Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false, mab::BusType_E busType = mab::BusType_E::USB);
 	/**
 	 * @brief A destructor of Candle class. Takes care of all started threads that need to be stopped before clean exit
 	 */

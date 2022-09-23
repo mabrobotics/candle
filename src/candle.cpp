@@ -30,11 +30,9 @@ uint64_t getTimestamp()
 
 std::vector<Candle*> Candle::instances = std::vector<Candle*>();
 
-Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, bool printFailure, mab::BusType_E busType)
+Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::BusType_E busType)
 	: printVerbose(printVerbose)
 {
-	(void)printFailure;
-
 	vout << "CANdle library version: " << getVersion() << std::endl;
 
 	if (busType == mab::BusType_E::USB)
