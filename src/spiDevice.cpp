@@ -4,8 +4,8 @@
 
 static const char* spiDev = "/dev/spidev0.0";
 
-// #define SPI_VERBOSE
-// #define SPI_VERBOSE_ON_CRC_ERROR
+#define SPI_VERBOSE				 0
+#define SPI_VERBOSE_ON_CRC_ERROR 0
 
 SpiDevice::SpiDevice()
 {
@@ -125,7 +125,7 @@ bool SpiDevice::receive(int timeout, int responseLen, bool faultVerbose)
 		bytesReceived -= crc->getCrcLen();
 	else if (bytesReceived > 0)
 	{
-#ifdef SPI_VERBOSE_ON_CRC_ERROR
+#if SPI_VERBOSE_ON_CRC_ERROR == 1
 		bytesReceived = responseLen;
 		displayDebugMsg(rxBuffer, bytesReceived);
 #endif
@@ -139,7 +139,7 @@ bool SpiDevice::receive(int timeout, int responseLen, bool faultVerbose)
 
 	rxLock.unlock();
 
-#ifdef SPI_VERBOSE
+#if SPI_VERBOSE == 1
 	displayDebugMsg(rxBuffer, bytesReceived);
 #endif
 

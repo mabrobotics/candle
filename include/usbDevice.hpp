@@ -14,7 +14,6 @@ class UsbDevice : public mab::Bus
 	~UsbDevice();
 	bool transmit(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0, bool faultVerbose = true) override;
 	bool receive(int responseLen, int timeoutMs = 100, bool checkCrc = true, bool faultVerbose = true) override;
-	int getBytesReceived() override { return bytesReceived; }
 	unsigned long getId() override { return serialDeviceId; }
 	std::string getDeviceName() override { return serialDeviceName; }
 	void flushReceiveBuffer() override;
@@ -23,7 +22,6 @@ class UsbDevice : public mab::Bus
 	static unsigned long getConnectedDeviceId(std::string devName);
 
    private:
-	int bytesReceived;
 	int fd;
 	std::string serialDeviceName;
 	unsigned long serialDeviceId = 0;

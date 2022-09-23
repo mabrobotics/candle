@@ -22,7 +22,6 @@ class UartDevice : public mab::Bus
 	~UartDevice();
 	bool transmit(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0, bool faultVerbose = true) override;
 	bool receive(int responseLen, int timeoutMs = 100, bool checkCrc = true, bool faultVerbose = true) override;
-	int getBytesReceived() override { return bytesReceived; }
 	unsigned long getId() override { return 0; }
 	void flushReceiveBuffer() override;
 
@@ -34,7 +33,6 @@ class UartDevice : public mab::Bus
 
 	int fd;
 	struct termios tty;
-	int bytesReceived;
 	std::mutex rxLock;
 
 	void displayDebugMsg(char* buffer, int bytesReceived);

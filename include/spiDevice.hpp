@@ -21,7 +21,6 @@ class SpiDevice : public mab::Bus
 	~SpiDevice();
 	bool transmit(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0, bool faultVerbose = true) override;
 	bool transfer(char* buffer, int commandLen, int responseLen) override;
-	int getBytesReceived() override { return bytesReceived; }
 	unsigned long getId() override { return 0; }
 
 	bool receive(int timeout, int responseLen, bool faultVerbose);
@@ -37,7 +36,6 @@ class SpiDevice : public mab::Bus
 
 	int fd;
 	struct spi_ioc_transfer trx;
-	int bytesReceived;
 	std::mutex rxLock;
 
 	void displayDebugMsg(char* buffer, int bytesReceived);

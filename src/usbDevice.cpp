@@ -16,7 +16,7 @@
 struct termios tty;
 struct termios ti_prev;
 
-// #define USB_VERBOSE
+#define USB_VERBOSE 0
 
 int open_device(std::string devName, std::string idVendor, std::string idProduct);
 bool checkDeviceAvailable(std::string devName, std::string idVendor, std::string idProduct);
@@ -147,7 +147,7 @@ bool UsbDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faul
 	}
 
 	rxLock.unlock();
-#ifdef USB_VERBOSE
+#if USB_VERBOSE == 1
 	if (bytesReceived > 0)
 	{
 		std::cout << "Got " << std::dec << bytesReceived << "bytes." << std::endl;

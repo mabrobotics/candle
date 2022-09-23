@@ -314,7 +314,7 @@ std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
 }
 std::vector<uint16_t> Candle::ping()
 {
-	return ping(mab::CANdleBaudrate_E::CAN_BAUD_1M);
+	return ping(canBaudrate);
 }
 bool Candle::sengGenericFDCanFrame(uint16_t canId, int msgLen, const char* txBuffer, char* rxBuffer, int timeoutMs)
 {
@@ -360,7 +360,7 @@ bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newB
 		if (*bus->getRxBuffer(1) == 1)
 		{
 			vout << "CAN config change successful!" << statusOK << std::endl;
-			vout << "Drive ID = " << std::to_string(canId) << " was changed to ID = " << std::to_string(newId) << std::endl;
+			vout << "Drive ID: " << std::to_string(canId) << " was changed to ID: " << std::to_string(newId) << std::endl;
 			vout << "It's baudrate is now " << std::to_string(newBaudrateMbps) << "Mbps" << std::endl;
 			vout << "It's CAN timeout (watchdog) is now " << (newTimeout == 0 ? "Disabled" : std::to_string(newTimeout) + "ms") << std::endl;
 			return true;
@@ -377,10 +377,10 @@ bool Candle::configMd80Save(uint16_t canId)
 	if (bus->transmit(tx, len, true, 500, 66))
 		if (*bus->getRxBuffer(1) == true)
 		{
-			vout << "Saving in flash successful at ID = " << canId << statusOK << std::endl;
+			vout << "Saving in flash successful at ID: " << canId << statusOK << std::endl;
 			return true;
 		}
-	vout << "Saving in flash failed at ID = " << canId << statusFAIL << std::endl;
+	vout << "Saving in flash failed at ID: " << canId << statusFAIL << std::endl;
 	return false;
 }
 bool Candle::configMd80Blink(uint16_t canId)
@@ -392,10 +392,10 @@ bool Candle::configMd80Blink(uint16_t canId)
 	if (bus->transmit(tx, len, true, 500, 66))
 		if (*bus->getRxBuffer(1) == true)
 		{
-			vout << "LEDs blining at ID = " << canId << statusOK << std::endl;
+			vout << "LEDs blining at ID: " << canId << statusOK << std::endl;
 			return true;
 		}
-	vout << "Blinking failed at ID = " << canId << statusFAIL << std::endl;
+	vout << "Blinking failed at ID: " << canId << statusFAIL << std::endl;
 	return false;
 }
 
@@ -412,10 +412,10 @@ bool Candle::controlMd80SetEncoderZero(uint16_t canId)
 			Md80& drive = getMd80FromList(canId);
 			sendMotionCommand(drive, 0.0f, 0.0f, 0.0f);
 			drive.setTargetPosition(0.0f);
-			vout << "Setting new zero position successful at ID = " << canId << statusOK << std::endl;
+			vout << "Setting new zero position successful at ID: " << canId << statusOK << std::endl;
 			return true;
 		}
-	vout << "Setting new zero position failed at ID = " << canId << statusFAIL << std::endl;
+	vout << "Setting new zero position failed at ID: " << canId << statusFAIL << std::endl;
 	return false;
 }
 bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
@@ -439,10 +439,10 @@ bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
 	if (bus->transmit(tx, len, true, 50, 66))
 		if (*bus->getRxBuffer(0) == BUS_FRAME_MD80_GENERIC_FRAME && *bus->getRxBuffer(1) == true)
 		{
-			vout << "Setting new current limit successful at ID = " << canId << statusOK << std::endl;
+			vout << "Setting new current limit successful at ID: " << canId << statusOK << std::endl;
 			return true;
 		}
-	vout << "Setting new current limit failed at ID = " << canId << statusFAIL << std::endl;
+	vout << "Setting new current limit failed at ID: " << canId << statusFAIL << std::endl;
 	return false;
 }
 
@@ -492,7 +492,7 @@ bool Candle::configMd80TorqueBandwidth(uint16_t canId, uint16_t torqueBandwidth)
 			vout << "Bandwidth succesfully changed at ID: " << canId << statusOK << std::endl;
 			return true;
 		}
-	vout << "Bandwidth change failed at ID = " << canId << statusFAIL << std::endl;
+	vout << "Bandwidth change failed at ID: " << canId << statusFAIL << std::endl;
 	return false;
 }
 
@@ -533,11 +533,11 @@ bool Candle::controlMd80Mode(uint16_t canId, Md80Mode_E mode)
 		if (bus->transmit(tx, len, true, 50, 66))
 			if (*bus->getRxBuffer(1) == true)
 			{
-				vout << "Setting control mode successful at ID = " << canId << statusOK << std::endl;
+				vout << "Setting control mode successful at ID: " << canId << statusOK << std::endl;
 				drive.__setControlMode(mode);
 				return true;
 			}
-		vout << "Setting control mode failed at ID = " << canId << statusFAIL << std::endl;
+		vout << "Setting control mode failed at ID: " << canId << statusFAIL << std::endl;
 		return false;
 	}
 	catch (const char* msg)
@@ -559,15 +559,15 @@ bool Candle::controlMd80Enable(uint16_t canId, bool enable)
 			if (*bus->getRxBuffer(1) == true)
 			{
 				if (enable)
-					vout << "Enabling successful at ID = " << canId << statusOK << std::endl;
+					vout << "Enabling successful at ID: " << canId << statusOK << std::endl;
 				else
 				{
-					vout << "Disabling successful at ID = " << canId << statusOK << std::endl;
+					vout << "Disabling successful at ID: " << canId << statusOK << std::endl;
 					this->getMd80FromList(canId).__updateRegulatorsAdjusted(false);	 // Drive will operate at default params
 				}
 				return true;
 			}
-		vout << "Enabling/Disabling failed at ID = " << canId << statusFAIL << std::endl;
+		vout << "Enabling/Disabling failed at ID: " << canId << statusFAIL << std::endl;
 		return false;
 	}
 	catch (const char* msg)
@@ -691,10 +691,10 @@ bool Candle::setupMd80Calibration(uint16_t canId)
 	if (bus->transmit(tx, len, true, 50, 66))
 		if (*bus->getRxBuffer(1) == true)
 		{
-			vout << "Starting calibration at ID = " << canId << statusOK << std::endl;
+			vout << "Starting calibration at ID: " << canId << statusOK << std::endl;
 			return true;
 		}
-	vout << "Starting calibration failed at ID = " << canId << statusFAIL << std::endl;
+	vout << "Starting calibration failed at ID: " << canId << statusFAIL << std::endl;
 	return false;
 }
 
@@ -708,10 +708,10 @@ bool Candle::setupMd80Diagnostic(uint16_t canId)
 	if (bus->transmit(tx, len, true, 50, 66))
 	{
 		vout << "Library version: " << getVersion() << std::endl;
-		vout << "DIAG at ID = " << canId << ": " << std::string(bus->getRxBuffer(2)) << std::endl;
+		vout << "DIAG at ID: " << canId << ": " << std::string(bus->getRxBuffer(2)) << std::endl;
 		return true;
 	}
-	vout << "Diagnostic failed at ID = " << canId << std::endl;
+	vout << "Diagnostic failed at ID: " << canId << std::endl;
 	return false;
 }
 bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
@@ -727,7 +727,7 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 						  mab::Md80Reg_E::motorInductance, regR.RO.inductance))
 	{
 		return false;
-		vout << "Extended diagnostic failed at ID = " << canId << std::endl;
+		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
 	}
 
 	if (!readMd80Register(canId,
@@ -743,7 +743,7 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 						  mab::Md80Reg_E::temperature, regR.RO.temperature))
 	{
 		return false;
-		vout << "Extended diagnostic failed at ID = " << canId << std::endl;
+		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
 	}
 
 	return true;

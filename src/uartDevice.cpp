@@ -13,8 +13,8 @@
 #include "bus.hpp"
 #include "crc.hpp"
 
-//#define UART_VERBOSE
-//#define UART_VERBOSE_ON_CRC_ERROR
+#define UART_VERBOSE			  0
+#define UART_VERBOSE_ON_CRC_ERROR 0
 
 static const char* uartDev = "/dev/ttyAMA0";
 
@@ -31,8 +31,7 @@ UartDevice::UartDevice()
 		throw msg;
 	}
 
-	tty.c_cflag &= ~PARENB;	 // Clear parity bit, disabling parity (most common)
-	// tty.c_cflag |= PARODD;  // Set parity to ODD
+	tty.c_cflag &= ~PARENB;			// Clear parity bit, disabling parity (most common)
 	tty.c_cflag &= ~CSTOPB;			// Clear stop field, only one stop bit used in communication (most common)
 	tty.c_cflag &= ~CSIZE;			// Clear all bits that set the data size
 	tty.c_cflag |= CS8;				// 8 bits per byte (most common)
@@ -122,7 +121,7 @@ bool UartDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool fau
 		bytesReceived = bytesReceived - crc->getCrcLen();
 	else if (bytesReceived > 0 && checkCrc)
 	{
-#ifdef UART_VERBOSE_ON_CRC_ERROR
+#if UART_VERBOSE_ON_CRC_ERROR == 1
 		displayDebugMsg(rxBuffer, bytesReceived);
 #endif
 		/* clear the command byte -> the frame will be rejected */
@@ -133,7 +132,7 @@ bool UartDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool fau
 	else if (bytesReceived == 0)
 		if (faultVerbose) std::cout << "[UART] Did not receive response from UART Device." << std::endl;
 
-#ifdef UART_VERBOSE
+#if UART_VERBOSE == 1
 	displayDebugMsg(rxBuffer, bytesReceived);
 #endif
 	if (bytesReceived > 0)

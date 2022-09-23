@@ -21,7 +21,7 @@ int main()
 
 	candle.controlMd80SetEncoderZero(ids[0]);  // Reset encoder at current position
 
-	candle.controlMd80Mode(ids[0], mab::Md80Mode_E::VELOCITY_PID);	// Set mode to impedance control
+	candle.controlMd80Mode(ids[0], mab::Md80Mode_E::VELOCITY_PID);	// Set mode to velocity PID
 	candle.controlMd80Enable(ids[0], true);							// Enable the drive
 
 	// Now we set up Velocity Regulator, and additionaly max output velocity just to be on a safe side

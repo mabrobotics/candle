@@ -31,14 +31,15 @@ class Bus
 		(void)faultVerbose;
 		return false;
 	}
-	virtual int getBytesReceived() = 0;
+
 	virtual unsigned long getId() = 0;
 	virtual std::string getDeviceName() { return ""; }
 	virtual void flushReceiveBuffer(){};
 
 	/* public non-virtual functions */
-	mab::BusType_E getType() { return busType; };
-	char* getRxBuffer(int index = 0) { return (char*)&rxBuffer[index]; };
+	int getBytesReceived() { return bytesReceived; }
+	mab::BusType_E getType() { return busType; }
+	char* getRxBuffer(int index = 0) { return (char*)&rxBuffer[index]; }
 
 	bool manageMsgErrors(bool ret)
 	{
@@ -66,7 +67,7 @@ class Bus
 
    protected:
 	BusType_E busType;
-
+	int bytesReceived = 0;
 	static const uint32_t rxBufferSize = 1024;
 	static const uint32_t txBufferSize = 1024;
 	char rxBuffer[rxBufferSize];
