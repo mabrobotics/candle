@@ -25,7 +25,7 @@ std::string statusFAIL = "  \033[1;31m[FAILED]\033[0m";
 uint64_t getTimestamp()
 {
 	using namespace std::chrono;
-	return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	return duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
 }
 
 std::vector<Candle*> Candle::instances = std::vector<Candle*>();
@@ -89,39 +89,13 @@ void Candle::receive()
 		/* wait for a frame to be transmitted */
 		sem_wait(&transmitted);
 
-		if (!shouldStopReceiver && bus->receive(sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1, 50))
+		if (!shouldStopReceiver && bus->receive(sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1))
 		{
 			/* notify a frame was received */
 			sem_post(&received);
 
 			if (*bus->getRxBuffer() == BUS_FRAME_UPDATE)
-			{
-#if BENCHMARKING == 1
-				bool flag = false;
-#endif
-				for (int i = 0; i < (int)md80s.size(); i++)
-				{
-					md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t)));
-#if BENCHMARKING == 1
-					StdMd80ResponseFrame_t* _responseFrame = (StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t));
-					if (*(uint16_t*)&_responseFrame->fromMd80.data[1] & (1 << 15)) flag = true;
-#endif
-				}
-#if BENCHMARKING == 1
-				long long microseconds_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-#if BENCHMARKING_VERBOSE == 1
-				if (!flag || !flag_glob_rx) std::cout << "RX:" << microseconds_since_epoch << std::endl;
-#endif
-
-				if (flag && !flag_glob_rx)
-				{
-					flag_glob_rx = true;
-					time_delta = microseconds_since_epoch - txTimestamp;
-					std::cout << "got the flag!"
-							  << " time:" << time_delta << std::endl;
-				}
-#endif
-			}
+				manageReceivedFrame();
 		}
 	}
 }
@@ -133,7 +107,7 @@ void Candle::transmit()
 	{
 		if (++txCounter == 250)
 		{
-			this->usbCommsFreq = 250.0 / (float)(getTimestamp() - freqCheckStart) * 1000.0f;
+			this->usbCommsFreq = 250.0 / (float)(getTimestamp() - freqCheckStart) * 1000000.0f;
 			freqCheckStart = getTimestamp();
 			txCounter = 0;
 		}
@@ -146,45 +120,17 @@ void Candle::transmit()
 
 		/* transmit thread is also the receive thread for SPI in update mode */
 		if (bus->getType() == mab::BusType_E::SPI && *bus->getRxBuffer() == BUS_FRAME_UPDATE)
-		{
-#if BENCHMARKING == 1
-			bool flag = false;
-#endif
-			for (int i = 0; i < (int)md80s.size(); i++)
-			{
-				md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t)));
-#if BENCHMARKING == 1
-				StdMd80ResponseFrame_t* _responseFrame = (StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t));
-				if (*(uint16_t*)&_responseFrame->fromMd80.data[1] & (1 << 15)) flag = true;
-#endif
-			}
+			manageReceivedFrame();
 
 #if BENCHMARKING == 1
-
-			long long microseconds_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		long long timestampStart = getTimestamp();
 #if BENCHMARKING_VERBOSE == 1
-			if (!flag && !flag_glob_rx) std::cout << "RX:" << microseconds_since_epoch << std::endl;
-#endif
-
-			if (flag && !flag_glob_rx)
-			{
-				flag_glob_rx = true;
-				time_delta = microseconds_since_epoch - txTimestamp;
-				std::cout << "got the flag!"
-						  << " time:" << time_delta << std::endl;
-			}
-#endif
-		}
-
-#if BENCHMARKING == 1
-		long long microseconds_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-#if BENCHMARKING_VERBOSE == 1
-		if (!flag_glob_rx) std::cout << "TX:" << microseconds_since_epoch << std::endl;
+		if (!flag_glob_rx) std::cout << "TX:" << timestampStart << std::endl;
 #endif
 		if (flag_glob_tx == true)
 		{
 			flag_glob_tx = false;
-			txTimestamp = microseconds_since_epoch;
+			txTimestamp = timestampStart;
 		}
 #endif
 		msgsSent++;
@@ -200,6 +146,36 @@ void Candle::transmit()
 		usleep(20);
 	}
 }
+
+void Candle::manageReceivedFrame()
+{
+#if BENCHMARKING == 1
+	bool flag = false;
+#endif
+	for (int i = 0; i < (int)md80s.size(); i++)
+	{
+		md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t)));
+#if BENCHMARKING == 1
+		StdMd80ResponseFrame_t* _responseFrame = (StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t));
+		if (*(uint16_t*)&_responseFrame->fromMd80.data[1] & (1 << 15)) flag = true;
+#endif
+	}
+#if BENCHMARKING == 1
+	long long timestampStart = getTimestamp();
+#if BENCHMARKING_VERBOSE == 1
+	if (!flag || !flag_glob_rx) std::cout << "RX:" << timestampStart << std::endl;
+#endif
+
+	if (flag && !flag_glob_rx)
+	{
+		flag_glob_rx = true;
+		time_delta = timestampStart - txTimestamp;
+		std::cout << "got the flag!"
+				  << " time:" << time_delta << std::endl;
+	}
+#endif
+}
+
 void Candle::setVebose(bool enable)
 {
 	printVerbose = enable;

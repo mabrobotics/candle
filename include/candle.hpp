@@ -100,6 +100,7 @@ class Candle
 	void transmitNewStdFrame();
 
 	void receive();
+	void manageReceivedFrame();
 	void transmit();
 
 	bool inUpdateMode();
