@@ -14,6 +14,7 @@ enum class BusType_E
 class Bus
 {
    public:
+	Bus() = default;
 	virtual ~Bus() = default;
 	virtual bool transmit(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0, bool faultVerbose = true) = 0;
 	virtual bool transfer(char* buffer, int commandLen, int responseLen)
