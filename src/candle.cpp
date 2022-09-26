@@ -93,6 +93,12 @@ int Candle::getActualCommunicationFrequency()
 	return (int)this->usbCommsFreq;
 }
 
+void Candle::setTransmitDelayUs(uint32_t delayUs)
+{
+	if (delayUs < 20) delayUs = 20;
+	transmitterDelay = delayUs;
+}
+
 void Candle::receive()
 {
 	while (!shouldStopReceiver)
@@ -154,7 +160,7 @@ void Candle::transmit()
 		/* wait for a frame to be received */
 		else
 			sem_wait(&received);
-		usleep(20);
+		usleep(transmitterDelay);
 	}
 }
 

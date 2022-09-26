@@ -103,6 +103,11 @@ class Candle
 	int getActualCommunicationFrequency();
 
 	/**
+	 * @brief sets transmit thread sleep time (can be used to free resources when highest communication frequency is not needed)
+	 */
+	void setTransmitDelayUs(uint32_t delayUs);
+
+	/**
 	@brief Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80 at 1M baudrate.
 	@return the vector FDCAN IDs of drives that were found. If no drives were found, the vector is empty
 	*/
@@ -309,6 +314,19 @@ class Candle
 		return prepareMd80Register(canId, mab::Md80FrameId_E::FRAME_WRITE_REGISTER, regId, regValue, vs...);
 	}
 
+#if BENCHMARKING == 1
+	long long txTimestamp = 0;
+	bool flag_glob_tx = false;
+	bool flag_glob_rx = false;
+	long long time_delta;
+
+	bool benchGetFlagRx();
+	bool benchGetFlagTx();
+	void benchSetFlagRx(bool state);
+	void benchSetFlagTx(bool state);
+	long long benchGetTimeDelta();
+#endif
+
    private:
 	static std::vector<Candle*> instances;
 	const std::string version = "v3.0";
@@ -335,6 +353,7 @@ class Candle
 	int msgsReceived = 0;
 	int msgsSent = 0;
 	float usbCommsFreq = 0.0f;
+	uint32_t transmitterDelay = 20;
 
 	/* controller limits */
 	static const uint16_t driverMinBandwidth = 50;
@@ -348,13 +367,6 @@ class Candle
 	char regRxBuffer[maxCanFramelen];
 	char* regTxPtr = nullptr;
 	char* regRxPtr = nullptr;
-
-#ifdef BENCHMARKING
-	long long txTimestamp = 0;
-	bool flag_glob_tx = false;
-	bool flag_glob_rx = false;
-	long long time_delta;
-#endif
 
 	void transmitNewStdFrame();
 
@@ -418,14 +430,6 @@ class Candle
 	virtual Bus* createSpi() { return new SpiDevice(); }
 	virtual Bus* createUart() { return new UartDevice(); }
 	virtual Bus* createUsb(const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances) { return new UsbDevice(idVendor, idProduct, instances); }
-
-#if BENCHMARKING == 1
-	bool benchGetFlagRx();
-	bool benchGetFlagTx();
-	void benchSetFlagRx(bool state);
-	void benchSetFlagTx(bool state);
-	long long benchGetTimeDelta();
-#endif
 };
 
 }  // namespace mab
