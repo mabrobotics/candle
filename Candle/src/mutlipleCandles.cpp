@@ -284,6 +284,58 @@ namespace mab
         }
     }
 
+    void MultipleCandles::setSavgol(IdList_T idList, FilterVector coeffs)
+    {
+        for (auto &id : idList)
+        {
+            auto candle = findCandleByMd80Id(id);
+            if (candle != NULL)
+            {
+                auto &md = candle->md80s.at(id);
+                md.setSavgolCoeffs(coeffs);
+            }
+            else
+                candleHandlerOut << " [getMotorData] Drive with ID: " << id << " doesn't exist" << std::endl;
+        }
+    }
+
+    void MultipleCandles::setKalmanFilter(FilterConfig_T processNoiseCov, FilterConfig_T measurmentNoiseCov, FilterConfig_T initailStateError, int frequency)
+    {
+        for (auto const &[motorId, m_processNoiseCov]: processNoiseCov)
+        {
+            auto candle = findCandleByMd80Id(motorId);
+            if (candle != NULL)
+            {
+                auto &md = candle->md80s.at(motorId);
+                md.setKalmanFilter(m_processNoiseCov, measurmentNoiseCov[motorId], initailStateError[motorId], frequency);
+            }
+            else
+                candleHandlerOut << " [setKalmanFilter] Drive with ID: " << motorId << " doesn't exist" << std::endl;
+        }
+    }
+
+    void MultipleCandles::setPIDParams(MotorCommands_T pidParams)
+    {
+        for (auto const &[motorId, motorCommand] : pidParams)
+        {
+            try
+            {
+                auto candle = findCandleByMd80Id(motorId);
+                if (candle != NULL)
+                {
+                    auto &md = candle->md80s.at(motorId);
+                    md.setPIDParams(motorCommand);
+                }
+                else
+                    candleHandlerOut << " [setPidParams] Drive with ID: " << motorId << " doesn't exist" << std::endl;
+            }
+            catch (const char *eMsg)
+            {
+                candleHandlerOut << eMsg << std::endl;
+            }
+        }
+    }
+    
     void MultipleCandles::setImpedanceParameters(MotorCommands_T impedanceParams)
     {
         for (auto const &[motorId, motorCommand] : impedanceParams)
