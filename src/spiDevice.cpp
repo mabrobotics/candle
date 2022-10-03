@@ -170,7 +170,7 @@ bool SpiDevice::transfer(char* buffer, int commandLen, int responseLen)
 		bytesReceived = responseLen - crc.getCrcLen();
 	else if (bytesReceived > 0)
 	{
-#ifdef SPI_VERBOSE_ON_CRC_ERROR
+#if SPI_VERBOSE_ON_CRC_ERROR == 1
 		bytesReceived = responseLen;
 		displayDebugMsg(rxBuffer, bytesReceived);
 #endif
@@ -184,7 +184,7 @@ bool SpiDevice::transfer(char* buffer, int commandLen, int responseLen)
 
 	rxLock.unlock();
 
-#ifdef SPI_VERBOSE
+#if SPI_VERBOSE == 1
 	displayDebugMsg(rxBuffer, bytesReceived);
 #endif
 
