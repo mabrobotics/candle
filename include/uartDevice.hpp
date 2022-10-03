@@ -26,7 +26,7 @@ class UartDevice : public mab::Bus
 	void flushReceiveBuffer() override;
 
    private:
-	Crc* crc;
+	Crc crc;
 
 	/* UART settings */
 	const uint32_t uartSpeed = B1000000;

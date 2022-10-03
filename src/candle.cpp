@@ -743,8 +743,8 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 						  mab::Md80Reg_E::motorResistance, regR.RO.resistance,
 						  mab::Md80Reg_E::motorInductance, regR.RO.inductance))
 	{
-		return false;
 		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
+		return false;
 	}
 
 	if (!readMd80Register(canId,
@@ -759,8 +759,8 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 						  mab::Md80Reg_E::errorVector, regR.RO.errorVector,
 						  mab::Md80Reg_E::temperature, regR.RO.temperature))
 	{
-		return false;
 		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
+		return false;
 	}
 
 	return true;

@@ -33,7 +33,6 @@ UsbDevice::UsbDevice(const std::string idVendor, const std::string idProduct, st
 	{
 		std::cout << "[USB] No devices found!" << std::endl;
 		throw "[USB] No devices found!";
-		return;
 	}
 
 	if (instances.size() == 0)
@@ -56,7 +55,6 @@ UsbDevice::UsbDevice(const std::string idVendor, const std::string idProduct, st
 		}
 		const char* msg = "[USB] Failed to create USB object";
 		throw msg;
-		return;
 	}
 
 loopdone:
