@@ -19,17 +19,13 @@ class Bus
 	virtual bool transmit(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0, bool faultVerbose = true) = 0;
 	virtual bool transfer(char* buffer, int commandLen, int responseLen)
 	{
-		(void)buffer;
-		(void)commandLen;
-		(void)responseLen;
+		/* suppres unused variable warnings */
+		[buffer, commandLen, responseLen] {};
 		return false;
 	}
 	virtual bool receive(int responseLen, int timeoutMs = 100, bool checkCrc = true, bool faultVerbose = true)
 	{
-		(void)responseLen;
-		(void)timeoutMs;
-		(void)checkCrc;
-		(void)faultVerbose;
+		[responseLen, timeoutMs, checkCrc, faultVerbose] {};
 		return false;
 	}
 

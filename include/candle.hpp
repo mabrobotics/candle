@@ -55,19 +55,21 @@ class Candle
 	 * @brief A constructor of Candle class
 	 * @param canBaudrate Sets a baudrate that CANdle will use to talk to drives
 	 * @param printVerbose if true, additional printing will be enables. Usefull for debugging
-	 * @param printFailure if false the constructor will not display terminal messages when something fails
 	 * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
 	 */
 	explicit Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = true, mab::BusType_E busType = BusType_E::USB);
-	/* TODO */
+	/**
+	 * @brief A constructor of Candle class used for testing purposes
+	 * @param canBaudrate Sets a baudrate that CANdle will use to talk to drives
+	 * @param printVerbose if true, additional printing will be enables. Usefull for debugging
+	 * @param bus a bus object pointer to be used in CANdle class instance
+	 * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
+	 */
 	explicit Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::Bus* bus);
 	/**
 	 * @brief A destructor of Candle class. Takes care of all started threads that need to be stopped before clean exit
 	 */
 	~Candle();
-
-	// std::unique_ptr<Bus> makeBus(mab::BusType_E busType);
-	Bus* makeBus(mab::BusType_E busType);
 
 	/**
 	 * @brief Updates the current communication speed mode, based on the number of md80s
@@ -379,6 +381,8 @@ class Candle
 
 	void sendGetInfoFrame(mab::Md80& drive);
 	void sendMotionCommand(mab::Md80& drive, float pos, float vel, float torque);
+
+	Bus* makeBus(mab::BusType_E busType);
 
 	/* register actions private functions */
 	uint32_t packRegister(uint16_t regId, char* regValue, char* buffer);
