@@ -50,20 +50,17 @@ SpiDevice::SpiDevice()
 	memset(&trx, 0, sizeof(trx));
 	trx.bits_per_word = 8;
 	trx.speed_hz = spiSpeed;
-
-	crc = new Crc();
 }
 
 SpiDevice::~SpiDevice()
 {
-	delete (crc);
 	close(fd);
 }
 
 bool SpiDevice::transmit(char* buffer, int commandLen, bool waitForResponse, int timeout, int responseLen, bool faultVerbose)
 {
 	/* CRC */
-	commandLen = crc->addCrcToBuf(buffer, commandLen);
+	commandLen = crc.addCrcToBuf(buffer, commandLen);
 
 	trx.tx_buf = (unsigned long)buffer;
 	trx.rx_buf = (unsigned long)rxBuffer;
@@ -103,7 +100,7 @@ bool SpiDevice::receive(int timeout, int responseLen, bool faultVerbose)
 		/* if the received byte is non-zero, continue with a larger transfer for the rest (responseLen -1) */
 		if (byteRx != 0)
 		{
-			responseLen += crc->getCrcLen();
+			responseLen += crc.getCrcLen();
 			rxBuffer[bytesReceived++] = byteRx;
 			uint8_t dummyTxa[maxResponseLen];
 			memset(&dummyTxa, 0, responseLen);
@@ -121,8 +118,8 @@ bool SpiDevice::receive(int timeout, int responseLen, bool faultVerbose)
 		usleep(delayUs);
 	}
 
-	if (crc->checkCrcBuf(rxBuffer, bytesReceived))
-		bytesReceived -= crc->getCrcLen();
+	if (crc.checkCrcBuf(rxBuffer, bytesReceived))
+		bytesReceived -= crc.getCrcLen();
 	else if (bytesReceived > 0)
 	{
 #if SPI_VERBOSE_ON_CRC_ERROR == 1
@@ -158,9 +155,9 @@ bool SpiDevice::transfer(char* buffer, int commandLen, int responseLen)
 	memcpy(txBuffer, buffer, commandLen);
 
 	/* CRC */
-	commandLen = crc->addCrcToBuf(txBuffer, commandLen);
+	commandLen = crc.addCrcToBuf(txBuffer, commandLen);
 	/* modify the response len with CRC */
-	responseLen += crc->getCrcLen();
+	responseLen += crc.getCrcLen();
 
 	trx.tx_buf = (unsigned long)txBuffer;
 	trx.rx_buf = (unsigned long)rxBuffer;
@@ -169,11 +166,11 @@ bool SpiDevice::transfer(char* buffer, int commandLen, int responseLen)
 	sendMessage(SPI_IOC_MESSAGE(1), &trx);
 
 	/* check CRC */
-	if (crc->checkCrcBuf(rxBuffer, responseLen))
-		bytesReceived = responseLen - crc->getCrcLen();
+	if (crc.checkCrcBuf(rxBuffer, responseLen))
+		bytesReceived = responseLen - crc.getCrcLen();
 	else if (bytesReceived > 0)
 	{
-#ifdef SPI_VERBOSE_ON_CRC_ERROR
+#if SPI_VERBOSE_ON_CRC_ERROR == 1
 		bytesReceived = responseLen;
 		displayDebugMsg(rxBuffer, bytesReceived);
 #endif
@@ -187,7 +184,7 @@ bool SpiDevice::transfer(char* buffer, int commandLen, int responseLen)
 
 	rxLock.unlock();
 
-#ifdef SPI_VERBOSE
+#if SPI_VERBOSE == 1
 	displayDebugMsg(rxBuffer, bytesReceived);
 #endif
 

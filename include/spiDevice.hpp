@@ -26,7 +26,7 @@ class SpiDevice : public mab::Bus
 	bool receive(int timeout, int responseLen, bool faultVerbose);
 
    private:
-	Crc* crc;
+	Crc crc;
 
 	/* SPI settings */
 	const uint8_t bits = 8;

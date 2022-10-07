@@ -62,8 +62,6 @@ UartDevice::UartDevice()
 		return;
 	}
 
-	crc = new Crc();
-
 	/* frame used to automatically detect baudrate on Slave device side -> send twice so that it can be easily discarded on the Candle slave device */
 	char detectFrame[10] = {0x55, 0x55};
 	if (write(fd, detectFrame, 2) == -1)
@@ -75,12 +73,11 @@ UartDevice::UartDevice()
 UartDevice::~UartDevice()
 {
 	close(fd);
-	delete (crc);
 }
 
 bool UartDevice::transmit(char* buffer, int len, bool waitForResponse, int timeout, int responseLen, bool faultVerbose)
 {
-	len = crc->addCrcToBuf(buffer, len);
+	len = crc.addCrcToBuf(buffer, len);
 
 	if (write(fd, buffer, len) == -1)
 	{
@@ -102,7 +99,7 @@ bool UartDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool fau
 	long long timestampStart = duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
 	long long timestampAct = timestampStart;
 
-	while ((timestampAct - timestampStart) < (timeoutMs * 1000) && bytesReceived < (int)(responseLen + crc->getCrcLen()))
+	while ((timestampAct - timestampStart) < (timeoutMs * 1000) && bytesReceived < (int)(responseLen + crc.getCrcLen()))
 	{
 		char newByte;
 		int bytesRead = read(fd, &newByte, 1);
@@ -117,8 +114,8 @@ bool UartDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool fau
 	rxLock.unlock();
 
 	/* check CRC */
-	if (crc->checkCrcBuf(rxBuffer, bytesReceived) && checkCrc)
-		bytesReceived = bytesReceived - crc->getCrcLen();
+	if (crc.checkCrcBuf(rxBuffer, bytesReceived) && checkCrc)
+		bytesReceived = bytesReceived - crc.getCrcLen();
 	else if (bytesReceived > 0 && checkCrc)
 	{
 #if UART_VERBOSE_ON_CRC_ERROR == 1

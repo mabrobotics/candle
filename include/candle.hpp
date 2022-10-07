@@ -55,14 +55,22 @@ class Candle
 	 * @brief A constructor of Candle class
 	 * @param canBaudrate Sets a baudrate that CANdle will use to talk to drives
 	 * @param printVerbose if true, additional printing will be enables. Usefull for debugging
-	 * @param printFailure if false the constructor will not display terminal messages when something fails
 	 * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
 	 */
-	Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false, mab::BusType_E busType = mab::BusType_E::USB);
+	explicit Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = true, mab::BusType_E busType = BusType_E::USB);
+	/**
+	 * @brief A constructor of Candle class used for testing purposes
+	 * @param canBaudrate Sets a baudrate that CANdle will use to talk to drives
+	 * @param printVerbose if true, additional printing will be enables. Usefull for debugging
+	 * @param bus a bus object pointer to be used in CANdle class instance
+	 * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
+	 */
+	explicit Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::Bus* bus);
 	/**
 	 * @brief A destructor of Candle class. Takes care of all started threads that need to be stopped before clean exit
 	 */
 	~Candle();
+
 	/**
 	 * @brief Updates the current communication speed mode, based on the number of md80s
 	 */
@@ -95,6 +103,11 @@ class Candle
 	 * @return average communication frequency in Hertz
 	 */
 	int getActualCommunicationFrequency();
+
+	/**
+	 * @brief sets transmit thread sleep time (can be used to free resources when highest communication frequency is not needed)
+	 */
+	void setTransmitDelayUs(uint32_t delayUs);
 
 	/**
 	@brief Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80 at 1M baudrate.
@@ -303,6 +316,19 @@ class Candle
 		return prepareMd80Register(canId, mab::Md80FrameId_E::FRAME_WRITE_REGISTER, regId, regValue, vs...);
 	}
 
+#if BENCHMARKING == 1
+	long long txTimestamp = 0;
+	bool flag_glob_tx = false;
+	bool flag_glob_rx = false;
+	long long time_delta;
+
+	bool benchGetFlagRx();
+	bool benchGetFlagTx();
+	void benchSetFlagRx(bool state);
+	void benchSetFlagTx(bool state);
+	long long benchGetTimeDelta();
+#endif
+
    private:
 	static std::vector<Candle*> instances;
 	const std::string version = "v3.0";
@@ -329,6 +355,7 @@ class Candle
 	int msgsReceived = 0;
 	int msgsSent = 0;
 	float usbCommsFreq = 0.0f;
+	uint32_t transmitterDelay = 20;
 
 	/* controller limits */
 	static const uint16_t driverMinBandwidth = 50;
@@ -343,13 +370,6 @@ class Candle
 	char* regTxPtr = nullptr;
 	char* regRxPtr = nullptr;
 
-#ifdef BENCHMARKING
-	long long txTimestamp = 0;
-	bool flag_glob_tx = false;
-	bool flag_glob_rx = false;
-	long long time_delta;
-#endif
-
 	void transmitNewStdFrame();
 
 	void receive();
@@ -361,6 +381,8 @@ class Candle
 
 	void sendGetInfoFrame(mab::Md80& drive);
 	void sendMotionCommand(mab::Md80& drive, float pos, float vel, float torque);
+
+	Bus* makeBus(mab::BusType_E busType);
 
 	/* register actions private functions */
 	uint32_t packRegister(uint16_t regId, char* regValue, char* buffer);
@@ -408,13 +430,10 @@ class Candle
 		return true;
 	};
 
-#if BENCHMARKING == 1
-	bool benchGetFlagRx();
-	bool benchGetFlagTx();
-	void benchSetFlagRx(bool state);
-	void benchSetFlagTx(bool state);
-	long long benchGetTimeDelta();
-#endif
+	/* virtual methods for testing purposes */
+	virtual Bus* createSpi() { return new SpiDevice(); }
+	virtual Bus* createUart() { return new UartDevice(); }
+	virtual Bus* createUsb(const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances) { return new UsbDevice(idVendor, idProduct, instances); }
 };
 
 }  // namespace mab

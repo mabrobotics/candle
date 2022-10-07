@@ -31,21 +31,12 @@ uint64_t getTimestamp()
 std::vector<Candle*> Candle::instances = std::vector<Candle*>();
 
 Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::BusType_E busType)
-	: printVerbose(printVerbose)
+	: Candle(canBaudrate, printVerbose, makeBus(busType)) {}
+
+Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::Bus* bus)
+	: printVerbose(printVerbose), bus(bus)
 {
 	vout << "CANdle library version: " << getVersion() << std::endl;
-
-	if (busType == mab::BusType_E::USB)
-	{
-		std::vector<unsigned long> a;
-		for (auto& instance : instances)
-			a.push_back(instance->getDeviceId());
-		bus = new UsbDevice("MAB_Robotics", "MD_USB-TO-CAN", a);
-	}
-	else if (busType == mab::BusType_E::SPI)
-		bus = new SpiDevice();
-	else if (busType == mab::BusType_E::UART)
-		bus = new UartDevice();
 
 	this->reset();
 	usleep(5000);
@@ -65,10 +56,32 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::BusType_E b
 
 	Candle::instances.push_back(this);
 }
+
 Candle::~Candle()
 {
 	if (this->inUpdateMode())
 		this->end();
+}
+
+Bus* Candle::makeBus(mab::BusType_E busType)
+{
+	switch (busType)
+	{
+		case mab::BusType_E::USB:
+		{
+			std::vector<unsigned long> a;
+			for (auto& instance : instances)
+				a.push_back(instance->getDeviceId());
+			return new UsbDevice("MAB_Robotics", "MD_USB-TO-CAN", a);
+		}
+		case mab::BusType_E::SPI:
+			return new SpiDevice();
+		case mab::BusType_E::UART:
+			return new UartDevice();
+		default:
+			throw "Error wrong bus type specified!";
+	}
+	return nullptr;
 }
 
 const std::string Candle::getVersion()
@@ -78,6 +91,12 @@ const std::string Candle::getVersion()
 int Candle::getActualCommunicationFrequency()
 {
 	return (int)this->usbCommsFreq;
+}
+
+void Candle::setTransmitDelayUs(uint32_t delayUs)
+{
+	if (delayUs < 20) delayUs = 20;
+	transmitterDelay = delayUs;
 }
 
 void Candle::receive()
@@ -141,7 +160,7 @@ void Candle::transmit()
 		/* wait for a frame to be received */
 		else
 			sem_wait(&received);
-		usleep(20);
+		usleep(transmitterDelay);
 	}
 }
 
