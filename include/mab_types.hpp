@@ -102,6 +102,7 @@ typedef struct
 typedef struct
 {
 	uint32_t firmwareVersion;
+	uint8_t hardwareVersion;
 	uint32_t buildDate;
 	char commitHash[8];
 	uint8_t bridgeType;
@@ -120,6 +121,7 @@ typedef struct
 	uint32_t canBaudrate;
 	uint16_t canWatchdog;
 	uint32_t polePairs;
+	uint16_t motorKV;
 	float motorKt;
 	float motorKt_a;
 	float motorKt_b;
@@ -129,6 +131,7 @@ typedef struct
 	uint8_t outputEncoder;
 	float outputEncoderDir;
 	uint16_t torqueBandwidth;
+	uint32_t outputEncoderDefaultBaud;
 	float friction;
 	float stiction;
 	ImpedanceControllerGains_t impedancePdGains;
@@ -146,6 +149,11 @@ typedef struct
 {
 	regRW_st RW;
 } regWrite_st;
+
+/* adding a new field:
+1. add a new filed below (must be uniform with the same enum on MD80 side)
+2. add it to the "switch case" in md80.cpp (regarding it's size)
+3. add it to either RO/RW structs above */
 
 enum Md80Reg_E : uint16_t
 {
@@ -166,9 +174,11 @@ enum Md80Reg_E : uint16_t
 	motorStiction = 0x01A,
 	motorResistance = 0x01B,
 	motorInductance = 0x01C,
+	motorKV = 0x01D,
 
 	outputEncoder = 0x020,
 	outputEncoderDir = 0x021,
+	outputEncoderDefaultBaud = 0x022,
 
 	motorPosPidKp = 0x030,
 	motorPosPidKi = 0x031,
@@ -189,10 +199,11 @@ enum Md80Reg_E : uint16_t
 	buildDate = 0x800,
 	commitHash = 0x801,
 	firmwareVersion = 0x802,
-	bridgeType = 0x803,
-	errorVector = 0x0804,
-	temperature = 0x805,
-	temperatureAux = 0x806,
+	hardwareVersion = 0x803,
+	bridgeType = 0x804,
+	errorVector = 0x805,
+	temperature = 0x806,
+	temperatureAux = 0x807,
 };
 
 }  // namespace mab

@@ -164,10 +164,12 @@ uint16_t getRegisterSize(uint16_t regId)
 	{
 		case Md80Reg_E::bridgeType:
 		case Md80Reg_E::outputEncoder:
+		case Md80Reg_E::hardwareVersion:
 			return 1;
 		case Md80Reg_E::motorTorgueBandwidth:
 		case Md80Reg_E::canWatchdog:
 		case Md80Reg_E::errorVector:
+		case Md80Reg_E::motorKV:
 			return 2;
 		case Md80Reg_E::temperature:
 		case Md80Reg_E::temperatureAux:
@@ -191,6 +193,7 @@ uint16_t getRegisterSize(uint16_t regId)
 		case Md80Reg_E::motorFriction:
 		case Md80Reg_E::motorStiction:
 		case Md80Reg_E::outputEncoderDir:
+		case Md80Reg_E::outputEncoderDefaultBaud:
 		case Md80Reg_E::canBaudrate:
 		case Md80Reg_E::motorGearRatio:
 		case Md80Reg_E::motorPolePairs:

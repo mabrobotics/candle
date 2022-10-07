@@ -724,8 +724,8 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 						  mab::Md80Reg_E::motorResistance, regR.RO.resistance,
 						  mab::Md80Reg_E::motorInductance, regR.RO.inductance))
 	{
-		return false;
 		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
+		return false;
 	}
 
 	if (!readMd80Register(canId,
@@ -738,10 +738,23 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 						  mab::Md80Reg_E::motorTorgueBandwidth, regR.RW.torqueBandwidth,
 						  mab::Md80Reg_E::canBaudrate, regR.RW.canBaudrate,
 						  mab::Md80Reg_E::errorVector, regR.RO.errorVector,
-						  mab::Md80Reg_E::temperature, regR.RO.temperature))
+						  mab::Md80Reg_E::temperature, regR.RO.temperature,
+						  mab::Md80Reg_E::motorKV, regR.RW.motorKV,
+						  mab::Md80Reg_E::hardwareVersion, regR.RO.hardwareVersion))
 	{
-		return false;
 		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
+		return false;
+	}
+
+	if (!readMd80Register(canId,
+						  mab::Md80Reg_E::motorStiction, regR.RW.stiction,
+						  mab::Md80Reg_E::motorFriction, regR.RW.friction,
+						  mab::Md80Reg_E::outputEncoder, regR.RW.outputEncoder,
+						  mab::Md80Reg_E::outputEncoderDir, regR.RW.outputEncoderDir,
+						  mab::Md80Reg_E::outputEncoderDefaultBaud, regR.RW.outputEncoderDefaultBaud))
+	{
+		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
+		return false;
 	}
 
 	return true;
