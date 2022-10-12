@@ -1,10 +1,14 @@
 #include "multipleCandles.hpp"
 
+#include <unistd.h>
 namespace mab
 {
 
     MultipleCandles::MultipleCandles(bool useLogs)
     {
+        
+        node_ = std::make_shared<rclcpp::Node>("candle_publisher");
+        jointStatePub = node_->create_publisher<sensor_msgs::msg::JointState>("candle/joint_states", 10);
         while (1)
         {
             try
@@ -133,6 +137,7 @@ namespace mab
         {
             candle->begin();
         }
+        publishThread = std::thread(&MultipleCandles::publish, this);
         return retVal;
     }
 
@@ -163,7 +168,25 @@ namespace mab
         {
             candle->begin();
         }
+        publishThread = std::thread(&MultipleCandles::publish, this);
         return retVal;
+    }
+
+    void MultipleCandles::publish()
+    {
+        MultipleMotorsStatus_T motorsData = this->getAllMotorsData();
+        sensor_msgs::msg::JointState jointStateMsg;
+	    jointStateMsg.header.stamp = rclcpp::Clock().now();
+        for (auto const &[motorId, data] : motorsData)
+        {
+            jointStateMsg.name.push_back(std::string(std::to_string(motorId)));
+			jointStateMsg.position.push_back(data.at("position"));
+			jointStateMsg.velocity.push_back(data.at("velocity"));
+			jointStateMsg.effort.push_back(data.at("torque"));
+        }
+        this->jointStatePub->publish(jointStateMsg);
+        usleep(1990 * 2);
+
     }
 
     CandleResponse_T MultipleCandles::disableAllMotors()

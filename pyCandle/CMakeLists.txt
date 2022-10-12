@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.5)
 add_compile_options(-Wall -Wextra -Wpedantic)
 
 project(pybindtest)
-
 add_subdirectory(pybind)
 
 if(NOT TARGET candle)
