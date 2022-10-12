@@ -5,9 +5,6 @@
 
 namespace mab
 {
-    void packImpedanceFrame(CanFrame_t *frame, RegImpedance_t *reg);
-    void packPidFrame(CanFrame_t *frame, RegPid_t *reg);
-
     Md80::Md80(uint16_t _canID, MotorCommand_T config)
     {
         canId = _canID;
@@ -56,6 +53,7 @@ namespace mab
     Md80::~Md80()
     {
     }
+
     void Md80::setTargetPosition(float target)
     {
         requestedPosition = target;
@@ -203,7 +201,6 @@ namespace mab
     {
         float curr_pos = position;
         // If motor position within range
-
         if (curr_pos > softMinPosition && curr_pos < softMaxPosition)
         {
             printWatchdog = true;
