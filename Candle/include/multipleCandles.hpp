@@ -30,6 +30,7 @@ namespace mab
         mab::Candle *findCandleByMd80Id(uint16_t md80Id);
         std::map<int, int> motorIdToCandleId;
         std::thread publishThread;
+        bool stopMe = true;
 
         bool _useLogs;
         void publish();
