@@ -17,6 +17,7 @@ add_library(candle ${LIB_TYPE} ${CANDLE_SOURCE})
 
 target_include_directories (candle PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(candle pthread)
+ament_target_dependencies(candle rclcpp sensor_msgs)
 set_target_properties(candle PROPERTIES PUBLIC_HEADER candle.hpp)
 
 # if(NOT DEFINED CANDLE_OMIT_EXAMPLES)

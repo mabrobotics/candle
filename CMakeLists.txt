@@ -8,7 +8,9 @@ find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 message("EIGEN3_INCLUDE_DIR: " ${EIGEN3_INCLUDE_DIR})
 
-# ros2 
+# ros2
+find_package(ament_cmake REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 include_directories(/opt/ros/foxy/include /opt/ros/foxy/lib)
