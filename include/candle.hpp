@@ -155,7 +155,7 @@ class Candle
 	@param newTimeout FDCAN watchdof timeout in milliseconds. If set to 0 the watchdog is disabled.
 	@return true if all parameters were changed succesfully, false otherwise
 	*/
-	bool configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout);
+	bool configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout, bool canTermination = false);
 	/**
 	@brief Changes max phase-to-phase motor current.
 	@param canId ID of the drive

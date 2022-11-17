@@ -203,7 +203,7 @@ unsigned long Candle::getDeviceId()
 }
 GenericMd80Frame32 _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameId)
 {
-	GenericMd80Frame32 frame;
+	GenericMd80Frame32 frame = {0};
 	frame.frameId = BUS_FRAME_MD80_GENERIC_FRAME;
 	frame.driveCanId = canId;
 	frame.canMsgLen = msgLen;
@@ -363,13 +363,15 @@ bool Candle::sengGenericFDCanFrame(uint16_t canId, int msgLen, const char* txBuf
 	return false;
 }
 
-bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout)
+bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout, bool canTermination)
 {
-	GenericMd80Frame32 frame = _packMd80Frame(canId, 10, Md80FrameId_E::FRAME_CAN_CONFIG);
+	GenericMd80Frame32 frame = _packMd80Frame(canId, 11, Md80FrameId_E::FRAME_CAN_CONFIG);
 	frame.frameId = BUS_FRAME_MD80_CONFIG_CAN;
 	*(uint16_t*)&frame.canMsg[2] = newId;
 	*(uint32_t*)&frame.canMsg[4] = newBaudrateMbps * 1000000;
 	*(uint16_t*)&frame.canMsg[8] = newTimeout;
+	*(uint8_t*)&frame.canMsg[10] = (uint8_t)canTermination == true ? 1 : 0;
+
 	char tx[63];
 	int len = sizeof(frame);
 	memcpy(tx, &frame, len);
@@ -380,6 +382,7 @@ bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newB
 			vout << "Drive ID: " << std::to_string(canId) << " was changed to ID: " << std::to_string(newId) << std::endl;
 			vout << "It's baudrate is now " << std::to_string(newBaudrateMbps) << "Mbps" << std::endl;
 			vout << "It's CAN timeout (watchdog) is now " << (newTimeout == 0 ? "Disabled" : std::to_string(newTimeout) + "ms") << std::endl;
+			vout << "It's CAN termination resistor is " << (canTermination == true ? "enabled" : "disabled") << std::endl;
 			return true;
 		}
 	vout << "CAN config change failed!" << statusFAIL << std::endl;
@@ -770,7 +773,8 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 						  mab::Md80Reg_E::motorFriction, regR.RW.friction,
 						  mab::Md80Reg_E::outputEncoder, regR.RW.outputEncoder,
 						  mab::Md80Reg_E::outputEncoderDir, regR.RW.outputEncoderDir,
-						  mab::Md80Reg_E::outputEncoderDefaultBaud, regR.RW.outputEncoderDefaultBaud))
+						  mab::Md80Reg_E::outputEncoderDefaultBaud, regR.RW.outputEncoderDefaultBaud,
+						  mab::Md80Reg_E::canTermination, regR.RW.canTermination))
 	{
 		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
 		return false;
