@@ -792,7 +792,7 @@ bool Candle::checkMd80ForBaudrate(uint16_t canId)
 	char tx[64];
 	int len = sizeof(frame);
 	memcpy(tx, &frame, len);
-	if (bus->transmit(tx, len, true, 10, 66, false))
+	if (bus->transmit(tx, len, true, 300, 66, false))
 		if (*bus->getRxBuffer(1) == true)
 			return true;
 	return false;
