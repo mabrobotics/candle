@@ -345,7 +345,8 @@ class Candle
 
 	uint32_t candleDeviceVersion = 10;
 	const uint32_t candleCompatibleVersion = 14;
-	const uint32_t md80CompatibleVersion = 20;
+	/* major version number - ex. 2 means all 2.X versions will be compatible */
+	const uint32_t md80CompatibleMajorVersion = 2;
 
 	const int idMax = 2000;
 	int maxDevices = 12;
