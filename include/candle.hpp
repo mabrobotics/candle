@@ -347,6 +347,7 @@ class Candle
 	const uint32_t candleCompatibleVersion = 14;
 	const uint32_t md80CompatibleVersion = 20;
 
+	const int idMax = 2000;
 	int maxDevices = 12;
 	bool shouldStopReceiver;
 	bool shouldStopTransmitter;

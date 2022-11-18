@@ -318,7 +318,7 @@ std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
 				break;	// No more ids in the message
 
 			vout << std::to_string(i + 1) << ": ID = " << ids[i] << " (0x" << std::hex << ids[i] << std::dec << ")" << std::endl;
-			if (ids[i] > 2047)
+			if (ids[i] > idMax)
 			{
 				vout << "Error! This ID is invalid! Probably two or more drives share same ID."
 					 << "Communication will most likely be broken until IDs are unique!" << statusFAIL << std::endl;
@@ -365,6 +365,12 @@ bool Candle::sengGenericFDCanFrame(uint16_t canId, int msgLen, const char* txBuf
 
 bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout, bool canTermination)
 {
+	if (newId < 10 || newId > idMax)
+	{
+		vout << "CAN config change failed, ID out of range! Please use a valid ID [10-2000]" << statusFAIL << std::endl;
+		return false;
+	}
+
 	GenericMd80Frame32 frame = _packMd80Frame(canId, 11, Md80FrameId_E::FRAME_CAN_CONFIG);
 	frame.frameId = BUS_FRAME_MD80_CONFIG_CAN;
 	*(uint16_t*)&frame.canMsg[2] = newId;
