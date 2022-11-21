@@ -39,6 +39,7 @@ typedef struct
 	uint32_t canId;
 	uint32_t canBaudrate;
 	uint16_t canWatchdog;
+	uint8_t canTermination;
 	uint32_t polePairs;
 	uint16_t motorKV;
 	float motorKt;
@@ -74,6 +75,7 @@ enum Md80Reg_E : uint16_t
 	canId = 0x001,
 	canBaudrate = 0x002,
 	canWatchdog = 0x003,
+	canTermination = 0x004,
 
 	motorName = 0x010,
 	motorPolePairs = 0x011,

@@ -99,6 +99,7 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::bridgeType:
 		case Md80Reg_E::outputEncoder:
 		case Md80Reg_E::hardwareVersion:
+		case Md80Reg_E::canTermination:
 			return 1;
 		case Md80Reg_E::motorTorgueBandwidth:
 		case Md80Reg_E::canWatchdog:
