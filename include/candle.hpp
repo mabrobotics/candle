@@ -94,6 +94,11 @@ class Candle
 	std::vector<Md80> md80s;
 
 	/**
+	 * @brief Pointer to a md80Register class that is used to read/write MD80 registers.
+	 */
+	Register* md80Register;
+
+	/**
 	@brief Enables/disables extended printing.
 	*/
 	void setVebose(bool enable);
@@ -284,38 +289,6 @@ class Candle
 	*/
 	bool checkMd80ForBaudrate(uint16_t canId);
 
-	/**
-	@brief reads single-field registers
-	@param canId ID of the drive
-	@param regId first register's ID
-	@param value first reference to a variable where the read value should be stored
-	@param ...	remaining regId-value pairs to be read
-	@return true if register was read
-	*/
-	template <typename T2, typename... Ts>
-	bool readMd80Register(uint16_t canId, mab::Md80Reg_E regId, const T2& regValue, const Ts&... vs)
-	{
-		/* prepare and send the request frame */
-		if (!prepareMd80Register(canId, mab::Md80FrameId_E::FRAME_READ_REGISTER, regId, regValue, vs...))
-			return false;
-		/* interpret the frame */
-		return interpretMd80Register(canId, regId, regValue, vs...);
-	}
-
-	/**
-	@brief writes single-field registers
-	@param canId ID of the drive
-	@param regId first register's ID
-	@param value first reference to a value that should be written
-	@param ...	remaining regId-value pairs to be written
-	@return true if register was written
-	*/
-	template <typename T2, typename... Ts>
-	bool writeMd80Register(uint16_t canId, mab::Md80Reg_E regId, const T2& regValue, const Ts&... vs)
-	{
-		return prepareMd80Register(canId, mab::Md80FrameId_E::FRAME_WRITE_REGISTER, regId, regValue, vs...);
-	}
-
 #if BENCHMARKING == 1
 	long long txTimestamp = 0;
 	bool flag_glob_tx = false;
@@ -365,13 +338,6 @@ class Candle
 	const float driverMaxCurrent = 40.0f;
 	const float driverMinCurrent = 1.0f;
 
-	/* register data */
-	static const uint32_t maxCanFramelen = 64;
-	char regTxBuffer[maxCanFramelen];
-	char regRxBuffer[maxCanFramelen];
-	char* regTxPtr = nullptr;
-	char* regRxPtr = nullptr;
-
 	void transmitNewStdFrame();
 
 	void receive();
@@ -385,52 +351,6 @@ class Candle
 	void sendMotionCommand(mab::Md80& drive, float pos, float vel, float torque);
 
 	Bus* makeBus(mab::BusType_E busType);
-
-	/* register actions private functions */
-	uint32_t packRegister(uint16_t regId, char* regValue, char* buffer);
-	uint32_t unPackRegister(uint16_t regId, char* regValue, char* regDataPos);
-	uint32_t copyRegister(char* dest, char* source, uint32_t size, uint32_t freeSpace);
-	bool prepareFrameMd80Register(mab::Md80FrameId_E frameId, mab::Md80Reg_E regId, char* regValue);
-
-	template <typename T2, typename... Ts>
-	bool prepareMd80Register(uint16_t canId, mab::Md80FrameId_E frameType, mab::Md80Reg_E regId, const T2& regValue, const Ts&... vs)
-	{
-		static_assert(!std::is_same<double, T2>::value, "register value should be float not double");
-		if (!prepareFrameMd80Register(frameType, regId, (char*)&regValue))
-			return false;
-		return prepareMd80Register(canId, frameType, vs...);
-	}
-
-	bool prepareMd80Register(uint16_t canId, mab::Md80FrameId_E frameType)
-	{
-		(void)frameType;
-		/* clear the RX buffer and send register request */
-		memset(regRxBuffer, 0, sizeof(regRxBuffer));
-		regTxPtr = nullptr;
-		regRxPtr = nullptr;
-		return sengGenericFDCanFrame(canId, sizeof(regTxBuffer), regTxBuffer, regRxBuffer, 100);
-	}
-
-	template <typename T2, typename... Ts>
-	bool interpretMd80Register(uint16_t canId, mab::Md80Reg_E regId, const T2& regValue, const Ts&... vs)
-	{
-		/* if new frame */
-		if (regRxPtr == nullptr)
-			regRxPtr = &regRxBuffer[2];
-
-		uint32_t offset = unPackRegister(regId, (char*)&regValue, regRxPtr);
-		if (offset == 0)
-			return false;
-
-		regRxPtr += offset;
-		return interpretMd80Register(canId, vs...);
-	}
-
-	bool interpretMd80Register(uint16_t canId)
-	{
-		(void)canId;
-		return true;
-	};
 
 	/* virtual methods for testing purposes */
 	virtual Bus* createSpi() { return new SpiDevice(); }

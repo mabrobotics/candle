@@ -4,7 +4,7 @@
 #include <cstdint>
 
 #include "mab_types.hpp"
-
+#include "register.hpp"
 namespace mab
 {
 /**
@@ -185,10 +185,4 @@ class Md80
 	 */
 	void __setControlMode(Md80Mode_E mode);
 };
-/**
- * @brief For internal use by CANdle only.
- * @private
- */
-uint16_t getRegisterSize(uint16_t regId);
-
 }  // namespace mab

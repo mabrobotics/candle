@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "candle_protocol.hpp"
+#include "register.hpp"
 
 namespace mab
 {
@@ -53,6 +54,8 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::Bus* bus)
 		vout << "CANdle ready (SPI)" << std::endl;
 	else if (bus->getType() == mab::BusType_E::UART)
 		vout << "CANdle ready (UART)" << std::endl;
+
+	md80Register = new Register(this);
 
 	Candle::instances.push_back(this);
 }
@@ -203,7 +206,7 @@ unsigned long Candle::getDeviceId()
 }
 GenericMd80Frame32 _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameId)
 {
-	GenericMd80Frame32 frame = {0};
+	GenericMd80Frame32 frame;
 	frame.frameId = BUS_FRAME_MD80_GENERIC_FRAME;
 	frame.driveCanId = canId;
 	frame.canMsgLen = msgLen;
@@ -260,7 +263,7 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 			if (*bus->getRxBuffer(1) == true)
 			{
 				uint32_t firmwareVersion = 0;
-				if (!readMd80Register(canId, mab::Md80Reg_E::firmwareVersion, firmwareVersion))
+				if (!md80Register->read(canId, mab::Md80Reg_E::firmwareVersion, firmwareVersion))
 				{
 					vout << "Unable to read MD80's firmware version! Probably MD80's firmware is outdated. Please update it using MAB_CAN_Flasher." << statusFAIL << std::endl;
 					return false;
@@ -744,43 +747,42 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 {
 	regRead_st& regR = getMd80FromList(canId).getReadReg();
 
-	if (!readMd80Register(canId,
-						  mab::Md80Reg_E::motorName, regR.RW.motorName,
-						  mab::Md80Reg_E::buildDate, regR.RO.buildDate,
-						  mab::Md80Reg_E::commitHash, regR.RO.commitHash,
-						  mab::Md80Reg_E::firmwareVersion, regR.RO.firmwareVersion,
-						  mab::Md80Reg_E::motorResistance, regR.RO.resistance,
-						  mab::Md80Reg_E::motorInductance, regR.RO.inductance))
+	if (!md80Register->read(canId,
+							mab::Md80Reg_E::motorName, regR.RW.motorName,
+							mab::Md80Reg_E::buildDate, regR.RO.buildDate,
+							mab::Md80Reg_E::commitHash, regR.RO.commitHash,
+							mab::Md80Reg_E::firmwareVersion, regR.RO.firmwareVersion,
+							mab::Md80Reg_E::motorResistance, regR.RO.resistance,
+							mab::Md80Reg_E::motorInductance, regR.RO.inductance))
 	{
 		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
 		return false;
 	}
 
-	if (!readMd80Register(canId,
-						  mab::Md80Reg_E::motorIMax, regR.RW.iMax,
-						  mab::Md80Reg_E::motorPolePairs, regR.RW.polePairs,
-						  mab::Md80Reg_E::motorKt, regR.RW.motorKt,
-						  mab::Md80Reg_E::motorGearRatio, regR.RW.gearRatio,
-						  mab::Md80Reg_E::bridgeType, regR.RO.bridgeType,
-						  mab::Md80Reg_E::canWatchdog, regR.RW.canWatchdog,
-						  mab::Md80Reg_E::motorTorgueBandwidth, regR.RW.torqueBandwidth,
-						  mab::Md80Reg_E::canBaudrate, regR.RW.canBaudrate,
-						  mab::Md80Reg_E::errorVector, regR.RO.errorVector,
-						  mab::Md80Reg_E::temperature, regR.RO.temperature,
-						  mab::Md80Reg_E::motorKV, regR.RW.motorKV,
-						  mab::Md80Reg_E::hardwareVersion, regR.RO.hardwareVersion))
+	if (!md80Register->read(canId,
+							mab::Md80Reg_E::motorIMax, regR.RW.iMax,
+							mab::Md80Reg_E::motorPolePairs, regR.RW.polePairs,
+							mab::Md80Reg_E::motorKt, regR.RW.motorKt,
+							mab::Md80Reg_E::motorGearRatio, regR.RW.gearRatio,
+							mab::Md80Reg_E::bridgeType, regR.RO.bridgeType,
+							mab::Md80Reg_E::canWatchdog, regR.RW.canWatchdog,
+							mab::Md80Reg_E::motorTorgueBandwidth, regR.RW.torqueBandwidth,
+							mab::Md80Reg_E::canBaudrate, regR.RW.canBaudrate,
+							mab::Md80Reg_E::errorVector, regR.RO.errorVector,
+							mab::Md80Reg_E::temperature, regR.RO.temperature,
+							mab::Md80Reg_E::motorKV, regR.RW.motorKV,
+							mab::Md80Reg_E::hardwareVersion, regR.RO.hardwareVersion))
 	{
 		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
 		return false;
 	}
 
-	if (!readMd80Register(canId,
-						  mab::Md80Reg_E::motorStiction, regR.RW.stiction,
-						  mab::Md80Reg_E::motorFriction, regR.RW.friction,
-						  mab::Md80Reg_E::outputEncoder, regR.RW.outputEncoder,
-						  mab::Md80Reg_E::outputEncoderDir, regR.RW.outputEncoderDir,
-						  mab::Md80Reg_E::outputEncoderDefaultBaud, regR.RW.outputEncoderDefaultBaud,
-						  mab::Md80Reg_E::canTermination, regR.RW.canTermination))
+	if (!md80Register->read(canId,
+							mab::Md80Reg_E::motorStiction, regR.RW.stiction,
+							mab::Md80Reg_E::motorFriction, regR.RW.friction,
+							mab::Md80Reg_E::outputEncoder, regR.RW.outputEncoder,
+							mab::Md80Reg_E::outputEncoderDir, regR.RW.outputEncoderDir,
+							mab::Md80Reg_E::outputEncoderDefaultBaud, regR.RW.outputEncoderDefaultBaud))
 	{
 		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
 		return false;
@@ -802,76 +804,6 @@ bool Candle::checkMd80ForBaudrate(uint16_t canId)
 		if (*bus->getRxBuffer(1) == true)
 			return true;
 	return false;
-}
-
-uint32_t Candle::packRegister(uint16_t regId, char* value, char* buffer)
-{
-	uint32_t len = getRegisterSize(regId);
-	/* in case no place is left in the buffer */
-	if ((len + 2) > (sizeof(regTxBuffer) - (buffer - regTxBuffer)))
-	{
-		throw "Error while packaging data. Make sure its size is not above 62 bytes. Remember to add 2 bytes per field (field ID).";
-		return 0;
-	}
-	/* place register ID at the beginning */
-	*(uint16_t*)buffer = regId;
-	/* move the pointer forward by 2 bytes */
-	buffer += sizeof(regId);
-	/* in case we're just preparing a read frame */
-	if (value == nullptr)
-		memset(buffer, 0, len);
-	else
-		memcpy(buffer, value, len);
-
-	return (len + sizeof(regId));
-}
-
-uint32_t Candle::unPackRegister(uint16_t regId, char* value, char* buffer)
-{
-	/* place register ID at the beginning */
-	*(uint16_t*)buffer = regId;
-	/* move the pointer forward by 2 bytes */
-	buffer += sizeof(regId);
-
-	uint32_t len = getRegisterSize(regId);
-
-	return copyRegister(value, buffer, len, sizeof(regTxBuffer) - (buffer - &regTxBuffer[2]));
-}
-
-uint32_t Candle::copyRegister(char* dest, char* source, uint32_t size, uint32_t freeSpace)
-{
-	/* return two so that we move by the reg ID and find a zero reg ID which terminates reception/transmission */
-	if (freeSpace < size)
-		return 0;
-
-	memcpy(dest, source, size);
-	return size + 2;
-}
-
-bool Candle::prepareFrameMd80Register(mab::Md80FrameId_E frameId, mab::Md80Reg_E regId, char* value)
-{
-	/* if new frame */
-	if (regTxPtr == nullptr)
-	{ /* clear the buffer */
-		memset(regTxBuffer, 0, sizeof(regTxBuffer));
-		regTxBuffer[0] = frameId;
-		regTxBuffer[1] = 0;
-		regTxPtr = &regTxBuffer[2];
-	}
-	/* let packRegister know to fill data space with zeros */
-	if (frameId == mab::Md80FrameId_E::FRAME_READ_REGISTER)
-		value = nullptr;
-	/* add value's data to tx buffer */
-	uint32_t offset = packRegister(regId, value, regTxPtr);
-
-	if (offset == 0)
-	{
-		throw "Error while packaging data. Make sure its size is not above 62 bytes. Remember to add 2 bytes per field (field ID).";
-		return false;
-	}
-
-	regTxPtr += offset;
-	return true;
 }
 
 #if BENCHMARKING == 1
