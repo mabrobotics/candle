@@ -94,11 +94,6 @@ class Candle
 	std::vector<Md80> md80s;
 
 	/**
-	 * @brief Pointer to a md80Register class that is used to read/write MD80 registers.
-	 */
-	Register* md80Register;
-
-	/**
 	@brief Enables/disables extended printing.
 	*/
 	void setVebose(bool enable);
@@ -288,6 +283,32 @@ class Candle
 	@return true if drive was successfully contacted, false otherwise
 	*/
 	bool checkMd80ForBaudrate(uint16_t canId);
+	/**
+	@brief reads single-field registers
+	@param canId ID of the drive
+	@param regId first register's ID
+	@param value first reference to a variable where the read value should be stored
+	@param ...	remaining regId-value pairs to be read
+	@return true if register was read
+	*/
+	template <typename T2, typename... Ts>
+	bool readMd80Register(uint16_t canId, Md80Reg_E regId, const T2& regValue, const Ts&... vs)
+	{
+		return md80Register->read(canId, regId, regValue, vs...);
+	}
+	/**
+	@brief writes single-field registers
+	@param canId ID of the drive
+	@param regId first register's ID
+	@param value first reference to a value that should be written
+	@param ...	remaining regId-value pairs to be written
+	@return true if register was written
+	*/
+	template <typename T2, typename... Ts>
+	bool writeMd80Register(uint16_t canId, Md80Reg_E regId, const T2& regValue, const Ts&... vs)
+	{
+		return md80Register->write(canId, regId, regValue, vs...);
+	}
 
 #if BENCHMARKING == 1
 	long long txTimestamp = 0;
@@ -315,6 +336,8 @@ class Candle
 	CANdleMode_E mode = CANdleMode_E::CONFIG;
 
 	Bus* bus = nullptr;
+
+	Register* md80Register = nullptr;
 
 	uint32_t candleDeviceVersion = 10;
 	const uint32_t candleCompatibleVersion = 14;

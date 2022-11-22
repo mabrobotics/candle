@@ -14,9 +14,9 @@ int main()
 	/* read registers of your choice NOTE: remember that a single read function call cannot exceed 62 bytes,
 	 including the 2 byte reg ID that is attached per register.
 	 In this example the length is: 2 (resistance reg ID) + 4 (float value) + 2 (inductance reg ID) + 4 (float value)  = 12 bytes */
-	if (!candle.md80Register->read(ids[0],
-								   mab::Md80Reg_E::motorResistance, regR.RO.resistance,
-								   mab::Md80Reg_E::motorInductance, regR.RO.inductance))
+	if (!candle.readMd80Register(ids[0],
+								 mab::Md80Reg_E::motorResistance, regR.RO.resistance,
+								 mab::Md80Reg_E::motorInductance, regR.RO.inductance))
 	{
 		std::cout << "Reading register failed at ID: " << ids[0] << std::endl;
 		return false;
