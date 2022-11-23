@@ -54,7 +54,7 @@ typedef struct
 	uint32_t outputEncoderDefaultBaud;
 	float friction;
 	float stiction;
-	float motorShutdownTemp;
+	uint8_t motorShutdownTemp;
 	ImpedanceControllerGains_t impedancePdGains;
 	PidControllerGains_t velocityPidGains;
 	PidControllerGains_t positionPidGains;

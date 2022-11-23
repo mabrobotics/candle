@@ -100,13 +100,13 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::outputEncoder:
 		case Md80Reg_E::hardwareVersion:
 		case Md80Reg_E::canTermination:
+		case Md80Reg_E::motorShutdownTemp:
 			return 1;
 		case Md80Reg_E::motorTorgueBandwidth:
 		case Md80Reg_E::canWatchdog:
 		case Md80Reg_E::errorVector:
 		case Md80Reg_E::motorKV:
 			return 2;
-		case Md80Reg_E::motorShutdownTemp:
 		case Md80Reg_E::mosfetTemperature:
 		case Md80Reg_E::motorTemperature:
 		case Md80Reg_E::motorInductance:
