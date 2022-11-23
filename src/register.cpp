@@ -106,8 +106,9 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::errorVector:
 		case Md80Reg_E::motorKV:
 			return 2;
-		case Md80Reg_E::temperature:
-		case Md80Reg_E::temperatureAux:
+		case Md80Reg_E::motorShutdownTemp:
+		case Md80Reg_E::mosfetTemperature:
+		case Md80Reg_E::motorTemperature:
 		case Md80Reg_E::motorInductance:
 		case Md80Reg_E::motorResistance:
 		case Md80Reg_E::firmwareVersion:

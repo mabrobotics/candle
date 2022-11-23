@@ -28,8 +28,8 @@ typedef struct
 	float resistance;
 	float inductance;
 	uint16_t errorVector;
-	float temperature;
-	float temperatureAux;
+	float mosfetTemperature;
+	float motorTemperature;
 } regRO_st;
 
 /* READ WRITE PARAMS */
@@ -54,6 +54,7 @@ typedef struct
 	uint32_t outputEncoderDefaultBaud;
 	float friction;
 	float stiction;
+	float motorShutdownTemp;
 	ImpedanceControllerGains_t impedancePdGains;
 	PidControllerGains_t velocityPidGains;
 	PidControllerGains_t positionPidGains;
@@ -118,8 +119,9 @@ enum Md80Reg_E : uint16_t
 	hardwareVersion = 0x803,
 	bridgeType = 0x804,
 	errorVector = 0x805,
-	temperature = 0x806,
-	temperatureAux = 0x807,
+	mosfetTemperature = 0x806,
+	motorTemperature = 0x807,
+	motorShutdownTemp = 0x808,
 };
 
 class Register
