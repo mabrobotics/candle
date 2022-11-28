@@ -21,7 +21,7 @@ int main()
 
 	candle.controlMd80SetEncoderZero(ids[0]);  // Reset encoder at current position
 
-	candle.controlMd80Mode(ids[0], mab::Md80Mode_E::POSITION_PID);	// Set mode to impedance control
+	candle.controlMd80Mode(ids[0], mab::Md80Mode_E::POSITION_PID);	// Set mode to position PID
 	candle.controlMd80Enable(ids[0], true);							// Enable the drive
 
 	// We will run both Position PID and Velocity PID at default settings. If you wish you can play with the parameters
