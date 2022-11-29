@@ -785,7 +785,9 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 							mab::Md80Reg_E::outputEncoderDefaultBaud, regR.RW.outputEncoderDefaultBaud,
 							mab::Md80Reg_E::motorTemperature, regR.RO.motorTemperature,
 							mab::Md80Reg_E::motorShutdownTemp, regR.RW.motorShutdownTemp,
-							mab::Md80Reg_E::canTermination, regR.RW.canTermination))
+							mab::Md80Reg_E::canTermination, regR.RW.canTermination,
+							mab::Md80Reg_E::outputEncoderPosition, regR.RO.outputEncoderPosition,
+							mab::Md80Reg_E::outputEncoderVelocity, regR.RO.outputEncoderVelocity))
 	{
 		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
 		return false;

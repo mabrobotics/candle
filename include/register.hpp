@@ -30,6 +30,8 @@ typedef struct
 	uint16_t errorVector;
 	float mosfetTemperature;
 	float motorTemperature;
+	float outputEncoderVelocity;
+	float outputEncoderPosition;
 } regRO_st;
 
 /* READ WRITE PARAMS */
@@ -96,6 +98,8 @@ enum Md80Reg_E : uint16_t
 	outputEncoder = 0x020,
 	outputEncoderDir = 0x021,
 	outputEncoderDefaultBaud = 0x022,
+	outputEncoderVelocity = 0x023,
+	outputEncoderPosition = 0x024,
 
 	motorPosPidKp = 0x030,
 	motorPosPidKi = 0x031,

@@ -130,6 +130,8 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::motorStiction:
 		case Md80Reg_E::outputEncoderDir:
 		case Md80Reg_E::outputEncoderDefaultBaud:
+		case Md80Reg_E::outputEncoderVelocity:
+		case Md80Reg_E::outputEncoderPosition:
 		case Md80Reg_E::canBaudrate:
 		case Md80Reg_E::motorGearRatio:
 		case Md80Reg_E::motorPolePairs:
