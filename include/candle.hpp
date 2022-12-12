@@ -57,7 +57,7 @@ class Candle
 	 * @param printVerbose if true, additional printing will be enables. Usefull for debugging
 	 * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
 	 */
-	explicit Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = true, mab::BusType_E busType = BusType_E::USB);
+	explicit Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = true, mab::BusType_E busType = BusType_E::USB, const std::string device = "");
 	/**
 	 * @brief A constructor of Candle class used for testing purposes
 	 * @param canBaudrate Sets a baudrate that CANdle will use to talk to drives
@@ -373,7 +373,7 @@ class Candle
 	void sendGetInfoFrame(mab::Md80& drive);
 	void sendMotionCommand(mab::Md80& drive, float pos, float vel, float torque);
 
-	Bus* makeBus(mab::BusType_E busType);
+	Bus* makeBus(mab::BusType_E busType, std::string device);
 
 	/* virtual methods for testing purposes */
 	virtual Bus* createSpi() { return new SpiDevice(); }

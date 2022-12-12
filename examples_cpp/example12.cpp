@@ -11,7 +11,7 @@ int main()
 	/* get the reference to the regR struct that holds fields of registers */
 	mab::regRead_st& regR = candle.getMd80FromList(ids[0]).getReadReg();
 
-	/* read registers of your choice NOTE: remember that a single read function call cannot exceed 62 bytes,
+	/* read registers of your choice NOTE: remember that a single read function call cannot exceed 62 bytes (runtime exception will be thrown otherwise),
 	 including the 2 byte reg ID that is attached per register.
 	 In this example the length is: 2 (resistance reg ID) + 4 (float value) + 2 (inductance reg ID) + 4 (float value)  = 12 bytes */
 	if (!candle.readMd80Register(ids[0],

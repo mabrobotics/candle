@@ -16,13 +16,11 @@
 #define UART_VERBOSE			  0
 #define UART_VERBOSE_ON_CRC_ERROR 0
 
-static const char* uartDev = "/dev/ttyAMA0";
-
-UartDevice::UartDevice()
+UartDevice::UartDevice(const std::string device) : device(device)
 {
 	busType = mab::BusType_E::UART;
 
-	fd = open(uartDev, O_RDWR);
+	fd = open(device.c_str(), O_RDWR);
 
 	if (tcgetattr(fd, &tty) != 0)
 	{
@@ -135,6 +133,16 @@ bool UartDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool fau
 	if (bytesReceived > 0)
 		return true;
 	return false;
+}
+
+unsigned long UartDevice::getId()
+{
+	return 0;
+}
+
+std::string UartDevice::getDeviceName()
+{
+	return device;
 }
 
 void UartDevice::flushReceiveBuffer()

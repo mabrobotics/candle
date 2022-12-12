@@ -2,16 +2,14 @@
 
 #include "bus.hpp"
 
-static const char* spiDev = "/dev/spidev0.0";
-
 #define SPI_VERBOSE				 0
 #define SPI_VERBOSE_ON_CRC_ERROR 0
 
-SpiDevice::SpiDevice()
+SpiDevice::SpiDevice(const std::string device) : device(device)
 {
 	busType = mab::BusType_E::SPI;
 
-	fd = open(spiDev, O_RDWR);
+	fd = open(device.c_str(), O_RDWR);
 	if (fd < 0)
 	{
 		const char* msg = "[SPI] Could not open the SPI device... (is SPI bus available on your device?)";
@@ -144,6 +142,16 @@ bool SpiDevice::receive(int timeout, int responseLen, bool faultVerbose)
 		return true;
 
 	return false;
+}
+
+unsigned long SpiDevice::getId()
+{
+	return 0;
+}
+
+std::string SpiDevice::getDeviceName()
+{
+	return device;
 }
 
 bool SpiDevice::transfer(char* buffer, int commandLen, int responseLen)

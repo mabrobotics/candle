@@ -14,6 +14,8 @@ int main()
 
 	// Create CANdle object and set FDCAN baudrate to 8Mbps
 	mab::Candle candle(mab::CAN_BAUD_8M, true, mab::BusType_E::UART);
+	// If your UART device is different from the default one ("/dev/ttyAMA0") use the following constructor:
+	// mab::Candle candle(mab::CAN_BAUD_8M, true, mab::BusType_E::UART, "/dev/ttyAMA1");
 
 	// Ping FDCAN bus in search of drives
 	auto ids = candle.ping(mab::CAN_BAUD_8M);

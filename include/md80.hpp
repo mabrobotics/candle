@@ -142,8 +142,8 @@ class Md80
 	 */
 	float getTorque() { return torque; };
 	/**
-	 * @brief Get the exteral thermistor temperature reading
-	 * @return uint8_t internally computed temperature value in *C
+	 * @brief Get the exteral thermistor temperature reading (motor thermistor)
+	 * @return uint8_t temperature value in *C
 	 */
 	uint8_t getTemperature() { return temperature; };
 

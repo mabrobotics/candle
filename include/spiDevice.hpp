@@ -17,11 +17,12 @@
 class SpiDevice : public mab::Bus
 {
    public:
-	SpiDevice();
+	SpiDevice(const std::string device = "/dev/spidev0.0");
 	~SpiDevice();
 	bool transmit(char* buffer, int len, bool waitForResponse = false, int timeout = 100, int responseLen = 0, bool faultVerbose = true) override;
 	bool transfer(char* buffer, int commandLen, int responseLen) override;
-	unsigned long getId() override { return 0; }
+	unsigned long getId() override;
+	std::string getDeviceName() override;
 
 	bool receive(int timeout, int responseLen, bool faultVerbose);
 
@@ -29,6 +30,7 @@ class SpiDevice : public mab::Bus
 	Crc crc;
 
 	/* SPI settings */
+	std::string device;
 	const uint8_t bits = 8;
 	const uint32_t spiSpeed = 20000000;
 	const uint8_t mode = SPI_MODE_0;

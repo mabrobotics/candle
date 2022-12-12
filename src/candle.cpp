@@ -31,8 +31,8 @@ uint64_t getTimestamp()
 
 std::vector<Candle*> Candle::instances = std::vector<Candle*>();
 
-Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::BusType_E busType)
-	: Candle(canBaudrate, printVerbose, makeBus(busType)) {}
+Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::BusType_E busType, const std::string device)
+	: Candle(canBaudrate, printVerbose, makeBus(busType, device)) {}
 
 Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::Bus* bus)
 	: printVerbose(printVerbose), bus(bus)
@@ -66,7 +66,7 @@ Candle::~Candle()
 		this->end();
 }
 
-Bus* Candle::makeBus(mab::BusType_E busType)
+Bus* Candle::makeBus(mab::BusType_E busType, std::string device)
 {
 	switch (busType)
 	{
@@ -78,9 +78,20 @@ Bus* Candle::makeBus(mab::BusType_E busType)
 			return new UsbDevice("MAB_Robotics", "MD_USB-TO-CAN", a);
 		}
 		case mab::BusType_E::SPI:
-			return new SpiDevice();
+		{
+			if (device != "")
+				return new SpiDevice(device);
+			else
+				return new SpiDevice();
+		}
+
 		case mab::BusType_E::UART:
-			return new UartDevice();
+		{
+			if (device != "")
+				return new UartDevice(device);
+			else
+				return new UartDevice();
+		}
 		default:
 			throw "Error wrong bus type specified!";
 	}

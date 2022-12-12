@@ -162,6 +162,15 @@ bool UsbDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faul
 	return false;
 }
 
+unsigned long UsbDevice::getId()
+{
+	return serialDeviceId;
+}
+std::string UsbDevice::getDeviceName()
+{
+	return serialDeviceName;
+}
+
 void UsbDevice::flushReceiveBuffer()
 {
 	/* the delay is required to make flush work */
