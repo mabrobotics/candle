@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 20)
 project(md80)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 add_compile_options(-Wall -Wextra -Wpedantic)
 
 if(ARCH STREQUAL "armhf")
@@ -27,13 +27,19 @@ else()
     set(CANDLE_BUILD_STATIC "FALSE")
     set(CANDLE_BUILD_SHARED "TRUE")
     add_library(candle SHARED ${CANDLE_SOURCE})
-endif()	
+endif()
 
 message(STATUS "\nCANDLE_BUILD_SHARED: ${CANDLE_BUILD_SHARED}\nCANDLE_BUILD_STATIC: ${CANDLE_BUILD_STATIC}")
 
-target_include_directories (candle PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(candle PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(candle pthread)
 set_target_properties(candle PROPERTIES PUBLIC_HEADER candle.hpp)
+
+if(MAKE_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+    set(CANDLE_OMIT_EXAMPLES ON)
+endif()
 
 if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
     add_executable(example1 examples_cpp/example1.cpp)
@@ -62,13 +68,13 @@ if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
 
     add_executable(example9 examples_cpp/example9.cpp)
     target_link_libraries(example9 candle)
-    
+
     add_executable(example10 examples_cpp/example10.cpp)
     target_link_libraries(example10 candle)
 
     add_executable(example11 examples_cpp/example11.cpp)
     target_link_libraries(example11 candle)
 
+    add_executable(example12 examples_cpp/example12.cpp)
+    target_link_libraries(example12 candle)
 endif()
-
-

@@ -11,19 +11,54 @@
 #include <cstring>
 #include <iostream>
 
+#include "bus.hpp"
+
 struct termios tty;
 struct termios ti_prev;
 
-// #define USB_VERBOSE
+#define USB_VERBOSE 0
 
 int open_device(std::string devName, std::string idVendor, std::string idProduct);
 bool checkDeviceAvailable(std::string devName, std::string idVendor, std::string idProduct);
 std::string getDeviceShortId(std::string devName);
 unsigned long hash(const char* str);
 
-UsbDevice::UsbDevice(std::string deviceName, std::string idVendor, std::string idProduct, char* rxBufferPtr, const int rxBufferSize_)
+UsbDevice::UsbDevice(const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances)
 {
-	serialDeviceName = deviceName;
+	auto listOfDevices = UsbDevice::getConnectedACMDevices(idVendor, idProduct);
+
+	busType = mab::BusType_E::USB;
+
+	if (listOfDevices.size() == 0)
+	{
+		std::cout << "[USB] No devices found!" << std::endl;
+		throw "[USB] No devices found!";
+	}
+
+	if (instances.size() == 0)
+		serialDeviceName = listOfDevices[0];
+	else
+	{
+		for (auto& entry : listOfDevices)
+		{
+			unsigned int newIdCount = 0;
+			for (auto& instance : instances)
+				if (UsbDevice::getConnectedDeviceId(entry) != instance)
+					newIdCount++;
+
+			/* only if all instances were different from the current one -> create new device */
+			if (newIdCount == instances.size())
+			{
+				serialDeviceName = entry;
+				goto loopdone;
+			}
+		}
+		const char* msg = "[USB] Failed to create USB object";
+		throw msg;
+	}
+
+loopdone:
+
 	int device_descriptor = open_device(serialDeviceName, idVendor, idProduct);
 	serialDeviceId = getConnectedDeviceId(serialDeviceName);
 
@@ -32,7 +67,6 @@ UsbDevice::UsbDevice(std::string deviceName, std::string idVendor, std::string i
 		const char* msg = "[USB] Device not found! Try re-plugging the device!";
 		std::cout << msg << std::endl;
 		throw msg;
-		
 	}
 
 	tcgetattr(device_descriptor, &ti_prev);										  // Save the previous serial config
@@ -51,69 +85,67 @@ UsbDevice::UsbDevice(std::string deviceName, std::string idVendor, std::string i
 	tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL);  // Disable special chars on RX
 	tty.c_oflag &= ~OPOST;														  // Prevent special interpretation of output bytes
 	tty.c_oflag &= ~ONLCR;														  // Prevent conversion of newline to carriage return/line feed
-
-	tty.c_cc[VTIME] = 0;  // Wait for up to 0.1s (1 decisecond), returning as soon as any data is received.
+	tty.c_cc[VTIME] = 0;														  // Wait for up to 0.1s (1 decisecond), returning as soon as any data is received.
 	tty.c_cc[VMIN] = 0;
 
-	// cfmakeraw(&tty);
 	tcsetattr(device_descriptor, TCSANOW, &tty);  // Set the new serial config
 
 	this->fd = device_descriptor;
-	gotResponse = false;
 
-	rxBuffer = rxBufferPtr;
-	rxBufferSize = rxBufferSize_;
+	std::string setSerialCommand = "setserial " + getDeviceName() + " low_latency";
+	if (system(setSerialCommand.c_str()) != 0)
+		std::cout << "Could not execute command '" << setSerialCommand << "'. Communication in low-speed mode." << std::endl;
 }
 
-bool UsbDevice::transmit(char* buffer, int len, bool _waitForResponse, int timeout, bool faultVerbose)
+bool UsbDevice::transmit(char* buffer, int len, bool waitForResponse, int timeout, int responseLen, bool faultVerbose)
 {
+	errno = 0;
 	if (write(fd, buffer, len) == -1)
 	{
-		std::cout << "[USB] Writing to USB Device failed. Device Unavailable!" << std::endl;
-		return false;
+		std::cout << "[USB] Writing to USB Device failed. Device Unavailable! Error " << errno << " from tcgetattr: " << strerror(errno) << std::endl;
+		return manageMsgErrors(false);
 	}
-	if (_waitForResponse)
+	if (waitForResponse)
 	{
-		if (receive(timeout, faultVerbose))
-			return true;
+		if (receive(responseLen, timeout, faultVerbose))
+			return manageMsgErrors(true);
 		else
 		{
 			if (faultVerbose) std::cout << "[USB] Did not receive response from USB Device." << std::endl;
-			return false;
+			return manageMsgErrors(false);
 		}
 	}
-	return true;
+	return manageMsgErrors(true);
 }
 
-bool UsbDevice::receive(int timeoutMs, bool faultVerbose)
+bool UsbDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faultVerbose)
 {
 	(void)faultVerbose;
+	(void)checkCrc;
+
 	memset(rxBuffer, 0, rxBufferSize);
 	rxLock.lock();
-	const int delayUs = 10;
-	const int timeoutUs = 100;
-	int timeoutBusOutUs = timeoutMs * 1000;
-	int usTimestamp = 0;
 	bytesReceived = 0;
-	bool firstByteReceived = false;
-	while (usTimestamp < timeoutUs && timeoutBusOutUs > 0)
+
+	using namespace std::chrono;
+	long long timestampStart = duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
+	long long timestampAct = timestampStart;
+
+	while ((timestampAct - timestampStart) < (timeoutMs * 1000) && responseLen > bytesReceived)
 	{
 		char newByte;
 		int bytesRead = read(fd, &newByte, 1);
 		if (bytesRead > 0)
 		{
-			firstByteReceived = true;
 			rxBuffer[bytesReceived++] = newByte;
 			continue;
 		}
-		if (firstByteReceived && bytesRead == 0)
-			usTimestamp += delayUs;	 // If receiving wait for 100us idle state on the bus
-		else
-			timeoutBusOutUs -= delayUs;	 // If not receiving wait for 100ms and return false
-		usleep(delayUs);
+		usleep(1);
+		timestampAct = duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
 	}
+
 	rxLock.unlock();
-#ifdef USB_VERBOSE
+#if USB_VERBOSE == 1
 	if (bytesReceived > 0)
 	{
 		std::cout << "Got " << std::dec << bytesReceived << "bytes." << std::endl;
@@ -125,11 +157,25 @@ bool UsbDevice::receive(int timeoutMs, bool faultVerbose)
 	}
 #endif
 	if (bytesReceived > 0)
-	{
-		gotResponse = true;
 		return true;
-	}
+
 	return false;
+}
+
+unsigned long UsbDevice::getId()
+{
+	return serialDeviceId;
+}
+std::string UsbDevice::getDeviceName()
+{
+	return serialDeviceName;
+}
+
+void UsbDevice::flushReceiveBuffer()
+{
+	/* the delay is required to make flush work */
+	usleep(1000);
+	tcflush(fd, TCOFLUSH);
 }
 
 UsbDevice::~UsbDevice()

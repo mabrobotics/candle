@@ -4,7 +4,7 @@
 #include <cstdint>
 
 #include "mab_types.hpp"
-
+#include "register.hpp"
 namespace mab
 {
 /**
@@ -37,6 +37,9 @@ class Md80
 	bool velocityRegulatorAdjusted = false;
 	StdMd80CommandFrame_t commandFrame;
 	StdMd80ResponseFrame_t responseFrame;
+
+	regRead_st regRead;
+	regWrite_st regWrite;
 
 	void packImpedanceFrame();
 	void packPositionFrame();
@@ -139,10 +142,22 @@ class Md80
 	 */
 	float getTorque() { return torque; };
 	/**
-	 * @brief Get the exteral thermistor temperature reading
-	 * @return uint8_t internally computed temperature value in *C 
+	 * @brief Get the exteral thermistor temperature reading (motor thermistor)
+	 * @return uint8_t temperature value in *C
 	 */
 	uint8_t getTemperature() { return temperature; };
+
+	/**
+	 * @brief Get the read register struct
+	 * @return reference to read register struct
+	 */
+	regRead_st& getReadReg() { return regRead; };
+
+	/**
+	 * @brief Get the write register struct
+	 * @return reference to write register struct
+	 */
+	regWrite_st& getWriteReg() { return regWrite; };
 
 	/**
 	 * @brief For internal use by CANdle only.

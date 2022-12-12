@@ -1,5 +1,7 @@
 #include "md80.hpp"
 
+#include <string.h>
+
 #include <iostream>
 
 #include "mab_types.hpp"
@@ -13,6 +15,8 @@ Md80::Md80(uint16_t _canID)
 {
 	canId = _canID;
 	commandFrame.canId = _canID;
+	memset(&regRead, 0, sizeof(regRead));
+	memset(&regWrite, 0, sizeof(regWrite));
 }
 Md80::~Md80()
 {
@@ -153,4 +157,5 @@ void Md80::packMotionTargetsFrame()
 	*(float*)&commandFrame.toMd80.data[6] = positionTarget;
 	*(float*)&commandFrame.toMd80.data[10] = torqueSet;
 }
+
 }  // namespace mab

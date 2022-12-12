@@ -4,7 +4,9 @@ import math
 import sys  
 
 # Create CANdle object and set FDCAN baudrate to 8Mbps
-candle = pyCandle.Candle(pyCandle.CAN_BAUD_8M, True, pyCandle.NORMAL, True, pyCandle.SPI)
+candle = pyCandle.Candle(pyCandle.CAN_BAUD_8M, True, pyCandle.SPI)
+# If your SPI device is different from the default one ("/dev/spidev0.0") use the following constructor:
+# candle = pyCandle.Candle(pyCandle.CAN_BAUD_8M, True, pyCandle.SPI, "/dev/spidev0.0")
 
 # Ping FDCAN bus in search of drives
 ids = candle.ping(pyCandle.CAN_BAUD_8M)
