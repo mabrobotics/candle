@@ -4,7 +4,9 @@ import math
 import sys  
 
 # Create CANdle object and set FDCAN baudrate to 8Mbps
-candle = pyCandle.Candle(pyCandle.CAN_BAUD_8M, True, pyCandle.FAST2, True, pyCandle.UART)
+candle = pyCandle.Candle(pyCandle.CAN_BAUD_8M, True, pyCandle.UART)
+# If your UART device is different from the default one ("/dev/ttyAMA0") use the following constructor:
+# candle = pyCandle.Candle(pyCandle.CAN_BAUD_8M, True, pyCandle.UART, "/dev/ttyAMA1")
 
 # Ping FDCAN bus in search of drives
 ids = candle.ping(pyCandle.CAN_BAUD_8M)

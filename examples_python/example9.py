@@ -5,8 +5,8 @@ import sys
 
 # Create CANdle object and ping FDCAN bus in search of drives. 
 # Any found drives will be printed out by the ping() method.
-candle1 = pyCandle.Candle(pyCandle.CAN_BAUD_1M, True, pyCandle.FAST1)
-candle2 = pyCandle.Candle(pyCandle.CAN_BAUD_1M, True, pyCandle.FAST1)
+candle1 = pyCandle.Candle(pyCandle.CAN_BAUD_1M, True)
+candle2 = pyCandle.Candle(pyCandle.CAN_BAUD_1M, True)
 
 print("Candle 1 ID is: " + str(candle1.getUsbDeviceId()))
 print("Candle 2 ID is: " + str(candle2.getUsbDeviceId()))

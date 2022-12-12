@@ -18,7 +18,7 @@ for id in ids:
 
 candle.controlMd80SetEncoderZero(ids[0])       #  Reset encoder at current position
 
-candle.controlMd80Mode(ids[0], pyCandle.VELOCITY_PID)     # Set mode to impedance control
+candle.controlMd80Mode(ids[0], pyCandle.VELOCITY_PID)     # Set mode to velocity control
 candle.controlMd80Enable(ids[0], True)     # Enable the drive
 
 #  Now we set up Velocity Regulator, and additionaly max output velocity just to be on a safe side

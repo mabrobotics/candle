@@ -10,26 +10,26 @@
 #include <cstring>
 #include <iostream>
 
+#include "bus.hpp"
 #include "crc.hpp"
 
-//#define UART_VERBOSE
-//#define UART_VERBOSE_ON_CRC_ERROR
+#define UART_VERBOSE			  0
+#define UART_VERBOSE_ON_CRC_ERROR 0
 
-static const char* uartDev = "/dev/ttyAMA0";
-
-UartDevice::UartDevice(char* rxBufferPtr, const int rxBufferSize_)
+UartDevice::UartDevice(const std::string device) : device(device)
 {
-	fd = open(uartDev, O_RDWR);
+	busType = mab::BusType_E::UART;
+
+	fd = open(device.c_str(), O_RDWR);
 
 	if (tcgetattr(fd, &tty) != 0)
-	{	
+	{
 		const char* msg = "[UART] Could not open the UART device... (is UART bus available on your device?)";
 		std::cout << msg << std::endl;
 		throw msg;
 	}
 
-	tty.c_cflag &= ~PARENB;	 // Clear parity bit, disabling parity (most common)
-	// tty.c_cflag |= PARODD;  // Set parity to ODD
+	tty.c_cflag &= ~PARENB;			// Clear parity bit, disabling parity (most common)
 	tty.c_cflag &= ~CSTOPB;			// Clear stop field, only one stop bit used in communication (most common)
 	tty.c_cflag &= ~CSIZE;			// Clear all bits that set the data size
 	tty.c_cflag |= CS8;				// 8 bits per byte (most common)
@@ -60,13 +60,6 @@ UartDevice::UartDevice(char* rxBufferPtr, const int rxBufferSize_)
 		return;
 	}
 
-	gotResponse = false;
-
-	rxBuffer = rxBufferPtr;
-	rxBufferSize = rxBufferSize_;
-
-	crc = new Crc();
-
 	/* frame used to automatically detect baudrate on Slave device side -> send twice so that it can be easily discarded on the Candle slave device */
 	char detectFrame[10] = {0x55, 0x55};
 	if (write(fd, detectFrame, 2) == -1)
@@ -78,61 +71,54 @@ UartDevice::UartDevice(char* rxBufferPtr, const int rxBufferSize_)
 UartDevice::~UartDevice()
 {
 	close(fd);
-	delete (crc);
 }
 
-bool UartDevice::transmit(char* buffer, int commandLen, bool _waitForResponse, int timeout, bool faultVerbose)
+bool UartDevice::transmit(char* buffer, int len, bool waitForResponse, int timeout, int responseLen, bool faultVerbose)
 {
-	commandLen = crc->addCrcToBuf(buffer, commandLen);
+	len = crc.addCrcToBuf(buffer, len);
 
-	if (write(fd, buffer, commandLen) == -1)
+	if (write(fd, buffer, len) == -1)
 	{
 		std::cout << "[UART] Writing to UART Device failed. Device Unavailable!" << std::endl;
-		return false;
+		return manageMsgErrors(false);
 	}
-	if (_waitForResponse)
-		return receive(timeout, true, faultVerbose);
-	return true;
+	if (waitForResponse)
+		return manageMsgErrors(receive(responseLen, timeout, true, faultVerbose));
+	return manageMsgErrors(true);
 }
 
-bool UartDevice::receive(int timeoutMs, bool checkCrc, bool faultVerbose)
+bool UartDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faultVerbose)
 {
 	memset(rxBuffer, 0, rxBufferSize);
 	rxLock.lock();
-	const int delayUs = 10;
-	const int timeoutUs = 100;
-	int timeoutBusOutUs = timeoutMs * 1000;
-	int usTimestamp = 0;
 	bytesReceived = 0;
-	bool firstByteReceived = false;
-	while (usTimestamp < timeoutUs && timeoutBusOutUs > 0)
+
+	using namespace std::chrono;
+	long long timestampStart = duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
+	long long timestampAct = timestampStart;
+
+	while ((timestampAct - timestampStart) < (timeoutMs * 1000) && bytesReceived < (int)(responseLen + crc.getCrcLen()))
 	{
 		char newByte;
 		int bytesRead = read(fd, &newByte, 1);
 		if (bytesRead > 0)
 		{
-			firstByteReceived = true;
 			rxBuffer[bytesReceived++] = newByte;
 			continue;
 		}
-		if (firstByteReceived && bytesRead == 0)
-			usTimestamp += delayUs;	 // If receiving wait for 100us idle state on the bus
-		else
-			timeoutBusOutUs -= delayUs;	 // If not receiving wait for 100ms and return false
-		usleep(delayUs);
+		usleep(1);
+		timestampAct = duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
 	}
 	rxLock.unlock();
 
 	/* check CRC */
-	if (crc->checkCrcBuf(rxBuffer, bytesReceived) && checkCrc)
-		bytesReceived = bytesReceived - crc->getCrcLen();
+	if (crc.checkCrcBuf(rxBuffer, bytesReceived) && checkCrc)
+		bytesReceived = bytesReceived - crc.getCrcLen();
 	else if (bytesReceived > 0 && checkCrc)
 	{
-#ifdef UART_VERBOSE_ON_CRC_ERROR
+#if UART_VERBOSE_ON_CRC_ERROR == 1
 		displayDebugMsg(rxBuffer, bytesReceived);
 #endif
-
-		errorCnt++;
 		/* clear the command byte -> the frame will be rejected */
 		rxBuffer[0] = 0;
 		bytesReceived = 0;
@@ -141,15 +127,29 @@ bool UartDevice::receive(int timeoutMs, bool checkCrc, bool faultVerbose)
 	else if (bytesReceived == 0)
 		if (faultVerbose) std::cout << "[UART] Did not receive response from UART Device." << std::endl;
 
-#ifdef UART_VERBOSE
+#if UART_VERBOSE == 1
 	displayDebugMsg(rxBuffer, bytesReceived);
 #endif
 	if (bytesReceived > 0)
-	{
-		gotResponse = true;
 		return true;
-	}
 	return false;
+}
+
+unsigned long UartDevice::getId()
+{
+	return 0;
+}
+
+std::string UartDevice::getDeviceName()
+{
+	return device;
+}
+
+void UartDevice::flushReceiveBuffer()
+{
+	/* the delay is required to make flush work */
+	usleep(1000);
+	tcflush(fd, TCOFLUSH);
 }
 
 void UartDevice::displayDebugMsg(char* buffer, int bytesReceived)

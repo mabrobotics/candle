@@ -47,6 +47,7 @@ enum Md80FrameId_E : uint8_t
 	FRAME_ZERO_ENCODER = 0x03,
 	FRAME_BASE_CONFIG = 0x04,
 	FRAME_GET_INFO = 0x05,
+	FRAME_SET_BANDWIDTH = 0x06,
 	FRAME_POS_CONTROL = 0x10,
 	FRAME_VEL_CONTROL = 0x11,
 	FRAME_IMP_CONTROL = 0x12,
@@ -54,8 +55,13 @@ enum Md80FrameId_E : uint8_t
 	FRAME_SET_MOTION_TARGETS = 0x14,
 	FRAME_CAN_CONFIG = 0x20,
 	FRAME_CAN_SAVE = 0x21,
+	FRAME_WRITE_REGISTER = 0x40,
+	FRAME_READ_REGISTER = 0x41,
 	FRAME_DIAGNOSTIC = 0x69,
 	FRAME_CALIBRATION = 0x70,
+	FRAME_MOTOR_CONFIG = 0x71,
+	FRAME_MOTOR_MOTION_CONFIG = 0x72,
+	FRAME_DIAGNOSTIC_EXTENDED = 0x73,
 	RESPONSE_DEFAULT = 0xA0
 };
 struct CanFrame_t
@@ -73,4 +79,23 @@ struct StdMd80ResponseFrame_t
 	uint16_t canId;
 	CanFrame_t fromMd80;
 };
+
+// ########################3
+
+typedef struct
+{
+	float kp;
+	float kd;
+	float outMax;
+} ImpedanceControllerGains_t;
+
+typedef struct
+{
+	float kp;
+	float ki;
+	float kd;
+	float intWindup;
+	float outMax;
+} PidControllerGains_t;
+
 }  // namespace mab

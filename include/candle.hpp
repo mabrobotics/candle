@@ -1,13 +1,18 @@
 #pragma once
 
+#include <semaphore.h>
+
 #include <iostream>
 #include <string>
 #include <thread>
+#include <type_traits>
 #include <vector>
 
 #include "bus.hpp"
 #include "mab_types.hpp"
 #include "md80.hpp"
+#include "spiDevice.hpp"
+#include "uartDevice.hpp"
 #include "usbDevice.hpp"
 
 /* Turn on benchmarking */
@@ -35,13 +40,6 @@ enum CANdleBaudrate_E : uint8_t
 	CAN_BAUD_8M = 8, /*!< FDCAN Baudrate of 8Mbps (8 000 000 bits per second) */
 };
 
-enum class CANdleFastMode_E
-{
-	NORMAL,
-	FAST1,
-	FAST2
-};
-
 /*! \class Candle
 	\brief Class for communicating with CANdle (USB-CAN converter) and Md80 drives.
 
@@ -52,78 +50,31 @@ enum class CANdleFastMode_E
 */
 class Candle
 {
-   private:
-	enum class CANdleMaxDevices_E
-	{
-		MAX_DEV_NORMAL = 12,
-		MAX_DEV_FAST1 = 6,
-		MAX_DEV_FAST2 = 3
-	};
-	static std::vector<Candle*> instances;
-	const std::string version = "v3.0";
-	std::thread receiverThread;
-	std::thread transmitterThread;
-	CANdleMode_E mode = CANdleMode_E::CONFIG;
-	CANdleFastMode_E fastMode = CANdleFastMode_E::NORMAL;
-
-	Bus* bus;
-
-	int candleDeviceVersion = 10;
-	const int candleCompatibleVersion = 14;
-	int maxDevices = 12;
-	bool shouldStopReceiver;
-	bool shouldStopTransmitter;
-	mab::CANdleBaudrate_E canBaudrate;
-
-	int msgsReceived = 0;
-	int msgsSent = 0;
-	float usbCommsFreq = 0.0f;
-
-	bool printVerbose = true;
-
-	/* controller limits */
-	const uint16_t driverMinBandwidth = 50;
-	const uint16_t driverMaxBandwidth = 2500;
-
-	const float driverMaxCurrent = 40.0f;
-	const float driverMinCurrent = 1.0f;
-
-#ifdef BENCHMARKING
-	long long txTimestamp = 0;
-	bool flag_glob_tx = false;
-	bool flag_glob_rx = false;
-	long long time_delta;
-#endif
-
-	void transmitNewStdFrame();
-
-	void receive();
-	void transmit();
-
-	bool inUpdateMode();
-	bool inConfigMode();
-
-	void sendGetInfoFrame(mab::Md80& drive);
-	void sendMotionCommand(mab::Md80& drive, float pos, float vel, float torque);
-
    public:
 	/**
 	 * @brief A constructor of Candle class
 	 * @param canBaudrate Sets a baudrate that CANdle will use to talk to drives
 	 * @param printVerbose if true, additional printing will be enables. Usefull for debugging
-	 * @param fastMode setups update rate NORMAL for 100Hz (max 12 drives), FAST1 for 250Hz (max 6 drives), FAST2 for 500Hz (max 3 drives)
-	 * @param printFailure if false the constructor will not display terminal messages when something fails
 	 * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
 	 */
-	Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = false, mab::CANdleFastMode_E fastMode = mab::CANdleFastMode_E::NORMAL, bool printFailure = true, mab::BusType_E busType = mab::BusType_E::USB);
+	explicit Candle(CANdleBaudrate_E canBaudrate, bool printVerbose = true, mab::BusType_E busType = BusType_E::USB, const std::string device = "");
+	/**
+	 * @brief A constructor of Candle class used for testing purposes
+	 * @param canBaudrate Sets a baudrate that CANdle will use to talk to drives
+	 * @param printVerbose if true, additional printing will be enables. Usefull for debugging
+	 * @param bus a bus object pointer to be used in CANdle class instance
+	 * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
+	 */
+	explicit Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::Bus* bus);
 	/**
 	 * @brief A destructor of Candle class. Takes care of all started threads that need to be stopped before clean exit
 	 */
 	~Candle();
+
 	/**
 	 * @brief Updates the current communication speed mode, based on the number of md80s
 	 */
-	void updateModeBasedOnMd80List();
+	// void updateModeBasedOnMd80List();
 	/**
 	 * @brief Getter for version number
 	 * @return std::string with version in format "vMAJOR.MINOR"
@@ -131,10 +82,10 @@ class Candle
 	const std::string getVersion();
 
 	/**
-	 * @brief Getter for USB device ID. Can be used to differentiate between multiple CANdle's connected to one computer.
+	 * @brief Getter for device ID. Can be used to differentiate between multiple CANdle's connected to one computer (USB).
 	 * @return unique 64-bit identified
 	 */
-	unsigned long int getUsbDeviceId();
+	unsigned long int getDeviceId();
 
 	/**
 	 * @brief A vector holding all md80 instances that were succesfully added via `addMd80` method. This vector
@@ -152,6 +103,11 @@ class Candle
 	 * @return average communication frequency in Hertz
 	 */
 	int getActualCommunicationFrequency();
+
+	/**
+	 * @brief sets transmit thread sleep time (can be used to free resources when highest communication frequency is not needed)
+	 */
+	void setTransmitDelayUs(uint32_t delayUs);
 
 	/**
 	@brief Sends a FDCAN Frame to IDs in range (10 - 2047), and checks for valid responses from Md80 at 1M baudrate.
@@ -199,7 +155,7 @@ class Candle
 	@param newTimeout FDCAN watchdof timeout in milliseconds. If set to 0 the watchdog is disabled.
 	@return true if all parameters were changed succesfully, false otherwise
 	*/
-	bool configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout);
+	bool configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newBaudrateMbps, unsigned int newTimeout, bool canTermination = false);
 	/**
 	@brief Changes max phase-to-phase motor current.
 	@param canId ID of the drive
@@ -219,6 +175,13 @@ class Candle
 	@return true if blinking, false otherwise
 	*/
 	bool configMd80Blink(uint16_t canId);
+	/**
+	@brief set torque bandwidth
+	@param canId ID of the drive
+	@param torqueBandwidth torquer bandwidth to be set
+	@return true if change was succesfull, false otherwise
+	*/
+	bool configMd80TorqueBandwidth(uint16_t canId, uint16_t torqueBandwidth);
 
 	/**
 	@brief Sets current motor position as zero position -> reference for any future movements.
@@ -293,18 +256,22 @@ class Candle
 
 	/**
 	@brief Triggers a calibration routine of the drive's internal electronics.
-	@note **This method should not be ever used without consultation with MAB Robotics**, it may make drive unusable and
-	prone to fail if used incorrectly.
 	@param canId ID of the drive
 	@return true if the calibration started succesfully, false otherwise
 	*/
-	bool setupMd80Calibration(uint16_t canId, uint16_t torqueBandwidth);
+	bool setupMd80Calibration(uint16_t canId);
 	/**
 	@brief Prints diagnostic message from md80.
 	@param canId ID of the drive
 	@return true if the succesfull, false otherwise
 	*/
 	bool setupMd80Diagnostic(uint16_t canId);
+	/**
+	@brief Retrieves extended diagnostic parameters from md80
+	@param canId ID of the drive
+	@return true if the succesfull, false otherwise
+	*/
+	bool setupMd80DiagnosticExtended(uint16_t canId);
 	/**
 	@brief Returns current CAN baudrate
 	@return either mab::CANdleBaudrate_E::1M, mab::CANdleBaudrate_E::2M, mab::CANdleBaudrate_E::5M, or mab::CANdleBaudrate_E::8M
@@ -316,13 +283,102 @@ class Candle
 	@return true if drive was successfully contacted, false otherwise
 	*/
 	bool checkMd80ForBaudrate(uint16_t canId);
+	/**
+	@brief reads single-field registers
+	@param canId ID of the drive
+	@param regId first register's ID
+	@param value first reference to a variable where the read value should be stored
+	@param ...	remaining regId-value pairs to be read
+	@return true if register was read
+	*/
+	template <typename T2, typename... Ts>
+	bool readMd80Register(uint16_t canId, Md80Reg_E regId, const T2& regValue, const Ts&... vs)
+	{
+		return md80Register->read(canId, regId, regValue, vs...);
+	}
+	/**
+	@brief writes single-field registers
+	@param canId ID of the drive
+	@param regId first register's ID
+	@param value first reference to a value that should be written
+	@param ...	remaining regId-value pairs to be written
+	@return true if register was written
+	*/
+	template <typename T2, typename... Ts>
+	bool writeMd80Register(uint16_t canId, Md80Reg_E regId, const T2& regValue, const Ts&... vs)
+	{
+		return md80Register->write(canId, regId, regValue, vs...);
+	}
 
-#ifdef BENCHMARKING
+#if BENCHMARKING == 1
+	long long txTimestamp = 0;
+	bool flag_glob_tx = false;
+	bool flag_glob_rx = false;
+	long long time_delta;
+
 	bool benchGetFlagRx();
 	bool benchGetFlagTx();
 	void benchSetFlagRx(bool state);
 	void benchSetFlagTx(bool state);
 	long long benchGetTimeDelta();
 #endif
+
+   private:
+	static std::vector<Candle*> instances;
+	const std::string version = "v3.1";
+	std::thread receiverThread;
+	std::thread transmitterThread;
+	sem_t transmitted;
+	sem_t received;
+
+	bool printVerbose = true;
+
+	CANdleMode_E mode = CANdleMode_E::CONFIG;
+
+	Bus* bus = nullptr;
+
+	Register* md80Register = nullptr;
+
+	uint32_t candleDeviceVersion = 10;
+	const uint32_t candleCompatibleVersion = 14;
+	/* major version number - ex. 2 means all 2.X versions will be compatible */
+	const uint32_t md80CompatibleMajorVersion = 2;
+
+	const int idMax = 2000;
+	int maxDevices = 12;
+	bool shouldStopReceiver;
+	bool shouldStopTransmitter;
+	mab::CANdleBaudrate_E canBaudrate;
+
+	int msgsReceived = 0;
+	int msgsSent = 0;
+	float usbCommsFreq = 0.0f;
+	uint32_t transmitterDelay = 20;
+
+	/* controller limits */
+	static const uint16_t driverMinBandwidth = 50;
+	static const uint16_t driverMaxBandwidth = 2500;
+	const float driverMaxCurrent = 40.0f;
+	const float driverMinCurrent = 1.0f;
+
+	void transmitNewStdFrame();
+
+	void receive();
+	void manageReceivedFrame();
+	void transmit();
+
+	bool inUpdateMode();
+	bool inConfigMode();
+
+	void sendGetInfoFrame(mab::Md80& drive);
+	void sendMotionCommand(mab::Md80& drive, float pos, float vel, float torque);
+
+	Bus* makeBus(mab::BusType_E busType, std::string device);
+
+	/* virtual methods for testing purposes */
+	virtual Bus* createSpi() { return new SpiDevice(); }
+	virtual Bus* createUart() { return new UartDevice(); }
+	virtual Bus* createUsb(const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances) { return new UsbDevice(idVendor, idProduct, instances); }
 };
+
 }  // namespace mab
