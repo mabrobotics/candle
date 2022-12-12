@@ -15,7 +15,7 @@ int main()
 	// Create CANdle object and set FDCAN baudrate to 8Mbps
 	mab::Candle candle(mab::CAN_BAUD_8M, true, mab::BusType_E::SPI);
 	// If your SPI device is different from the default one ("/dev/spidev0.0") use the following constructor:
-	// mab::Candle candle(mab::CAN_BAUD_8M, true, mab::BusType_E::UART, "/dev/spidev0.1");
+	// mab::Candle candle(mab::CAN_BAUD_8M, true, mab::BusType_E::SPI, "/dev/spidev0.1");
 
 	// Ping FDCAN bus in search of drives
 	auto ids = candle.ping(mab::CAN_BAUD_8M);
