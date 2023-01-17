@@ -96,6 +96,7 @@ uint16_t Register::getSize(uint16_t regId)
 {
 	switch (regId)
 	{
+		case Md80Reg_E::outputEncoderMode:
 		case Md80Reg_E::bridgeType:
 		case Md80Reg_E::outputEncoder:
 		case Md80Reg_E::hardwareVersion:
