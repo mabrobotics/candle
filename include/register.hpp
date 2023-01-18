@@ -32,6 +32,12 @@ typedef struct
 	float motorTemperature;
 	float outputEncoderVelocity;
 	float outputEncoderPosition;
+	uint32_t mainEncoderErrors;
+	uint32_t auxEncoderErrors;
+	uint32_t calibrationErrors;
+	uint32_t bridgeErrors;
+	uint32_t hardwareErrors;
+	uint32_t communicationErrors;
 } regRO_st;
 
 /* READ WRITE PARAMS */
@@ -128,6 +134,12 @@ enum Md80Reg_E : uint16_t
 	mosfetTemperature = 0x806,
 	motorTemperature = 0x807,
 	motorShutdownTemp = 0x808,
+	mainEncoderErrors = 0x809,
+	auxEncoderErrors = 0x80A,
+	calibrationErrors = 0x80B,
+	bridgeErrors = 0x80C,
+	hardwareErrors = 0x80D,
+	communicationErrors = 0x80E,
 };
 
 class Register

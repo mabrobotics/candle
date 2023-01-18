@@ -141,6 +141,12 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::motorKt_b:
 		case Md80Reg_E::motorKt_c:
 		case Md80Reg_E::motorIMax:
+		case Md80Reg_E::mainEncoderErrors:
+		case Md80Reg_E::auxEncoderErrors:
+		case Md80Reg_E::calibrationErrors:
+		case Md80Reg_E::bridgeErrors:
+		case Md80Reg_E::hardwareErrors:
+		case Md80Reg_E::communicationErrors:
 			return 4;
 		case Md80Reg_E::commitHash:
 			return 8;

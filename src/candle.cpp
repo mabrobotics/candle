@@ -827,6 +827,18 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 		return false;
 	}
 
+	if (!md80Register->read(canId,
+							mab::Md80Reg_E::mainEncoderErrors, regR.RO.mainEncoderErrors,
+							mab::Md80Reg_E::auxEncoderErrors, regR.RO.auxEncoderErrors,
+							mab::Md80Reg_E::calibrationErrors, regR.RO.calibrationErrors,
+							mab::Md80Reg_E::bridgeErrors, regR.RO.bridgeErrors,
+							mab::Md80Reg_E::hardwareErrors, regR.RO.hardwareErrors,
+							mab::Md80Reg_E::communicationErrors, regR.RO.communicationErrors))
+	{
+		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
+		return false;
+	}
+
 	return true;
 }
 mab::CANdleBaudrate_E Candle::getCurrentBaudrate()
