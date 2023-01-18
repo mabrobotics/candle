@@ -738,6 +738,22 @@ bool Candle::setupMd80Calibration(uint16_t canId)
 	return false;
 }
 
+bool Candle::setupMd80CalibrationAux(uint16_t canId)
+{
+	GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CALIBRATION_AUX);
+	char tx[64];
+	int len = sizeof(frame);
+	memcpy(tx, &frame, len);
+	if (bus->transmit(tx, len, true, 50, 66))
+		if (*bus->getRxBuffer(1) == true)
+		{
+			vout << "Starting output encoder calibration at ID: " << canId << statusOK << std::endl;
+			return true;
+		}
+	vout << "Starting output encoder calibration failed at ID: " << canId << statusFAIL << std::endl;
+	return false;
+}
+
 /* legacy */
 bool Candle::setupMd80Diagnostic(uint16_t canId)
 {

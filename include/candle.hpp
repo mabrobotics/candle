@@ -261,6 +261,12 @@ class Candle
 	*/
 	bool setupMd80Calibration(uint16_t canId);
 	/**
+	@brief Triggers an output encoder calibration routine of the drive's internal electronics.
+	@param canId ID of the drive
+	@return true if the calibration started succesfully, false otherwise
+	*/
+	bool setupMd80CalibrationAux(uint16_t canId);
+	/**
 	@brief Prints diagnostic message from md80.
 	@param canId ID of the drive
 	@return true if the succesfull, false otherwise
