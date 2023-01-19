@@ -31,7 +31,6 @@ void Md80::setPositionControllerParams(float kp, float ki, float kd, float iWind
 }
 void Md80::setVelocityControllerParams(float kp, float ki, float kd, float iWindup)
 {
-	regulatorsAdjusted = true;
 	velocityRegulatorAdjusted = true;
 	velocityController.kp = kp;
 	velocityController.ki = ki;
@@ -55,33 +54,39 @@ void Md80::__updateCommandFrame()
 			break;
 		case Md80Mode_E::IMPEDANCE:
 			if (regulatorsAdjusted)
+			{
 				packImpedanceFrame();
+				regulatorsAdjusted = false;
+			}
 			else
 				packMotionTargetsFrame();
 			break;
 		case Md80Mode_E::POSITION_PID:
 			if (regulatorsAdjusted)
-				if (velocityRegulatorAdjusted)
-				{
-					velocityRegulatorAdjusted = false;
-					packVelocityFrame();
-				}
-				else
-					packPositionFrame();
+			{
+				packPositionFrame();
+				regulatorsAdjusted = false;
+			}
+			else if (velocityRegulatorAdjusted)
+			{
+				packVelocityFrame();
+				velocityRegulatorAdjusted = false;
+			}
 			else
 				packMotionTargetsFrame();
 			break;
 		case Md80Mode_E::VELOCITY_PID:
-			if (regulatorsAdjusted)
+			if (velocityRegulatorAdjusted)
+			{
 				packVelocityFrame();
+				velocityRegulatorAdjusted = false;
+			}
 			else
 				packMotionTargetsFrame();
 			break;
 		default:
 			break;
 	}
-	/* send updated gains only when modified */
-	regulatorsAdjusted = false;
 }
 void Md80::__updateResponseData(StdMd80ResponseFrame_t* _responseFrame)
 {
