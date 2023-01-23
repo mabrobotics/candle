@@ -347,7 +347,7 @@ std::vector<uint16_t> Candle::ping()
 {
 	return ping(canBaudrate);
 }
-bool Candle::sengGenericFDCanFrame(uint16_t canId, int msgLen, const char* txBuffer, char* rxBuffer, int timeoutMs)
+bool Candle::sendGenericFDCanFrame(uint16_t canId, int msgLen, const char* txBuffer, char* rxBuffer, int timeoutMs)
 {
 	int fdcanTimeout = timeoutMs - 3;
 	if (timeoutMs < 3)

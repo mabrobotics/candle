@@ -13,7 +13,7 @@ bool Register::prepare(uint16_t canId, mab::Md80FrameId_E frameType)
 	memset(regRxBuffer, 0, sizeof(regRxBuffer));
 	regTxPtr = nullptr;
 	regRxPtr = nullptr;
-	return candle->sengGenericFDCanFrame(canId, sizeof(regTxBuffer), regTxBuffer, regRxBuffer, 100);
+	return candle->sendGenericFDCanFrame(canId, sizeof(regTxBuffer), regTxBuffer, regRxBuffer, 100);
 }
 
 bool Register::interpret(uint16_t canId)
