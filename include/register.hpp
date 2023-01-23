@@ -32,6 +32,9 @@ typedef struct
 	float motorTemperature;
 	float outputEncoderVelocity;
 	float outputEncoderPosition;
+	float calOutputEncoderStdDev;
+	float calOutputEncoderMinE;
+	float calOutputEncoderMaxE;
 	uint32_t mainEncoderErrors;
 	uint32_t auxEncoderErrors;
 	uint32_t calibrationErrors;
@@ -67,6 +70,11 @@ typedef struct
 	ImpedanceControllerGains_t impedancePdGains;
 	PidControllerGains_t velocityPidGains;
 	PidControllerGains_t positionPidGains;
+	uint8_t runSaveCmd;
+	uint8_t runCheckOutputEncoderCmd;
+	uint8_t runCalibrateCmd;
+	uint8_t runCalibrateOutpuEncoderCmd;
+	uint8_t runCalibratePiGains;
 } regRW_st;
 
 typedef struct
@@ -124,6 +132,16 @@ enum Md80Reg_E : uint16_t
 	motorImpPidKp = 0x050,
 	motorImpPidKd = 0x051,
 	motorImpPidOutMax = 0x052,
+
+	runSaveCmd = 0x080,
+	runCheckOutputEncoderCmd = 0x081,
+	runCalibrateCmd = 0x082,
+	runCalibrateOutpuEncoderCmd = 0x083,
+	runCalibratePiGains = 0x084,
+
+	calOutputEncoderStdDev = 0x100,
+	calOutputEncoderMinE = 0x101,
+	calOutputEncoderMaxE = 0x102,
 
 	buildDate = 0x800,
 	commitHash = 0x801,

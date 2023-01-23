@@ -754,6 +754,19 @@ bool Candle::setupMd80CalibrationAux(uint16_t canId)
 	return false;
 }
 
+bool Candle::setupMd80CheckOutputEncoder(uint16_t canId)
+{
+	regWrite_st& regW = getMd80FromList(canId).getWriteReg();
+
+	if (!md80Register->write(canId, mab::Md80Reg_E::runCheckOutputEncoderCmd, regW.RW.runCheckOutputEncoderCmd))
+	{
+		vout << "Output encoder check failed at ID: " << canId << statusFAIL << std::endl;
+		return false;
+	}
+	vout << "Output encoder check in progress at ID: " << canId << statusOK << std::endl;
+	return true;
+}
+
 /* legacy */
 bool Candle::setupMd80Diagnostic(uint16_t canId)
 {
@@ -821,7 +834,10 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 	}
 
 	if (!md80Register->read(canId,
-							mab::Md80Reg_E::outputEncoderMode, regR.RW.outputEncoderMode))
+							mab::Md80Reg_E::outputEncoderMode, regR.RW.outputEncoderMode,
+							mab::Md80Reg_E::calOutputEncoderStdDev, regR.RO.calOutputEncoderStdDev,
+							mab::Md80Reg_E::calOutputEncoderMinE, regR.RO.calOutputEncoderMinE,
+							mab::Md80Reg_E::calOutputEncoderMaxE, regR.RO.calOutputEncoderMaxE))
 	{
 		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
 		return false;

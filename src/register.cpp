@@ -102,6 +102,11 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::hardwareVersion:
 		case Md80Reg_E::canTermination:
 		case Md80Reg_E::motorShutdownTemp:
+		case Md80Reg_E::runCalibrateCmd:
+		case Md80Reg_E::runCalibrateOutpuEncoderCmd:
+		case Md80Reg_E::runCalibratePiGains:
+		case Md80Reg_E::runCheckOutputEncoderCmd:
+		case Md80Reg_E::runSaveCmd:
 			return 1;
 		case Md80Reg_E::motorTorgueBandwidth:
 		case Md80Reg_E::canWatchdog:
@@ -147,6 +152,9 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::bridgeErrors:
 		case Md80Reg_E::hardwareErrors:
 		case Md80Reg_E::communicationErrors:
+		case Md80Reg_E::calOutputEncoderStdDev:
+		case Md80Reg_E::calOutputEncoderMinE:
+		case Md80Reg_E::calOutputEncoderMaxE:
 			return 4;
 		case Md80Reg_E::commitHash:
 			return 8;
