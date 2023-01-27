@@ -271,7 +271,13 @@ class Candle
 	@param canId ID of the drive
 	@return true if the check routine started succesfully, false otherwise
 	*/
-	bool setupMd80CheckOutputEncoder(uint16_t canId);
+	bool setupMd80TestOutputEncoder(uint16_t canId);
+	/**
+	@brief Triggers a main encoder check routine. After routine completion min, max and stdDev error can be read from registers.
+	@param canId ID of the drive
+	@return true if the check routine started succesfully, false otherwise
+	*/
+	bool setupMd80TestMainEncoder(uint16_t canId);
 	/**
 	@brief Prints diagnostic message from md80.
 	@param canId ID of the drive

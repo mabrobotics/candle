@@ -754,16 +754,29 @@ bool Candle::setupMd80CalibrationAux(uint16_t canId)
 	return false;
 }
 
-bool Candle::setupMd80CheckOutputEncoder(uint16_t canId)
+bool Candle::setupMd80TestOutputEncoder(uint16_t canId)
 {
 	regWrite_st& regW = getMd80FromList(canId).getWriteReg();
 
-	if (!md80Register->write(canId, mab::Md80Reg_E::runCheckOutputEncoderCmd, regW.RW.runCheckOutputEncoderCmd))
+	if (!md80Register->write(canId, mab::Md80Reg_E::runTestOutputEncoderCmd, regW.RW.runTestOutputEncoderCmd))
 	{
-		vout << "Output encoder check failed at ID: " << canId << statusFAIL << std::endl;
+		vout << "Output encoder test failed at ID: " << canId << statusFAIL << std::endl;
 		return false;
 	}
-	vout << "Output encoder check in progress at ID: " << canId << statusOK << std::endl;
+	vout << "Output encoder test in progress at ID: " << canId << statusOK << std::endl;
+	return true;
+}
+
+bool Candle::setupMd80TestMainEncoder(uint16_t canId)
+{
+	regWrite_st& regW = getMd80FromList(canId).getWriteReg();
+
+	if (!md80Register->write(canId, mab::Md80Reg_E::runTestMainEncoderCmd, regW.RW.runTestMainEncoderCmd))
+	{
+		vout << "Main encoder test failed at ID: " << canId << statusFAIL << std::endl;
+		return false;
+	}
+	vout << "Output encoder test in progress at ID: " << canId << statusOK << std::endl;
 	return true;
 }
 
@@ -837,7 +850,10 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 							mab::Md80Reg_E::outputEncoderMode, regR.RW.outputEncoderMode,
 							mab::Md80Reg_E::calOutputEncoderStdDev, regR.RO.calOutputEncoderStdDev,
 							mab::Md80Reg_E::calOutputEncoderMinE, regR.RO.calOutputEncoderMinE,
-							mab::Md80Reg_E::calOutputEncoderMaxE, regR.RO.calOutputEncoderMaxE))
+							mab::Md80Reg_E::calOutputEncoderMaxE, regR.RO.calOutputEncoderMaxE,
+							mab::Md80Reg_E::calMainEncoderStdDev, regR.RO.calMainEncoderStdDev,
+							mab::Md80Reg_E::calMainEncoderMinE, regR.RO.calMainEncoderMinE,
+							mab::Md80Reg_E::calMainEncoderMaxE, regR.RO.calMainEncoderMaxE))
 	{
 		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
 		return false;

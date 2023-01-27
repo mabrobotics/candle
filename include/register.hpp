@@ -35,6 +35,9 @@ typedef struct
 	float calOutputEncoderStdDev;
 	float calOutputEncoderMinE;
 	float calOutputEncoderMaxE;
+	float calMainEncoderStdDev;
+	float calMainEncoderMinE;
+	float calMainEncoderMaxE;
 	uint32_t mainEncoderErrors;
 	uint32_t auxEncoderErrors;
 	uint32_t calibrationErrors;
@@ -71,7 +74,8 @@ typedef struct
 	PidControllerGains_t velocityPidGains;
 	PidControllerGains_t positionPidGains;
 	uint8_t runSaveCmd;
-	uint8_t runCheckOutputEncoderCmd;
+	uint8_t runTestOutputEncoderCmd;
+	uint8_t runTestMainEncoderCmd;
 	uint8_t runCalibrateCmd;
 	uint8_t runCalibrateOutpuEncoderCmd;
 	uint8_t runCalibratePiGains;
@@ -134,14 +138,18 @@ enum Md80Reg_E : uint16_t
 	motorImpPidOutMax = 0x052,
 
 	runSaveCmd = 0x080,
-	runCheckOutputEncoderCmd = 0x081,
-	runCalibrateCmd = 0x082,
-	runCalibrateOutpuEncoderCmd = 0x083,
-	runCalibratePiGains = 0x084,
+	runTestMainEncoderCmd = 0x081,
+	runTestOutputEncoderCmd = 0x082,
+	runCalibrateCmd = 0x083,
+	runCalibrateOutpuEncoderCmd = 0x084,
+	runCalibratePiGains = 0x085,
 
 	calOutputEncoderStdDev = 0x100,
 	calOutputEncoderMinE = 0x101,
 	calOutputEncoderMaxE = 0x102,
+	calMainEncoderStdDev = 0x103,
+	calMainEncoderMinE = 0x104,
+	calMainEncoderMaxE = 0x105,
 
 	buildDate = 0x800,
 	commitHash = 0x801,
