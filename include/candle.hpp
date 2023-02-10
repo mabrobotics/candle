@@ -341,6 +341,9 @@ class Candle
 	long long benchGetTimeDelta();
 #endif
 
+   protected:
+	Register* md80Register = nullptr;
+
    private:
 	static std::vector<Candle*> instances;
 	const std::string version = "v3.1";
@@ -354,8 +357,6 @@ class Candle
 	CANdleMode_E mode = CANdleMode_E::CONFIG;
 
 	Bus* bus = nullptr;
-
-	Register* md80Register = nullptr;
 
 	uint32_t candleDeviceVersion = 10;
 	const uint32_t candleCompatibleVersion = 14;
