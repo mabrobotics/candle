@@ -362,7 +362,7 @@ bool Candle::sendGenericFDCanFrame(uint16_t canId, int msgLen, const char* txBuf
 	frame.timeoutMs = fdcanTimeout;
 	memcpy(frame.canMsg, txBuffer, msgLen);
 	char tx[96];
-	int len = sizeof(frame);
+	int len = sizeof(frame) - sizeof(frame.canMsg) + msgLen;
 	memcpy(tx, &frame, len);
 	if (bus->transmit(tx, len, true, timeoutMs, 66))  // Got some response
 	{

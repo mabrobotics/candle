@@ -22,7 +22,16 @@ int main()
 		return false;
 	}
 
+	usleep(100000);
+
+	if (!candle.setupMd80DiagnosticExtended(ids[0]))
+	{
+		std::cout << "Reading diagnostics failed at: " << ids[0] << std::endl;
+		return false;
+	}
 	/* NOTE: please make sure the motor is calibrated or otherwise you will read zeros in these registers */
+
+	usleep(100000);
 
 	std::cout << "Motor d-axis resistance: " << regR.RO.resistance << " Ohms " << std::endl;
 	std::cout << "Motor d-axis inductance: " << regR.RO.inductance << " H " << std::endl;
