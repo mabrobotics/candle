@@ -31,7 +31,7 @@ candle.begin()
 
 for i in range(1000):
     t=t+dt
-    #  After powerup the drive will load set of default parameters for every regulator.
+    #  After powerup the drive will load set of default parameters for every controller.
     #  To make the drive move all we got to do is set mode (.controlMd80Mode) and set target
     #  (.setTargetPosition, .setTargetVelocity, .setTargetTorque)
     candle.md80s[0].setTargetPosition(math.sin(t) * 3.0)
