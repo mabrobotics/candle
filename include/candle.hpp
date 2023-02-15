@@ -346,7 +346,7 @@ class Candle
 
    private:
 	static std::vector<Candle*> instances;
-	const std::string version = "v3.1";
+	const std::string version = "v3.2";
 	std::thread receiverThread;
 	std::thread transmitterThread;
 	sem_t transmitted;
