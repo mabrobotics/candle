@@ -305,7 +305,7 @@ std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
 {
 	if (!this->configCandleBaudrate(baudrate))
 		return std::vector<uint16_t>();
-	vout << "Starting pinging drives at baudrate: " << baudrate << "M" << std::endl;
+	vout << "Starting pinging drives at baudrate: " << std::to_string(baudrate) << "M" << std::endl;
 	char tx[128];
 	tx[0] = BUS_FRAME_PING_START;
 	tx[1] = 0x00;
