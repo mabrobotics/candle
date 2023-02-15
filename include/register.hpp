@@ -171,6 +171,19 @@ enum Md80Reg_E : uint16_t
 class Register
 {
    public:
+	enum class type
+	{
+		UNKNOWN = 0,
+		U8 = 1,
+		I8 = 2,
+		U16 = 3,
+		I16 = 4,
+		U32 = 5,
+		I32 = 6,
+		F32 = 7,
+		STR = 8
+	};
+
 	/**
 	@brief Register object constructor
 	@param candle Candle object pointer
@@ -208,6 +221,20 @@ class Register
 		return prepare(canId, mab::Md80FrameId_E::FRAME_WRITE_REGISTER, regId, regValue, vs...);
 	}
 
+	/**
+	@brief returns the size of a register based on it's id
+	@param regId register's ID
+	@return register size in bytes
+	*/
+	uint16_t getSize(uint16_t regId);
+
+	/**
+	@brief returns the type of a register field based on it's id
+	@param regId register's ID
+	@return register type (Register::type enum class)
+	*/
+	type getType(uint16_t regId);
+
    private:
 	Candle* candle;
 
@@ -223,7 +250,6 @@ class Register
 	bool prepareFrame(mab::Md80FrameId_E frameId, Md80Reg_E regId, char* value);
 	bool interpret(uint16_t canId);
 	bool prepare(uint16_t canId, mab::Md80FrameId_E frameType);
-	uint16_t getSize(uint16_t regId);
 
 	template <typename T2, typename... Ts>
 	bool interpret(uint16_t canId, Md80Reg_E regId, const T2& regValue, const Ts&... vs)
