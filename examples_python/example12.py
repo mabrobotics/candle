@@ -11,24 +11,28 @@ ids = candle.ping()
 
 candle.addMd80(ids[0])
 
-regR = candle.getMd80FromList(ids[0]).getReadReg()
+reg = candle.getMd80FromList(ids[0]).getReadReg()
+print("")
 
-print("Motor d-axis resistance: " +str(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorResistance, regR.RO.resistance))+" Ohm")
-print("Motor d-axis resistance: " +str(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorInductance, regR.RO.inductance))+" H")
+# Lets first read some registers NOTE: registers cannot be accessed after candle.begin();
+print("Drive ID: " + str(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.canId, reg.RW.canId)))
+print("Motor name: " + candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorName, ""))
+print("Impedance mode Kp gain : " + "{:.2f}".format(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorImpPidKp, reg.RW.impedancePdGains.kp)) + " Nm/rad")
+print("Impedance mode Kd gain : " + "{:.2f}".format(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorImpPidKd, reg.RW.impedancePdGains.kd)) + " Nm*s/rad")
+print("Impedance mode max out : " + "{:.2f}".format(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorImpPidOutMax, reg.RW.impedancePdGains.outMax)) + " Nm")
 
-# motor_name = "TEST"
-# print(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorResistance, regR.RO.resistance))
-# print(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.canTermination, regR.RW.canTermination))
-# print(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorName, motor_name))
+print("")
+# Then change some parameters 
+candle.writeMd80Register(ids[0],pyCandle.Md80Reg_E.motorName, "EXAMPLE12")
+candle.writeMd80Register(ids[0],pyCandle.Md80Reg_E.motorImpPidKp, 1.0)
+candle.writeMd80Register(ids[0],pyCandle.Md80Reg_E.motorImpPidKd, 0.01)
+candle.writeMd80Register(ids[0],pyCandle.Md80Reg_E.motorImpPidOutMax, 1.0)
 
-# print("was " + str(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorKt_a, regR.RW.motorKt_a)))
-# candle.writeMd80Register(ids[0],pyCandle.Md80Reg_E.motorKt_a, 0.666)
-# print("is " + str(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorKt_a, regR.RW.motorKt_a)))
-
-# candle.writeMd80Register(ids[0],pyCandle.Md80Reg_E.motorName, "TEST")
-# print(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorName, motor_name))
-
-# candle.writeMd80Register(ids[0],pyCandle.Md80Reg_E.canTermination, regR.RW.canTermination)
-# print(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.canTermination, regR.RW.canTermination))
+# And read one more time NOTE: these settings are not saved!
+print("Drive ID: " + str(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.canId, reg.RW.canId)))
+print("Motor name: " + candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorName, ""))
+print("Impedance mode Kp gain : " + "{:.2f}".format(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorImpPidKp, reg.RW.impedancePdGains.kp)) + " Nm/rad")
+print("Impedance mode Kd gain : " + "{:.2f}".format(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorImpPidKd, reg.RW.impedancePdGains.kd)) + " Nm*s/rad")
+print("Impedance mode max out : " + "{:.2f}".format(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorImpPidOutMax, reg.RW.impedancePdGains.outMax)) + " Nm")
 
 sys.exit("EXIT SUCCESS")
