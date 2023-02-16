@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <functional>
 
 #include "mab_types.hpp"
 #include "register.hpp"
@@ -45,6 +46,10 @@ class Md80
 	void packPositionFrame();
 	void packVelocityFrame();
 	void packMotionTargetsFrame();
+
+	void emptyCallback(){};
+	std::function<void()> txCallback = std::bind(&Md80::emptyCallback, this);
+	std::function<void()> rxCallback = std::bind(&Md80::emptyCallback, this);
 
    public:
 	/**
@@ -158,6 +163,27 @@ class Md80
 	 * @return reference to write register struct
 	 */
 	regWrite_st& getWriteReg() { return regWrite; };
+
+	/**
+	 * @brief Register a user callback that will be called on each bus receive frame
+	 * @param T class instance
+	 * @param func member function pointer
+	 */
+	template <typename T>
+	void registerRXCallback(T& p, void (T::*func)())
+	{
+		rxCallback = std::bind(func, p);
+	}
+	/**
+	 * @brief Register a user callback that will be called on each bus transmit frame
+	 * @param T class instance
+	 * @param func member function pointer
+	 */
+	template <typename T>
+	void registerTXCallback(T& p, void (T::*func)())
+	{
+		txCallback = std::bind(func, p);
+	}
 
 	/**
 	 * @brief For internal use by CANdle only.

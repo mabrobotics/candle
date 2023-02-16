@@ -46,6 +46,8 @@ void Md80::setImpedanceControllerParams(float kp, float kd)
 }
 void Md80::__updateCommandFrame()
 {
+	txCallback();
+
 	switch (controlMode)
 	{
 		case Md80Mode_E::IDLE:
@@ -92,6 +94,8 @@ void Md80::__updateResponseData(StdMd80ResponseFrame_t* _responseFrame)
 	position = *(float*)&_responseFrame->fromMd80.data[4];
 	velocity = *(float*)&_responseFrame->fromMd80.data[8];
 	torque = *(float*)&_responseFrame->fromMd80.data[12];
+
+	rxCallback();
 }
 void Md80::__updateRegulatorsAdjusted(bool adjusted)
 {
