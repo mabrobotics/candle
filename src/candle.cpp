@@ -273,7 +273,7 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 		if (*bus->getRxBuffer(0) == BUS_FRAME_MD80_ADD)
 			if (*bus->getRxBuffer(1) == true)
 			{
-				version_ut firmwareVersion = {0};
+				version_ut firmwareVersion = {{0, 0, 0, 0}};
 
 				if (!md80Register->read(canId, mab::Md80Reg_E::firmwareVersion, firmwareVersion.i))
 				{
