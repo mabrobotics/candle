@@ -96,4 +96,16 @@ typedef struct
 	float outMax;
 } PidControllerGains_t;
 
+typedef union version_ut
+{
+	struct
+	{
+		char tag;
+		uint8_t revision;
+		uint8_t minor;
+		uint8_t major;
+	} s;
+	uint32_t i;
+} version_ut;
+
 }  // namespace mab

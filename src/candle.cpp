@@ -37,15 +37,15 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::BusType_E b
 Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::Bus* bus)
 	: printVerbose(printVerbose), bus(bus)
 {
-	vout << "CANdle library version: " << getVersion() << std::endl;
+	vout << "CANdle library version: v" << getVersion() << std::endl;
 
 	this->reset();
 	usleep(5000);
 
 	if (!configCandleBaudrate(canBaudrate, true))
 	{
-		vout << "Failed to set up CANdle baudrate @" << canBaudrate << "Mbps!" << std::endl;
-		return;
+		vout << "Failed to set up CANdle baudrate @" << canBaudrate << "Mbps!" << statusFAIL << std::endl;
+		throw "Failed to set up CANdle baudrate!";
 	}
 
 	if (bus->getType() == mab::BusType_E::USB)
@@ -100,7 +100,7 @@ Bus* Candle::makeBus(mab::BusType_E busType, std::string device)
 
 const std::string Candle::getVersion()
 {
-	return version;
+	return getVersionString(&candleLibVersion);
 }
 int Candle::getActualCommunicationFrequency()
 {
@@ -273,19 +273,20 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 		if (*bus->getRxBuffer(0) == BUS_FRAME_MD80_ADD)
 			if (*bus->getRxBuffer(1) == true)
 			{
-				uint32_t firmwareVersion = 0;
-				if (!md80Register->read(canId, mab::Md80Reg_E::firmwareVersion, firmwareVersion))
+				version_ut firmwareVersion = {0};
+
+				if (!md80Register->read(canId, mab::Md80Reg_E::firmwareVersion, firmwareVersion.i))
 				{
 					vout << "Unable to read MD80's firmware version! Probably MD80's firmware is outdated. Please update it using MAB_CAN_Flasher." << statusFAIL << std::endl;
 					return false;
 				}
 
-				if (firmwareVersion / 10 < md80CompatibleMajorVersion)
+				if (firmwareVersion.i < md80CompatibleVersion.i)
 				{
 					vout << "MD80's firmware with ID: " + std::to_string(canId) + " is outdated. Please update it using MAB_CAN_Flasher." << statusFAIL << std::endl;
 					return false;
 				}
-				else if (firmwareVersion / 10 > md80CompatibleMajorVersion)
+				else if (firmwareVersion.i > md80CompatibleVersion.i)
 				{
 					vout << "MD80's firmware with ID: " + std::to_string(canId) + " is a future version. Please update your CANdle library." << statusFAIL << std::endl;
 					return false;
@@ -492,18 +493,25 @@ bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersio
 	char tx[10];
 	tx[0] = BUS_FRAME_CANDLE_CONFIG_BAUDRATE;
 	tx[1] = (uint8_t)canBaudrate;
-	if (bus->transmit(tx, 2, true, 50, 3))
+
+	if (bus->transmit(tx, 2, true, 50, 6))
+	{
 		if (*bus->getRxBuffer(0) == BUS_FRAME_CANDLE_CONFIG_BAUDRATE && *bus->getRxBuffer(1) == true)
 		{
-			candleDeviceVersion = *bus->getRxBuffer(2);
+			candleDeviceVersion.i = *(uint32_t*)bus->getRxBuffer(2);
+
 			if (printVersionInfo)
 			{
-				vout << "Device firmware version: v" << candleDeviceVersion / 10 << "." << candleDeviceVersion % 10 << std::endl;
-				if (candleDeviceVersion < candleCompatibleVersion)
-					std::cout << "Your CANdle firmware seems to be out-dated. Contact MAB: support@mabrobotics.pl , for intructions how to update." << std::endl;
+				if (candleDeviceVersion.i < candleDeviceCompatibleVersion.i)
+				{
+					vout << "Your CANdle device firmware seems to be out-dated. Please see the manual for intructions on how to update." << std::endl;
+					return false;
+				}
+				vout << "Device firmware version: v" << mab::getVersionString(&candleDeviceVersion) << std::endl;
 			}
 			return true;
 		}
+	}
 	return false;
 }
 
@@ -911,5 +919,10 @@ long long Candle::benchGetTimeDelta()
 	return time_delta;
 }
 #endif
+
+std::string getVersionString(const version_ut* ver)
+{
+	return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision) + '.' + (char)ver->s.tag);
+}
 
 }  // namespace mab

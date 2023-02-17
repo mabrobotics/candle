@@ -345,8 +345,15 @@ class Candle
 	Register* md80Register = nullptr;
 
    private:
+	const uint8_t VMAJOR = 3;
+	const uint8_t VMINOR = 2;
+	const uint8_t VREVISION = 0;
+	const char VTAG = 'p';
+
+	const version_ut candleLibVersion = {{VTAG, VREVISION, VMINOR, VMAJOR}};
+
 	static std::vector<Candle*> instances;
-	const std::string version = "v3.2";
+
 	std::thread receiverThread;
 	std::thread transmitterThread;
 	sem_t transmitted;
@@ -358,10 +365,9 @@ class Candle
 
 	Bus* bus = nullptr;
 
-	uint32_t candleDeviceVersion = 10;
-	const uint32_t candleCompatibleVersion = 14;
-	/* major version number - ex. 2 means all 2.X versions will be compatible */
-	const uint32_t md80CompatibleMajorVersion = 2;
+	version_ut candleDeviceVersion;
+	const version_ut candleDeviceCompatibleVersion = {{'p', 0, 1, 2}};
+	const version_ut md80CompatibleVersion = {{'p', 0, 1, 2}};
 
 	const int idMax = 2000;
 	int maxDevices = 12;
@@ -399,5 +405,7 @@ class Candle
 	virtual Bus* createUart() { return new UartDevice(); }
 	virtual Bus* createUsb(const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances) { return new UsbDevice(idVendor, idProduct, instances); }
 };
+
+std::string getVersionString(const version_ut* ver);
 
 }  // namespace mab
