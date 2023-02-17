@@ -348,7 +348,12 @@ class Candle
 	const uint8_t VMAJOR = 3;
 	const uint8_t VMINOR = 2;
 	const uint8_t VREVISION = 0;
-	const char VTAG = 'p';
+	const char VTAG = 'd';
+
+	version_ut candleDeviceVersion;
+	/* TODO make a proper version class as the reverse initalization is not elegant */
+	const version_ut candleDeviceCompatibleVersion = {{'d', 0, 1, 2}};
+	const version_ut md80CompatibleVersion = {{'d', 0, 1, 2}};
 
 	const version_ut candleLibVersion = {{VTAG, VREVISION, VMINOR, VMAJOR}};
 
@@ -364,10 +369,6 @@ class Candle
 	CANdleMode_E mode = CANdleMode_E::CONFIG;
 
 	Bus* bus = nullptr;
-
-	version_ut candleDeviceVersion;
-	const version_ut candleDeviceCompatibleVersion = {{'p', 0, 1, 2}};
-	const version_ut md80CompatibleVersion = {{'p', 0, 1, 2}};
 
 	const int idMax = 2000;
 	int maxDevices = 12;
