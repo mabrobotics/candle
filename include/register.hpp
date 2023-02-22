@@ -64,6 +64,7 @@ typedef struct
 	float gearRatio;
 	uint8_t outputEncoder;
 	uint8_t outputEncoderMode;
+	uint8_t outputEncoderCalibrationMode;
 	float outputEncoderDir;
 	uint16_t torqueBandwidth;
 	uint32_t outputEncoderDefaultBaud;
@@ -120,6 +121,7 @@ enum Md80Reg_E : uint16_t
 	outputEncoderVelocity = 0x023,
 	outputEncoderPosition = 0x024,
 	outputEncoderMode = 0x025,
+	outputEncoderCalibrationMode = 0x026,
 
 	motorPosPidKp = 0x030,
 	motorPosPidKi = 0x031,
