@@ -166,21 +166,21 @@ class Md80
 
 	/**
 	 * @brief Register a user callback that will be called on each bus receive frame
-	 * @param T class instance
+	 * @param T class instance pointer
 	 * @param func member function pointer
 	 */
 	template <typename T>
-	void registerRXCallback(T& p, void (T::*func)())
+	void registerRXCallback(T* p, void (T::*func)())
 	{
 		rxCallback = std::bind(func, p);
 	}
 	/**
 	 * @brief Register a user callback that will be called on each bus transmit frame
-	 * @param T class instance
+	 * @param T class instance pointer
 	 * @param func member function pointer
 	 */
 	template <typename T>
-	void registerTXCallback(T& p, void (T::*func)())
+	void registerTXCallback(T* p, void (T::*func)())
 	{
 		txCallback = std::bind(func, p);
 	}
