@@ -13,9 +13,10 @@ namespace mab
 class Candle;
 
 /* adding a new field:
-1. add a new filed below (must be uniform with the same enum on MD80 side)
+1. add a new field in the enum below (must be uniform with the same enum on MD80 side)
 2. add it to the "switch case" in register.cpp(regarding it's size)
-3. add it to either RO/RW structs on the end of this file */
+3. add it to the "switch case" in register.cpp(regarding it's type - this is needed for the python binding file)
+4. add it to either RO/RW structs on the end of this file */
 
 /* READ ONLY PARAMS */
 typedef struct
@@ -30,6 +31,8 @@ typedef struct
 	uint16_t errorVector;
 	float mosfetTemperature;
 	float motorTemperature;
+	float mainEncoderVelocity;
+	float mainEncoderPosition;
 	float outputEncoderVelocity;
 	float outputEncoderPosition;
 	float calOutputEncoderStdDev;
@@ -56,6 +59,7 @@ typedef struct
 	uint8_t canTermination;
 	uint32_t polePairs;
 	uint16_t motorKV;
+	uint8_t motorCalibrationMode;
 	float motorKt;
 	float motorKt_a;
 	float motorKt_b;
@@ -114,6 +118,7 @@ enum Md80Reg_E : uint16_t
 	motorResistance = 0x01B,
 	motorInductance = 0x01C,
 	motorKV = 0x01D,
+	motorCalibrationMode = 0x01E,
 
 	outputEncoder = 0x020,
 	outputEncoderDir = 0x021,
@@ -138,6 +143,9 @@ enum Md80Reg_E : uint16_t
 	motorImpPidKp = 0x050,
 	motorImpPidKd = 0x051,
 	motorImpPidOutMax = 0x052,
+
+	mainEncoderVelocity = 0x062,
+	mainEncoderPosition = 0x063,
 
 	runSaveCmd = 0x080,
 	runTestMainEncoderCmd = 0x081,

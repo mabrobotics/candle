@@ -97,6 +97,7 @@ uint16_t Register::getSize(uint16_t regId)
 {
 	switch (regId)
 	{
+		case Md80Reg_E::motorCalibrationMode:
 		case Md80Reg_E::outputEncoderCalibrationMode:
 		case Md80Reg_E::outputEncoderMode:
 		case Md80Reg_E::bridgeType:
@@ -116,6 +117,8 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::errorVector:
 		case Md80Reg_E::motorKV:
 			return 2;
+		case Md80Reg_E::mainEncoderVelocity:
+		case Md80Reg_E::mainEncoderPosition:
 		case Md80Reg_E::mosfetTemperature:
 		case Md80Reg_E::motorTemperature:
 		case Md80Reg_E::motorInductance:
@@ -176,6 +179,7 @@ Register::type Register::getType(uint16_t regId)
 {
 	switch (regId)
 	{
+		case Md80Reg_E::motorCalibrationMode:
 		case Md80Reg_E::outputEncoderCalibrationMode:
 		case Md80Reg_E::outputEncoderMode:
 		case Md80Reg_E::bridgeType:
@@ -208,6 +212,8 @@ Register::type Register::getType(uint16_t regId)
 		case Md80Reg_E::firmwareVersion:
 		case Md80Reg_E::buildDate:
 			return type::U32;
+		case Md80Reg_E::mainEncoderVelocity:
+		case Md80Reg_E::mainEncoderPosition:
 		case Md80Reg_E::mosfetTemperature:
 		case Md80Reg_E::motorTemperature:
 		case Md80Reg_E::motorInductance:
