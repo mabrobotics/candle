@@ -60,6 +60,7 @@ typedef struct
 	uint32_t polePairs;
 	uint16_t motorKV;
 	uint8_t motorCalibrationMode;
+	uint8_t motorThermistorType;
 	float motorKt;
 	float motorKt_a;
 	float motorKt_b;
@@ -119,6 +120,7 @@ enum Md80Reg_E : uint16_t
 	motorInductance = 0x01C,
 	motorKV = 0x01D,
 	motorCalibrationMode = 0x01E,
+	motorThermistorType = 0x01F,
 
 	outputEncoder = 0x020,
 	outputEncoderDir = 0x021,

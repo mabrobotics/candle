@@ -97,6 +97,7 @@ uint16_t Register::getSize(uint16_t regId)
 {
 	switch (regId)
 	{
+		case Md80Reg_E::motorThermistorType:
 		case Md80Reg_E::motorCalibrationMode:
 		case Md80Reg_E::outputEncoderCalibrationMode:
 		case Md80Reg_E::outputEncoderMode:
@@ -179,6 +180,7 @@ Register::type Register::getType(uint16_t regId)
 {
 	switch (regId)
 	{
+		case Md80Reg_E::motorThermistorType:
 		case Md80Reg_E::motorCalibrationMode:
 		case Md80Reg_E::outputEncoderCalibrationMode:
 		case Md80Reg_E::outputEncoderMode:
