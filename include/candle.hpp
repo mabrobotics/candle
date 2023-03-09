@@ -185,14 +185,13 @@ class Candle
 
 	/**
 	@brief Sets current motor position as zero position -> reference for any future movements.
-	@param drive reference to a Md80 class (candle.md80s memeber)
+	@param drive reference to a Md80 class (candle.md80s member)
 	@return true if setting was succesfull, false otherwise
 	*/
 	bool controlMd80SetEncoderZero(Md80& drive);
 	/**
-	@brief Changes max phase-to-phase motor current.
-	@param canId ID of the drive
-	@param currentLimit phase-to-phase current limit in Amps
+	@brief Sets current motor position as zero position -> reference for any future movements.
+	@param canId uint16_t drive CAN bus ID
 	@return true if setting was succesfull, false otherwise
 	*/
 	bool controlMd80SetEncoderZero(uint16_t canId);
