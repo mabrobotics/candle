@@ -168,8 +168,29 @@ void Candle::transmit()
 
 		if (bus->getType() == mab::BusType_E::SPI)
 		{
-			for (int i = 1; i < (int)md80s.size(); i++)
-				usleep(20);
+			switch (canBaudrate)
+			{
+				case CAN_BAUD_1M:
+				{
+					usleep(600 * md80s.size());
+					break;
+				}
+				case CAN_BAUD_2M:
+				{
+					usleep(450 * md80s.size());
+					break;
+				}
+				case CAN_BAUD_5M:
+				{
+					usleep(250 * md80s.size());
+					break;
+				}
+				case CAN_BAUD_8M:
+				{
+					usleep(200 * md80s.size());
+					break;
+				}
+			}
 		}
 		/* wait for a frame to be received */
 		else

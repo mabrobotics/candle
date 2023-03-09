@@ -159,12 +159,14 @@ void Md80::packVelocityFrame()
 }
 void Md80::packMotionTargetsFrame()
 {
-	commandFrame.toMd80.length = 16;
+	commandFrame.toMd80.length = 24;
 	commandFrame.toMd80.data[0] = mab::Md80FrameId_E::FRAME_SET_MOTION_TARGETS;
 	commandFrame.toMd80.data[1] = 0x00;
 	*(float*)&commandFrame.toMd80.data[2] = velocityTarget;
 	*(float*)&commandFrame.toMd80.data[6] = positionTarget;
 	*(float*)&commandFrame.toMd80.data[10] = torqueSet;
+	*(float*)&commandFrame.toMd80.data[14] = maxTorque;
+	*(float*)&commandFrame.toMd80.data[18] = maxVelocity;
 }
 
 }  // namespace mab
