@@ -910,6 +910,11 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 		vout << "Extended diagnostic failed at ID: " << canId << " while reading motorCalibrationMode register" << std::endl;
 		return false;
 	}
+	if (!md80Register->read(canId, mab::Md80Reg_E::shuntResistance, regR.RO.shuntResistance))
+	{
+		vout << "Extended diagnostic failed at ID: " << canId << " while reading shuntResistance register" << std::endl;
+		return false;
+	}
 
 	return true;
 }

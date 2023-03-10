@@ -47,6 +47,7 @@ typedef struct
 	uint32_t bridgeErrors;
 	uint32_t hardwareErrors;
 	uint32_t communicationErrors;
+	float shuntResistance;
 } regRO_st;
 
 /* READ WRITE PARAMS */
@@ -162,6 +163,8 @@ enum Md80Reg_E : uint16_t
 	calMainEncoderStdDev = 0x103,
 	calMainEncoderMinE = 0x104,
 	calMainEncoderMaxE = 0x105,
+
+	shuntResistance = 0x700,
 
 	buildDate = 0x800,
 	commitHash = 0x801,
