@@ -346,7 +346,7 @@ class Candle
    private:
 	const uint8_t VMAJOR = 3;
 	const uint8_t VMINOR = 2;
-	const uint8_t VREVISION = 1;
+	const uint8_t VREVISION = 2;
 	const char VTAG = 'd';
 
 	version_ut candleDeviceVersion;
