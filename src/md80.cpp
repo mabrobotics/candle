@@ -99,6 +99,8 @@ void Md80::__updateResponseData(StdMd80ResponseFrame_t* _responseFrame)
 	position = *(float*)&_responseFrame->fromMd80.data[4];
 	velocity = *(float*)&_responseFrame->fromMd80.data[8];
 	torque = *(float*)&_responseFrame->fromMd80.data[12];
+	outputEncoderPosition = *(float*)&_responseFrame->fromMd80.data[16];
+	outputEncoderVelocity = *(float*)&_responseFrame->fromMd80.data[20];
 
 	rxCallback();
 }

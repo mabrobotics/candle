@@ -21,6 +21,8 @@ class Md80
 	float position = 0.0f;
 	float velocity = 0.0f;
 	float torque = 0.0f;
+	float outputEncoderPosition = 0.0f;
+	float outputEncoderVelocity = 0.0f;
 	uint8_t temperature = 0;
 	uint16_t errorVector = 0;
 
@@ -146,6 +148,17 @@ class Md80
 	 * @return float torque in Nm (Newton-meters)
 	 */
 	float getTorque() { return torque; };
+
+	/**
+	 * @brief Get the Position of md80
+	 * @return float angular position in radians
+	 */
+	float getOutputEncoderPosition() { return outputEncoderPosition; };
+	/**
+	 * @brief Get the Velocity of md80
+	 * @return float angular velocity in rad/s (radians per second)
+	 */
+	float getOutputEncoderVelocity() { return outputEncoderVelocity; };
 	/**
 	 * @brief Get the exteral thermistor temperature reading (motor thermistor)
 	 * @return uint8_t temperature value in *C
