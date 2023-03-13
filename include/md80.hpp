@@ -36,6 +36,8 @@ class Md80
 	RegPid_t positionController;
 	RegImpedance_t impedanceController;
 
+	bool maxTorqueAdjusted = false;
+	bool maxVelocityAdjusted = false;
 	bool regulatorsAdjusted = false;
 	bool velocityRegulatorAdjusted = false;
 	StdMd80CommandFrame_t commandFrame;

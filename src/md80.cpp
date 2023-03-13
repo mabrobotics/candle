@@ -113,10 +113,12 @@ void Md80::__updateRegulatorsAdjusted(bool adjusted)
 void Md80::setMaxTorque(float _maxTorque)
 {
 	maxTorque = _maxTorque;
+	maxTorqueAdjusted = true;
 }
 void Md80::setMaxVelocity(float _maxVelocity)
 {
 	maxVelocity = _maxVelocity;
+	maxVelocityAdjusted = true;
 }
 void Md80::__setControlMode(Md80Mode_E mode)
 {
@@ -167,8 +169,8 @@ void Md80::packMotionTargetsFrame()
 	*(float*)&commandFrame.toMd80.data[2] = velocityTarget;
 	*(float*)&commandFrame.toMd80.data[6] = positionTarget;
 	*(float*)&commandFrame.toMd80.data[10] = torqueSet;
-	*(float*)&commandFrame.toMd80.data[14] = maxTorque;
-	*(float*)&commandFrame.toMd80.data[18] = maxVelocity;
+	*(float*)&commandFrame.toMd80.data[14] = maxTorqueAdjusted ? maxTorque : NAN;
+	*(float*)&commandFrame.toMd80.data[18] = maxVelocityAdjusted ? maxVelocityAdjusted : NAN;
 }
 
 }  // namespace mab
