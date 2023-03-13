@@ -155,7 +155,7 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::motorKt_c:
 		case Md80Reg_E::motorIMax:
 		case Md80Reg_E::mainEncoderErrors:
-		case Md80Reg_E::auxEncoderErrors:
+		case Md80Reg_E::outputEncoderErrors:
 		case Md80Reg_E::calibrationErrors:
 		case Md80Reg_E::bridgeErrors:
 		case Md80Reg_E::hardwareErrors:
@@ -207,7 +207,7 @@ Register::type Register::getType(uint16_t regId)
 		case Md80Reg_E::canId:
 		case Md80Reg_E::motorPolePairs:
 		case Md80Reg_E::mainEncoderErrors:
-		case Md80Reg_E::auxEncoderErrors:
+		case Md80Reg_E::outputEncoderErrors:
 		case Md80Reg_E::calibrationErrors:
 		case Md80Reg_E::bridgeErrors:
 		case Md80Reg_E::hardwareErrors:

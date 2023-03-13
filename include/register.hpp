@@ -42,7 +42,7 @@ typedef struct
 	float calMainEncoderMinE;
 	float calMainEncoderMaxE;
 	uint32_t mainEncoderErrors;
-	uint32_t auxEncoderErrors;
+	uint32_t outputEncoderErrors;
 	uint32_t calibrationErrors;
 	uint32_t bridgeErrors;
 	uint32_t hardwareErrors;
@@ -176,7 +176,7 @@ enum Md80Reg_E : uint16_t
 	motorTemperature = 0x807,
 	motorShutdownTemp = 0x808,
 	mainEncoderErrors = 0x809,
-	auxEncoderErrors = 0x80A,
+	outputEncoderErrors = 0x80A,
 	calibrationErrors = 0x80B,
 	bridgeErrors = 0x80C,
 	hardwareErrors = 0x80D,

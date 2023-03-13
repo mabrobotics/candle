@@ -264,7 +264,7 @@ class Candle
 	@param canId ID of the drive
 	@return true if the calibration started succesfully, false otherwise
 	*/
-	bool setupMd80CalibrationAux(uint16_t canId);
+	bool setupMd80CalibrationOutput(uint16_t canId);
 	/**
 	@brief Triggers an output encoder check routine. After routine completion min, max and stdDev error can be read from registers.
 	@param canId ID of the drive

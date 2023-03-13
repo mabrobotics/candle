@@ -767,9 +767,9 @@ bool Candle::setupMd80Calibration(uint16_t canId)
 	return false;
 }
 
-bool Candle::setupMd80CalibrationAux(uint16_t canId)
+bool Candle::setupMd80CalibrationOutput(uint16_t canId)
 {
-	GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CALIBRATION_AUX);
+	GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CALIBRATION_OUTPUT);
 	char tx[64];
 	int len = sizeof(frame);
 	memcpy(tx, &frame, len);
@@ -890,7 +890,7 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 
 	if (!md80Register->read(canId,
 							mab::Md80Reg_E::mainEncoderErrors, regR.RO.mainEncoderErrors,
-							mab::Md80Reg_E::auxEncoderErrors, regR.RO.auxEncoderErrors,
+							mab::Md80Reg_E::outputEncoderErrors, regR.RO.outputEncoderErrors,
 							mab::Md80Reg_E::calibrationErrors, regR.RO.calibrationErrors,
 							mab::Md80Reg_E::bridgeErrors, regR.RO.bridgeErrors,
 							mab::Md80Reg_E::hardwareErrors, regR.RO.hardwareErrors,
