@@ -170,7 +170,7 @@ void Md80::packMotionTargetsFrame()
 	*(float*)&commandFrame.toMd80.data[6] = positionTarget;
 	*(float*)&commandFrame.toMd80.data[10] = torqueSet;
 	*(float*)&commandFrame.toMd80.data[14] = maxTorqueAdjusted ? maxTorque : NAN;
-	*(float*)&commandFrame.toMd80.data[18] = maxVelocityAdjusted ? maxVelocityAdjusted : NAN;
+	*(float*)&commandFrame.toMd80.data[18] = maxVelocityAdjusted ? maxVelocity : NAN;
 }
 
 }  // namespace mab
