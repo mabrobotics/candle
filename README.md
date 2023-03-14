@@ -1,6 +1,6 @@
 # CANdle library 
 CANdle C++ library is the heart of the MD80 x CANdle ecosystem on the master controller side. 
-It takes care of all actions connected to communication and provides API for higher-level software. For a detailed manual please see [MD80 x CANdle Manual](https://www.mabrobotics.pl/servos/#comp-l6v4io99).
+It takes care of all actions connected to communication and provides API for higher-level software. For a detailed manual please see [MD80 x CANdle Manual](https://www.mabrobotics.pl/servos/manual).
  
 ## C++ library
 To run the examples clone the repo and make sure you're in the `candle` main directory. Execute:
@@ -73,7 +73,6 @@ Similar to `example 6`, but based on the SPI bus available on single-board compu
 Similar to `example 6`, but based on the UART bus available on single-board computers. Before running be sure all actuators are switched to 8M speed. 
  
 ### Example 12
-Register read demo. 
-Note: Currently registers operations are only available in C++!
+Register read-write demo. Please remember that register operations are only valid before candle.begin() is called. 
 
  

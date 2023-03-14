@@ -31,7 +31,7 @@ int main()
 	// candle.md80s[0].setMaxVelocity(50.0);
 	// candle.md80s[0].setMaxTorque(0.5f);
 
-	// To reload default regulator parameters, simply disable the drive (contorlMd80Enable(id, false)),
+	// To reload default controller parameters, simply disable the drive (contorlMd80Enable(id, false)),
 	// stop the communications (candle.end()) or power cycle the drive (off-on).
 
 	float t = 0.0f;

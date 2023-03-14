@@ -13,9 +13,10 @@ namespace mab
 class Candle;
 
 /* adding a new field:
-1. add a new filed below (must be uniform with the same enum on MD80 side)
+1. add a new field in the enum below (must be uniform with the same enum on MD80 side)
 2. add it to the "switch case" in register.cpp(regarding it's size)
-3. add it to either RO/RW structs on the end of this file */
+3. add it to the "switch case" in register.cpp(regarding it's type - this is needed for the python binding file)
+4. add it to either RO/RW structs on the end of this file */
 
 /* READ ONLY PARAMS */
 typedef struct
@@ -30,8 +31,23 @@ typedef struct
 	uint16_t errorVector;
 	float mosfetTemperature;
 	float motorTemperature;
+	float mainEncoderVelocity;
+	float mainEncoderPosition;
 	float outputEncoderVelocity;
 	float outputEncoderPosition;
+	float calOutputEncoderStdDev;
+	float calOutputEncoderMinE;
+	float calOutputEncoderMaxE;
+	float calMainEncoderStdDev;
+	float calMainEncoderMinE;
+	float calMainEncoderMaxE;
+	uint32_t mainEncoderErrors;
+	uint32_t outputEncoderErrors;
+	uint32_t calibrationErrors;
+	uint32_t bridgeErrors;
+	uint32_t hardwareErrors;
+	uint32_t communicationErrors;
+	float shuntResistance;
 } regRO_st;
 
 /* READ WRITE PARAMS */
@@ -44,6 +60,8 @@ typedef struct
 	uint8_t canTermination;
 	uint32_t polePairs;
 	uint16_t motorKV;
+	uint8_t motorCalibrationMode;
+	uint8_t motorThermistorType;
 	float motorKt;
 	float motorKt_a;
 	float motorKt_b;
@@ -51,6 +69,8 @@ typedef struct
 	float iMax;
 	float gearRatio;
 	uint8_t outputEncoder;
+	uint8_t outputEncoderMode;
+	uint8_t outputEncoderCalibrationMode;
 	float outputEncoderDir;
 	uint16_t torqueBandwidth;
 	uint32_t outputEncoderDefaultBaud;
@@ -60,6 +80,12 @@ typedef struct
 	ImpedanceControllerGains_t impedancePdGains;
 	PidControllerGains_t velocityPidGains;
 	PidControllerGains_t positionPidGains;
+	uint8_t runSaveCmd;
+	uint8_t runTestOutputEncoderCmd;
+	uint8_t runTestMainEncoderCmd;
+	uint8_t runCalibrateCmd;
+	uint8_t runCalibrateOutpuEncoderCmd;
+	uint8_t runCalibratePiGains;
 } regRW_st;
 
 typedef struct
@@ -94,12 +120,16 @@ enum Md80Reg_E : uint16_t
 	motorResistance = 0x01B,
 	motorInductance = 0x01C,
 	motorKV = 0x01D,
+	motorCalibrationMode = 0x01E,
+	motorThermistorType = 0x01F,
 
 	outputEncoder = 0x020,
 	outputEncoderDir = 0x021,
 	outputEncoderDefaultBaud = 0x022,
 	outputEncoderVelocity = 0x023,
 	outputEncoderPosition = 0x024,
+	outputEncoderMode = 0x025,
+	outputEncoderCalibrationMode = 0x026,
 
 	motorPosPidKp = 0x030,
 	motorPosPidKi = 0x031,
@@ -117,6 +147,25 @@ enum Md80Reg_E : uint16_t
 	motorImpPidKd = 0x051,
 	motorImpPidOutMax = 0x052,
 
+	mainEncoderVelocity = 0x062,
+	mainEncoderPosition = 0x063,
+
+	runSaveCmd = 0x080,
+	runTestMainEncoderCmd = 0x081,
+	runTestOutputEncoderCmd = 0x082,
+	runCalibrateCmd = 0x083,
+	runCalibrateOutpuEncoderCmd = 0x084,
+	runCalibratePiGains = 0x085,
+
+	calOutputEncoderStdDev = 0x100,
+	calOutputEncoderMinE = 0x101,
+	calOutputEncoderMaxE = 0x102,
+	calMainEncoderStdDev = 0x103,
+	calMainEncoderMinE = 0x104,
+	calMainEncoderMaxE = 0x105,
+
+	shuntResistance = 0x700,
+
 	buildDate = 0x800,
 	commitHash = 0x801,
 	firmwareVersion = 0x802,
@@ -126,11 +175,30 @@ enum Md80Reg_E : uint16_t
 	mosfetTemperature = 0x806,
 	motorTemperature = 0x807,
 	motorShutdownTemp = 0x808,
+	mainEncoderErrors = 0x809,
+	outputEncoderErrors = 0x80A,
+	calibrationErrors = 0x80B,
+	bridgeErrors = 0x80C,
+	hardwareErrors = 0x80D,
+	communicationErrors = 0x80E,
 };
 
 class Register
 {
    public:
+	enum class type
+	{
+		UNKNOWN = 0,
+		U8 = 1,
+		I8 = 2,
+		U16 = 3,
+		I16 = 4,
+		U32 = 5,
+		I32 = 6,
+		F32 = 7,
+		STR = 8
+	};
+
 	/**
 	@brief Register object constructor
 	@param candle Candle object pointer
@@ -168,6 +236,20 @@ class Register
 		return prepare(canId, mab::Md80FrameId_E::FRAME_WRITE_REGISTER, regId, regValue, vs...);
 	}
 
+	/**
+	@brief returns the size of a register based on it's id
+	@param regId register's ID
+	@return register size in bytes
+	*/
+	uint16_t getSize(uint16_t regId);
+
+	/**
+	@brief returns the type of a register field based on it's id
+	@param regId register's ID
+	@return register type (Register::type enum class)
+	*/
+	type getType(uint16_t regId);
+
    private:
 	Candle* candle;
 
@@ -183,7 +265,6 @@ class Register
 	bool prepareFrame(mab::Md80FrameId_E frameId, Md80Reg_E regId, char* value);
 	bool interpret(uint16_t canId);
 	bool prepare(uint16_t canId, mab::Md80FrameId_E frameType);
-	uint16_t getSize(uint16_t regId);
 
 	template <typename T2, typename... Ts>
 	bool interpret(uint16_t canId, Md80Reg_E regId, const T2& regValue, const Ts&... vs)

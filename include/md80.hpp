@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <functional>
 
 #include "mab_types.hpp"
 #include "register.hpp"
@@ -20,6 +21,8 @@ class Md80
 	float position = 0.0f;
 	float velocity = 0.0f;
 	float torque = 0.0f;
+	float outputEncoderPosition = 0.0f;
+	float outputEncoderVelocity = 0.0f;
 	uint8_t temperature = 0;
 	uint16_t errorVector = 0;
 
@@ -33,6 +36,8 @@ class Md80
 	RegPid_t positionController;
 	RegImpedance_t impedanceController;
 
+	bool maxTorqueAdjusted = false;
+	bool maxVelocityAdjusted = false;
 	bool regulatorsAdjusted = false;
 	bool velocityRegulatorAdjusted = false;
 	StdMd80CommandFrame_t commandFrame;
@@ -45,6 +50,10 @@ class Md80
 	void packPositionFrame();
 	void packVelocityFrame();
 	void packMotionTargetsFrame();
+
+	void emptyCallback(){};
+	std::function<void()> txCallback = std::bind(&Md80::emptyCallback, this);
+	std::function<void()> rxCallback = std::bind(&Md80::emptyCallback, this);
 
    public:
 	/**
@@ -141,6 +150,17 @@ class Md80
 	 * @return float torque in Nm (Newton-meters)
 	 */
 	float getTorque() { return torque; };
+
+	/**
+	 * @brief Get the Position of md80
+	 * @return float angular position in radians
+	 */
+	float getOutputEncoderPosition() { return outputEncoderPosition; };
+	/**
+	 * @brief Get the Velocity of md80
+	 * @return float angular velocity in rad/s (radians per second)
+	 */
+	float getOutputEncoderVelocity() { return outputEncoderVelocity; };
 	/**
 	 * @brief Get the exteral thermistor temperature reading (motor thermistor)
 	 * @return uint8_t temperature value in *C
@@ -158,6 +178,27 @@ class Md80
 	 * @return reference to write register struct
 	 */
 	regWrite_st& getWriteReg() { return regWrite; };
+
+	/**
+	 * @brief Register a user callback that will be called on each bus receive frame
+	 * @param T class instance pointer
+	 * @param func member function pointer
+	 */
+	template <typename T>
+	void registerRXCallback(T* p, void (T::*func)())
+	{
+		rxCallback = std::bind(func, p);
+	}
+	/**
+	 * @brief Register a user callback that will be called on each bus transmit frame
+	 * @param T class instance pointer
+	 * @param func member function pointer
+	 */
+	template <typename T>
+	void registerTXCallback(T* p, void (T::*func)())
+	{
+		txCallback = std::bind(func, p);
+	}
 
 	/**
 	 * @brief For internal use by CANdle only.

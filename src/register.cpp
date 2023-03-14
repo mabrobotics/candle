@@ -11,9 +11,10 @@ bool Register::prepare(uint16_t canId, mab::Md80FrameId_E frameType)
 	(void)frameType;
 	/* clear the RX buffer and send register request */
 	memset(regRxBuffer, 0, sizeof(regRxBuffer));
+	bool status = candle->sendGenericFDCanFrame(canId, regTxPtr - regTxBuffer, regTxBuffer, regRxBuffer, 100);
 	regTxPtr = nullptr;
 	regRxPtr = nullptr;
-	return candle->sengGenericFDCanFrame(canId, sizeof(regTxBuffer), regTxBuffer, regRxBuffer, 100);
+	return status;
 }
 
 bool Register::interpret(uint16_t canId)
@@ -96,17 +97,30 @@ uint16_t Register::getSize(uint16_t regId)
 {
 	switch (regId)
 	{
+		case Md80Reg_E::motorThermistorType:
+		case Md80Reg_E::motorCalibrationMode:
+		case Md80Reg_E::outputEncoderCalibrationMode:
+		case Md80Reg_E::outputEncoderMode:
 		case Md80Reg_E::bridgeType:
 		case Md80Reg_E::outputEncoder:
 		case Md80Reg_E::hardwareVersion:
 		case Md80Reg_E::canTermination:
 		case Md80Reg_E::motorShutdownTemp:
+		case Md80Reg_E::runCalibrateCmd:
+		case Md80Reg_E::runCalibrateOutpuEncoderCmd:
+		case Md80Reg_E::runCalibratePiGains:
+		case Md80Reg_E::runTestOutputEncoderCmd:
+		case Md80Reg_E::runTestMainEncoderCmd:
+		case Md80Reg_E::runSaveCmd:
 			return 1;
 		case Md80Reg_E::motorTorgueBandwidth:
 		case Md80Reg_E::canWatchdog:
 		case Md80Reg_E::errorVector:
 		case Md80Reg_E::motorKV:
 			return 2;
+		case Md80Reg_E::shuntResistance:
+		case Md80Reg_E::mainEncoderVelocity:
+		case Md80Reg_E::mainEncoderPosition:
 		case Md80Reg_E::mosfetTemperature:
 		case Md80Reg_E::motorTemperature:
 		case Md80Reg_E::motorInductance:
@@ -140,6 +154,19 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::motorKt_b:
 		case Md80Reg_E::motorKt_c:
 		case Md80Reg_E::motorIMax:
+		case Md80Reg_E::mainEncoderErrors:
+		case Md80Reg_E::outputEncoderErrors:
+		case Md80Reg_E::calibrationErrors:
+		case Md80Reg_E::bridgeErrors:
+		case Md80Reg_E::hardwareErrors:
+		case Md80Reg_E::communicationErrors:
+		case Md80Reg_E::calOutputEncoderStdDev:
+		case Md80Reg_E::calOutputEncoderMinE:
+		case Md80Reg_E::calOutputEncoderMaxE:
+		case Md80Reg_E::calMainEncoderStdDev:
+		case Md80Reg_E::calMainEncoderMinE:
+		case Md80Reg_E::calMainEncoderMaxE:
+		case Md80Reg_E::canId:
 			return 4;
 		case Md80Reg_E::commitHash:
 			return 8;
@@ -149,4 +176,89 @@ uint16_t Register::getSize(uint16_t regId)
 			return 0;
 	}
 }
+
+Register::type Register::getType(uint16_t regId)
+{
+	switch (regId)
+	{
+		case Md80Reg_E::motorThermistorType:
+		case Md80Reg_E::motorCalibrationMode:
+		case Md80Reg_E::outputEncoderCalibrationMode:
+		case Md80Reg_E::outputEncoderMode:
+		case Md80Reg_E::bridgeType:
+		case Md80Reg_E::outputEncoder:
+		case Md80Reg_E::hardwareVersion:
+		case Md80Reg_E::canTermination:
+		case Md80Reg_E::motorShutdownTemp:
+		case Md80Reg_E::runCalibrateCmd:
+		case Md80Reg_E::runCalibrateOutpuEncoderCmd:
+		case Md80Reg_E::runCalibratePiGains:
+		case Md80Reg_E::runTestOutputEncoderCmd:
+		case Md80Reg_E::runTestMainEncoderCmd:
+		case Md80Reg_E::runSaveCmd:
+			return type::U8;
+		case Md80Reg_E::motorTorgueBandwidth:
+		case Md80Reg_E::canWatchdog:
+		case Md80Reg_E::errorVector:
+		case Md80Reg_E::motorKV:
+			return type::U16;
+		case Md80Reg_E::outputEncoderDefaultBaud:
+		case Md80Reg_E::canBaudrate:
+		case Md80Reg_E::canId:
+		case Md80Reg_E::motorPolePairs:
+		case Md80Reg_E::mainEncoderErrors:
+		case Md80Reg_E::outputEncoderErrors:
+		case Md80Reg_E::calibrationErrors:
+		case Md80Reg_E::bridgeErrors:
+		case Md80Reg_E::hardwareErrors:
+		case Md80Reg_E::communicationErrors:
+		case Md80Reg_E::firmwareVersion:
+		case Md80Reg_E::buildDate:
+			return type::U32;
+		case Md80Reg_E::shuntResistance:
+		case Md80Reg_E::mainEncoderVelocity:
+		case Md80Reg_E::mainEncoderPosition:
+		case Md80Reg_E::mosfetTemperature:
+		case Md80Reg_E::motorTemperature:
+		case Md80Reg_E::motorInductance:
+		case Md80Reg_E::motorResistance:
+		case Md80Reg_E::motorImpPidKp:
+		case Md80Reg_E::motorImpPidKd:
+		case Md80Reg_E::motorImpPidOutMax:
+		case Md80Reg_E::motorPosPidKp:
+		case Md80Reg_E::motorPosPidKi:
+		case Md80Reg_E::motorPosPidKd:
+		case Md80Reg_E::motorPosPidOutMax:
+		case Md80Reg_E::motorPosPidWindup:
+		case Md80Reg_E::motorVelPidKp:
+		case Md80Reg_E::motorVelPidKi:
+		case Md80Reg_E::motorVelPidKd:
+		case Md80Reg_E::motorVelPidOutMax:
+		case Md80Reg_E::motorVelPidWindup:
+		case Md80Reg_E::motorFriction:
+		case Md80Reg_E::motorStiction:
+		case Md80Reg_E::outputEncoderDir:
+		case Md80Reg_E::outputEncoderVelocity:
+		case Md80Reg_E::outputEncoderPosition:
+		case Md80Reg_E::motorGearRatio:
+		case Md80Reg_E::calOutputEncoderStdDev:
+		case Md80Reg_E::calOutputEncoderMinE:
+		case Md80Reg_E::calOutputEncoderMaxE:
+		case Md80Reg_E::calMainEncoderStdDev:
+		case Md80Reg_E::calMainEncoderMinE:
+		case Md80Reg_E::calMainEncoderMaxE:
+		case Md80Reg_E::motorKt:
+		case Md80Reg_E::motorKt_a:
+		case Md80Reg_E::motorKt_b:
+		case Md80Reg_E::motorKt_c:
+		case Md80Reg_E::motorIMax:
+			return type::F32;
+		case Md80Reg_E::commitHash:
+		case Md80Reg_E::motorName:
+			return type::STR;
+		default:
+			return type::UNKNOWN;
+	}
+}
+
 }  // namespace mab

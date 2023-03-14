@@ -59,9 +59,7 @@ enum Md80FrameId_E : uint8_t
 	FRAME_READ_REGISTER = 0x41,
 	FRAME_DIAGNOSTIC = 0x69,
 	FRAME_CALIBRATION = 0x70,
-	FRAME_MOTOR_CONFIG = 0x71,
-	FRAME_MOTOR_MOTION_CONFIG = 0x72,
-	FRAME_DIAGNOSTIC_EXTENDED = 0x73,
+	FRAME_CALIBRATION_OUTPUT = 0x71,
 	RESPONSE_DEFAULT = 0xA0
 };
 struct CanFrame_t
@@ -97,5 +95,17 @@ typedef struct
 	float intWindup;
 	float outMax;
 } PidControllerGains_t;
+
+typedef union version_ut
+{
+	struct
+	{
+		char tag;
+		uint8_t revision;
+		uint8_t minor;
+		uint8_t major;
+	} s;
+	uint32_t i;
+} version_ut;
 
 }  // namespace mab
