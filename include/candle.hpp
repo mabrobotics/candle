@@ -370,7 +370,7 @@ class Candle
 	Bus* bus = nullptr;
 
 	const int idMax = 2000;
-	static constexpr int maxDevices = 20;
+	static constexpr int maxDevices = 16;
 	bool shouldStopReceiver;
 	bool shouldStopTransmitter;
 	mab::CANdleBaudrate_E canBaudrate;
