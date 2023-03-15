@@ -959,7 +959,10 @@ long long Candle::benchGetTimeDelta()
 
 std::string getVersionString(const version_ut* ver)
 {
-	return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision) + '.' + (char)ver->s.tag);
+	if ((char)ver->s.tag == 'r' || (char)ver->s.tag == 'R')
+		return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision));
+	else
+		return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision) + '.' + (char)ver->s.tag);
 }
 
 }  // namespace mab
