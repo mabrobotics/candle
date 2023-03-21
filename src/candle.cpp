@@ -335,7 +335,7 @@ std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
 	if (bus->transmit(tx, 2, true, 2000, 33))
 	{
 		uint16_t* idsPointer = (uint16_t*)bus->getRxBuffer(1);
-		for (int i = 0; i < 12; i++)
+		for (int i = 0; i < maxDevices; i++)
 		{
 			uint16_t id = idsPointer[i];
 			if (id == 0x00)
@@ -735,7 +735,7 @@ bool Candle::inConfigMode()
 }
 void Candle::transmitNewStdFrame()
 {
-	char tx[512];
+	char tx[1 + sizeof(StdMd80CommandFrame_t) * maxDevices];
 	tx[0] = BUS_FRAME_UPDATE;
 	for (int i = 0; i < (int)md80s.size(); i++)
 	{
@@ -959,7 +959,10 @@ long long Candle::benchGetTimeDelta()
 
 std::string getVersionString(const version_ut* ver)
 {
-	return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision) + '.' + (char)ver->s.tag);
+	if ((char)ver->s.tag == 'r' || (char)ver->s.tag == 'R')
+		return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision));
+	else
+		return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision) + '.' + (char)ver->s.tag);
 }
 
 }  // namespace mab

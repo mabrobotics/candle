@@ -346,7 +346,7 @@ class Candle
    private:
 	const uint8_t VMAJOR = 3;
 	const uint8_t VMINOR = 2;
-	const uint8_t VREVISION = 2;
+	const uint8_t VREVISION = 3;
 	const char VTAG = 'd';
 
 	version_ut candleDeviceVersion;
@@ -370,7 +370,7 @@ class Candle
 	Bus* bus = nullptr;
 
 	const int idMax = 2000;
-	int maxDevices = 12;
+	static constexpr int maxDevices = 16;
 	bool shouldStopReceiver;
 	bool shouldStopTransmitter;
 	mab::CANdleBaudrate_E canBaudrate;
