@@ -15,11 +15,6 @@
 #include "uartDevice.hpp"
 #include "usbDevice.hpp"
 
-/* Turn on benchmarking */
-#define BENCHMARKING 0
-/* Turn on RX and TX timestamps */
-#define BENCHMARKING_VERBOSE 0
-
 namespace mab
 {
 enum CANdleMode_E
@@ -326,19 +321,6 @@ class Candle
 	{
 		return md80Register->write(canId, regId, regValue, vs...);
 	}
-
-#if BENCHMARKING == 1
-	long long txTimestamp = 0;
-	bool flag_glob_tx = false;
-	bool flag_glob_rx = false;
-	long long time_delta;
-
-	bool benchGetFlagRx();
-	bool benchGetFlagTx();
-	void benchSetFlagRx(bool state);
-	void benchSetFlagTx(bool state);
-	long long benchGetTimeDelta();
-#endif
 
    protected:
 	Register* md80Register = nullptr;

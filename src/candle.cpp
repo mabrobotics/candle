@@ -153,17 +153,6 @@ void Candle::transmit()
 		if (bus->getType() == mab::BusType_E::SPI && *bus->getRxBuffer() == BUS_FRAME_UPDATE)
 			manageReceivedFrame();
 
-#if BENCHMARKING == 1
-		long long timestampStart = getTimestamp();
-#if BENCHMARKING_VERBOSE == 1
-		if (!flag_glob_rx) std::cout << "TX:" << timestampStart << std::endl;
-#endif
-		if (flag_glob_tx == true)
-		{
-			flag_glob_tx = false;
-			txTimestamp = timestampStart;
-		}
-#endif
 		msgsSent++;
 
 		if (bus->getType() == mab::BusType_E::SPI)
@@ -201,31 +190,10 @@ void Candle::transmit()
 
 void Candle::manageReceivedFrame()
 {
-#if BENCHMARKING == 1
-	bool flag = false;
-#endif
 	for (int i = 0; i < (int)md80s.size(); i++)
 	{
 		md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t)));
-#if BENCHMARKING == 1
-		StdMd80ResponseFrame_t* _responseFrame = (StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t));
-		if (*(uint16_t*)&_responseFrame->fromMd80.data[1] & (1 << 15)) flag = true;
-#endif
 	}
-#if BENCHMARKING == 1
-	long long timestampStart = getTimestamp();
-#if BENCHMARKING_VERBOSE == 1
-	if (!flag || !flag_glob_rx) std::cout << "RX:" << timestampStart << std::endl;
-#endif
-
-	if (flag && !flag_glob_rx)
-	{
-		flag_glob_rx = true;
-		time_delta = timestampStart - txTimestamp;
-		std::cout << "got the flag!"
-				  << " time:" << time_delta << std::endl;
-	}
-#endif
 }
 
 void Candle::setVebose(bool enable)
@@ -933,29 +901,6 @@ bool Candle::checkMd80ForBaudrate(uint16_t canId)
 			return true;
 	return false;
 }
-
-#if BENCHMARKING == 1
-bool Candle::benchGetFlagRx()
-{
-	return flag_glob_rx;
-}
-bool Candle::benchGetFlagTx()
-{
-	return flag_glob_tx;
-}
-void Candle::benchSetFlagRx(bool state)
-{
-	flag_glob_rx = state;
-}
-void Candle::benchSetFlagTx(bool state)
-{
-	flag_glob_tx = state;
-}
-long long Candle::benchGetTimeDelta()
-{
-	return time_delta;
-}
-#endif
 
 std::string getVersionString(const version_ut* ver)
 {
