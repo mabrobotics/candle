@@ -735,7 +735,7 @@ bool Candle::inConfigMode()
 }
 void Candle::transmitNewStdFrame()
 {
-	char tx[sizeof(StdMd80CommandFrame_t) * maxDevices];
+	char tx[1 + sizeof(StdMd80CommandFrame_t) * maxDevices];
 	tx[0] = BUS_FRAME_UPDATE;
 	for (int i = 0; i < (int)md80s.size(); i++)
 	{
