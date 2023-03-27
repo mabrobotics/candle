@@ -23,10 +23,10 @@ candle.controlMd80Enable(ids[0], True)    # Enable the drive
 
 #  We will run both Position PID and Velocity PID at default settings. If you wish you can play with the parameters
 #  Using the methods below:
-#  candle.md80s[0].setPositionControllerParams(20.0, 0.2, 0.0, 15.0)
-#  candle.md80s[0].setVelocityControllerParams(0.0, 0.1, 0.0, 1.5)
-#  candle.md80s[0].setMaxVelocity(50.0)
-#  candle.md80s[0].setMaxTorque(0.5)
+# candle.md80s[0].setPositionControllerParams(20.0, 0.2, 0.0, 15.0)
+# candle.md80s[0].setVelocityControllerParams(0.0, 0.1, 0.0, 1.5)
+# candle.md80s[0].setMaxVelocity(50.0)
+# candle.md80s[0].setMaxTorque(0.5)
 
 #  To reload default controller parameters, simply disable the drive (contorlMd80Enable(id, false)), 
 #  stop the communications (candle.end()) or power cycle the drive (off-on).
@@ -39,7 +39,7 @@ candle.begin()
 
 for i in range(1000):
     t = t  + dt
-    candle.md80s[0].setTargetPosition(math.sin(t) * 10.0)  
+    candle.md80s[0].setTargetPosition(math.sin(t) * 2.0)  
     print("Drive ID = " + str(candle.md80s[0].getId()) + " Velocity: "  + str(candle.md80s[0].getVelocity()))
     time.sleep(0.01)  # Add some delay
 
