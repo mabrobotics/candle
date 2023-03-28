@@ -128,6 +128,13 @@ void Candle::receive()
 			if (*bus->getRxBuffer() == BUS_FRAME_UPDATE)
 				manageReceivedFrame();
 		}
+		else
+		{
+			shouldStopReceiver = true;
+			shouldStopTransmitter = true;
+			sem_post(&received);
+			vout << "Did not receive response from CANdle!" << statusFAIL << std::endl;
+		}
 	}
 }
 void Candle::transmit()
@@ -161,7 +168,7 @@ void Candle::transmit()
 			{
 				case CAN_BAUD_1M:
 				{
-					usleep(600 * md80s.size());
+					usleep(750 * md80s.size());
 					break;
 				}
 				case CAN_BAUD_2M:
@@ -651,16 +658,14 @@ bool Candle::end()
 		return false;
 
 	shouldStopTransmitter = true;
+	sem_post(&received);
 	if (transmitterThread.joinable())
 		transmitterThread.join();
 
 	shouldStopReceiver = true;
-	/* this is to make the receiver thread exit cleanly */
-	sem_post(&transmitted);
-	sem_post(&received);
-
 	if (bus->getType() != mab::BusType_E::SPI)
 	{
+		sem_post(&transmitted);
 		if (receiverThread.joinable())
 			receiverThread.join();
 	}
@@ -796,6 +801,16 @@ bool Candle::setupMd80Diagnostic(uint16_t canId)
 bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 {
 	regRead_st& regR = getMd80FromList(canId).getReadReg();
+
+	auto tryRegisterRead = [](Candle* obj, int16_t canId, Md80Reg_E regId, auto regValue)
+	{
+		if (!obj->md80Register->read(canId, regId, regValue))
+		{
+			std::cout << "Extended diagnostic failed at ID: " << canId << " while reading" << regId << " register" << std::endl;
+			return false;
+		}
+		return true;
+	};
 
 	if (!md80Register->read(canId,
 							mab::Md80Reg_E::motorName, regR.RW.motorName,
