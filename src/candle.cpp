@@ -802,16 +802,6 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 {
 	regRead_st& regR = getMd80FromList(canId).getReadReg();
 
-	auto tryRegisterRead = [](Candle* obj, int16_t canId, Md80Reg_E regId, auto regValue)
-	{
-		if (!obj->md80Register->read(canId, regId, regValue))
-		{
-			std::cout << "Extended diagnostic failed at ID: " << canId << " while reading" << regId << " register" << std::endl;
-			return false;
-		}
-		return true;
-	};
-
 	if (!md80Register->read(canId,
 							mab::Md80Reg_E::motorName, regR.RW.motorName,
 							mab::Md80Reg_E::buildDate, regR.RO.buildDate,
