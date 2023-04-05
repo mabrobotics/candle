@@ -25,7 +25,7 @@ candle.controlMd80Enable(ids[0], True)    # Enable the drive
 #  Using the methods below:
 # candle.md80s[0].setPositionControllerParams(20.0, 0.2, 0.0, 15.0)
 # candle.md80s[0].setVelocityControllerParams(0.0, 0.1, 0.0, 1.5)
-# candle.md80s[0].setMaxVelocity(50.0)
+# candle.md80s[0].setMaxVelocity(5.0)
 # candle.md80s[0].setMaxTorque(0.5)
 
 #  To reload default controller parameters, simply disable the drive (contorlMd80Enable(id, false)), 
