@@ -327,14 +327,14 @@ class Candle
 
    private:
 	const uint8_t VMAJOR = 3;
-	const uint8_t VMINOR = 2;
-	const uint8_t VREVISION = 4;
-	const char VTAG = 'd';
+	const uint8_t VMINOR = 3;
+	const uint8_t VREVISION = 0;
+	const char VTAG = 'r';
 
 	version_ut candleDeviceVersion;
 	/* TODO make a proper version class as the reverse initalization is not elegant */
-	const version_ut candleDeviceCompatibleVersion = {{'d', 0, 1, 2}};
-	const version_ut md80CompatibleVersion = {{'d', 0, 1, 2}};
+	const version_ut candleDeviceCompatibleVersion = {{'d', 0, 2, 2}};
+	const version_ut md80CompatibleVersion = {{'d', 0, 2, 2}};
 
 	const version_ut candleLibVersion = {{VTAG, VREVISION, VMINOR, VMAJOR}};
 
