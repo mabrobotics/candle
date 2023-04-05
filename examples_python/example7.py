@@ -21,8 +21,8 @@ candle.controlMd80SetEncoderZero(ids[0])               #  Reset encoder at curre
 candle.controlMd80Mode(ids[0], pyCandle.VELOCITY_PID)  # Set mode to velocity control
 candle.controlMd80Enable(ids[0], True)                 # Enable the drive
 
-#  Now we set up velocity controller
-candle.md80s[0].setVelocityControllerParams(0.05, 0.25, 0.0, 1.0)
+#  Uncomment the line below to change the *.cfg file defaults
+# candle.md80s[0].setVelocityControllerParams(0.05, 0.25, 0.0, 1.0)
 
 #  To reload default controller parameters, simply disable the drive (contorlMd80Enable(id, false)), 
 #  stop the communications (candle.end()) or power cycle the drive (off-on).
