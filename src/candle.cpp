@@ -37,15 +37,15 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::BusType_E b
 Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::Bus* bus)
 	: printVerbose(printVerbose), bus(bus)
 {
-	vout << "CANdle library version: " << getVersion() << std::endl;
+	vout << "CANdle library version: v" << getVersion() << std::endl;
 
 	this->reset();
 	usleep(5000);
 
 	if (!configCandleBaudrate(canBaudrate, true))
 	{
-		vout << "Failed to set up CANdle baudrate @" << canBaudrate << "Mbps!" << std::endl;
-		return;
+		vout << "Failed to set up CANdle baudrate @" << canBaudrate << "Mbps!" << statusFAIL << std::endl;
+		throw "Failed to set up CANdle baudrate!";
 	}
 
 	if (bus->getType() == mab::BusType_E::USB)
@@ -100,7 +100,7 @@ Bus* Candle::makeBus(mab::BusType_E busType, std::string device)
 
 const std::string Candle::getVersion()
 {
-	return version;
+	return getVersionString(&candleLibVersion);
 }
 int Candle::getActualCommunicationFrequency()
 {
@@ -128,6 +128,13 @@ void Candle::receive()
 			if (*bus->getRxBuffer() == BUS_FRAME_UPDATE)
 				manageReceivedFrame();
 		}
+		else
+		{
+			shouldStopReceiver = true;
+			shouldStopTransmitter = true;
+			sem_post(&received);
+			vout << "Did not receive response from CANdle!" << statusFAIL << std::endl;
+		}
 	}
 }
 void Candle::transmit()
@@ -153,23 +160,33 @@ void Candle::transmit()
 		if (bus->getType() == mab::BusType_E::SPI && *bus->getRxBuffer() == BUS_FRAME_UPDATE)
 			manageReceivedFrame();
 
-#if BENCHMARKING == 1
-		long long timestampStart = getTimestamp();
-#if BENCHMARKING_VERBOSE == 1
-		if (!flag_glob_rx) std::cout << "TX:" << timestampStart << std::endl;
-#endif
-		if (flag_glob_tx == true)
-		{
-			flag_glob_tx = false;
-			txTimestamp = timestampStart;
-		}
-#endif
 		msgsSent++;
 
 		if (bus->getType() == mab::BusType_E::SPI)
 		{
-			for (int i = 1; i < (int)md80s.size(); i++)
-				usleep(20);
+			switch (canBaudrate)
+			{
+				case CAN_BAUD_1M:
+				{
+					usleep(750 * md80s.size());
+					break;
+				}
+				case CAN_BAUD_2M:
+				{
+					usleep(450 * md80s.size());
+					break;
+				}
+				case CAN_BAUD_5M:
+				{
+					usleep(250 * md80s.size());
+					break;
+				}
+				case CAN_BAUD_8M:
+				{
+					usleep(200 * md80s.size());
+					break;
+				}
+			}
 		}
 		/* wait for a frame to be received */
 		else
@@ -180,31 +197,10 @@ void Candle::transmit()
 
 void Candle::manageReceivedFrame()
 {
-#if BENCHMARKING == 1
-	bool flag = false;
-#endif
 	for (int i = 0; i < (int)md80s.size(); i++)
 	{
 		md80s[i].__updateResponseData((StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t)));
-#if BENCHMARKING == 1
-		StdMd80ResponseFrame_t* _responseFrame = (StdMd80ResponseFrame_t*)bus->getRxBuffer(1 + i * sizeof(StdMd80ResponseFrame_t));
-		if (*(uint16_t*)&_responseFrame->fromMd80.data[1] & (1 << 15)) flag = true;
-#endif
 	}
-#if BENCHMARKING == 1
-	long long timestampStart = getTimestamp();
-#if BENCHMARKING_VERBOSE == 1
-	if (!flag || !flag_glob_rx) std::cout << "RX:" << timestampStart << std::endl;
-#endif
-
-	if (flag && !flag_glob_rx)
-	{
-		flag_glob_rx = true;
-		time_delta = timestampStart - txTimestamp;
-		std::cout << "got the flag!"
-				  << " time:" << time_delta << std::endl;
-	}
-#endif
 }
 
 void Candle::setVebose(bool enable)
@@ -273,19 +269,20 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 		if (*bus->getRxBuffer(0) == BUS_FRAME_MD80_ADD)
 			if (*bus->getRxBuffer(1) == true)
 			{
-				uint32_t firmwareVersion = 0;
-				if (!md80Register->read(canId, mab::Md80Reg_E::firmwareVersion, firmwareVersion))
+				version_ut firmwareVersion = {{0, 0, 0, 0}};
+
+				if (!md80Register->read(canId, mab::Md80Reg_E::firmwareVersion, firmwareVersion.i))
 				{
 					vout << "Unable to read MD80's firmware version! Probably MD80's firmware is outdated. Please update it using MAB_CAN_Flasher." << statusFAIL << std::endl;
 					return false;
 				}
 
-				if (firmwareVersion / 10 < md80CompatibleMajorVersion)
+				if (firmwareVersion.i < md80CompatibleVersion.i)
 				{
 					vout << "MD80's firmware with ID: " + std::to_string(canId) + " is outdated. Please update it using MAB_CAN_Flasher." << statusFAIL << std::endl;
 					return false;
 				}
-				else if (firmwareVersion / 10 > md80CompatibleMajorVersion)
+				else if (firmwareVersion.s.major > md80CompatibleVersion.s.major || firmwareVersion.s.minor > md80CompatibleVersion.s.minor)
 				{
 					vout << "MD80's firmware with ID: " + std::to_string(canId) + " is a future version. Please update your CANdle library." << statusFAIL << std::endl;
 					return false;
@@ -305,7 +302,7 @@ std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
 {
 	if (!this->configCandleBaudrate(baudrate))
 		return std::vector<uint16_t>();
-	vout << "Starting pinging drives at baudrate: " << baudrate << "M" << std::endl;
+	vout << "Starting pinging drives at baudrate: " << std::to_string(baudrate) << "M" << std::endl;
 	char tx[128];
 	tx[0] = BUS_FRAME_PING_START;
 	tx[1] = 0x00;
@@ -313,7 +310,7 @@ std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
 	if (bus->transmit(tx, 2, true, 2000, 33))
 	{
 		uint16_t* idsPointer = (uint16_t*)bus->getRxBuffer(1);
-		for (int i = 0; i < 12; i++)
+		for (int i = 0; i < maxDevices; i++)
 		{
 			uint16_t id = idsPointer[i];
 			if (id == 0x00)
@@ -347,7 +344,7 @@ std::vector<uint16_t> Candle::ping()
 {
 	return ping(canBaudrate);
 }
-bool Candle::sengGenericFDCanFrame(uint16_t canId, int msgLen, const char* txBuffer, char* rxBuffer, int timeoutMs)
+bool Candle::sendGenericFDCanFrame(uint16_t canId, int msgLen, const char* txBuffer, char* rxBuffer, int timeoutMs)
 {
 	int fdcanTimeout = timeoutMs - 3;
 	if (timeoutMs < 3)
@@ -362,7 +359,7 @@ bool Candle::sengGenericFDCanFrame(uint16_t canId, int msgLen, const char* txBuf
 	frame.timeoutMs = fdcanTimeout;
 	memcpy(frame.canMsg, txBuffer, msgLen);
 	char tx[96];
-	int len = sizeof(frame);
+	int len = sizeof(frame) - sizeof(frame.canMsg) + msgLen;
 	memcpy(tx, &frame, len);
 	if (bus->transmit(tx, len, true, timeoutMs, 66))  // Got some response
 	{
@@ -492,18 +489,25 @@ bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersio
 	char tx[10];
 	tx[0] = BUS_FRAME_CANDLE_CONFIG_BAUDRATE;
 	tx[1] = (uint8_t)canBaudrate;
-	if (bus->transmit(tx, 2, true, 50, 3))
+
+	if (bus->transmit(tx, 2, true, 50, 6))
+	{
 		if (*bus->getRxBuffer(0) == BUS_FRAME_CANDLE_CONFIG_BAUDRATE && *bus->getRxBuffer(1) == true)
 		{
-			candleDeviceVersion = *bus->getRxBuffer(2);
+			candleDeviceVersion.i = *(uint32_t*)bus->getRxBuffer(2);
+
 			if (printVersionInfo)
 			{
-				vout << "Device firmware version: v" << candleDeviceVersion / 10 << "." << candleDeviceVersion % 10 << std::endl;
-				if (candleDeviceVersion < candleCompatibleVersion)
-					std::cout << "Your CANdle firmware seems to be out-dated. Contact MAB: support@mabrobotics.pl , for intructions how to update." << std::endl;
+				if (candleDeviceVersion.i < candleDeviceCompatibleVersion.i)
+				{
+					vout << "Your CANdle device firmware seems to be out-dated. Please see the manual for intructions on how to update." << std::endl;
+					return false;
+				}
+				vout << "Device firmware version: v" << mab::getVersionString(&candleDeviceVersion) << std::endl;
 			}
 			return true;
 		}
+	}
 	return false;
 }
 
@@ -654,16 +658,14 @@ bool Candle::end()
 		return false;
 
 	shouldStopTransmitter = true;
+	sem_post(&received);
 	if (transmitterThread.joinable())
 		transmitterThread.join();
 
 	shouldStopReceiver = true;
-	/* this is to make the receiver thread exit cleanly */
-	sem_post(&transmitted);
-	sem_post(&received);
-
 	if (bus->getType() != mab::BusType_E::SPI)
 	{
+		sem_post(&transmitted);
 		if (receiverThread.joinable())
 			receiverThread.join();
 	}
@@ -706,7 +708,7 @@ bool Candle::inConfigMode()
 }
 void Candle::transmitNewStdFrame()
 {
-	char tx[512];
+	char tx[1 + sizeof(StdMd80CommandFrame_t) * maxDevices];
 	tx[0] = BUS_FRAME_UPDATE;
 	for (int i = 0; i < (int)md80s.size(); i++)
 	{
@@ -736,6 +738,48 @@ bool Candle::setupMd80Calibration(uint16_t canId)
 		}
 	vout << "Starting calibration failed at ID: " << canId << statusFAIL << std::endl;
 	return false;
+}
+
+bool Candle::setupMd80CalibrationOutput(uint16_t canId)
+{
+	GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CALIBRATION_OUTPUT);
+	char tx[64];
+	int len = sizeof(frame);
+	memcpy(tx, &frame, len);
+	if (bus->transmit(tx, len, true, 50, 66))
+		if (*bus->getRxBuffer(1) == true)
+		{
+			vout << "Starting output encoder calibration at ID: " << canId << statusOK << std::endl;
+			return true;
+		}
+	vout << "Starting output encoder calibration failed at ID: " << canId << statusFAIL << std::endl;
+	return false;
+}
+
+bool Candle::setupMd80TestOutputEncoder(uint16_t canId)
+{
+	regWrite_st& regW = getMd80FromList(canId).getWriteReg();
+
+	if (!md80Register->write(canId, mab::Md80Reg_E::runTestOutputEncoderCmd, regW.RW.runTestOutputEncoderCmd))
+	{
+		vout << "Output encoder test failed at ID: " << canId << statusFAIL << std::endl;
+		return false;
+	}
+	vout << "Output encoder test in progress at ID: " << canId << statusOK << std::endl;
+	return true;
+}
+
+bool Candle::setupMd80TestMainEncoder(uint16_t canId)
+{
+	regWrite_st& regW = getMd80FromList(canId).getWriteReg();
+
+	if (!md80Register->write(canId, mab::Md80Reg_E::runTestMainEncoderCmd, regW.RW.runTestMainEncoderCmd))
+	{
+		vout << "Main encoder test failed at ID: " << canId << statusFAIL << std::endl;
+		return false;
+	}
+	vout << "Output encoder test in progress at ID: " << canId << statusOK << std::endl;
+	return true;
 }
 
 /* legacy */
@@ -804,6 +848,47 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 		return false;
 	}
 
+	if (!md80Register->read(canId,
+							mab::Md80Reg_E::outputEncoderMode, regR.RW.outputEncoderMode,
+							mab::Md80Reg_E::calOutputEncoderStdDev, regR.RO.calOutputEncoderStdDev,
+							mab::Md80Reg_E::calOutputEncoderMinE, regR.RO.calOutputEncoderMinE,
+							mab::Md80Reg_E::calOutputEncoderMaxE, regR.RO.calOutputEncoderMaxE,
+							mab::Md80Reg_E::calMainEncoderStdDev, regR.RO.calMainEncoderStdDev,
+							mab::Md80Reg_E::calMainEncoderMinE, regR.RO.calMainEncoderMinE,
+							mab::Md80Reg_E::calMainEncoderMaxE, regR.RO.calMainEncoderMaxE))
+	{
+		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
+		return false;
+	}
+
+	if (!md80Register->read(canId,
+							mab::Md80Reg_E::mainEncoderErrors, regR.RO.mainEncoderErrors,
+							mab::Md80Reg_E::outputEncoderErrors, regR.RO.outputEncoderErrors,
+							mab::Md80Reg_E::calibrationErrors, regR.RO.calibrationErrors,
+							mab::Md80Reg_E::bridgeErrors, regR.RO.bridgeErrors,
+							mab::Md80Reg_E::hardwareErrors, regR.RO.hardwareErrors,
+							mab::Md80Reg_E::communicationErrors, regR.RO.communicationErrors))
+	{
+		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
+		return false;
+	}
+
+	if (!md80Register->read(canId, mab::Md80Reg_E::outputEncoderCalibrationMode, regR.RW.outputEncoderCalibrationMode))
+	{
+		vout << "Extended diagnostic failed at ID: " << canId << " while reading outputEncoderCalibrationMode register" << std::endl;
+		return false;
+	}
+	if (!md80Register->read(canId, mab::Md80Reg_E::motorCalibrationMode, regR.RW.motorCalibrationMode))
+	{
+		vout << "Extended diagnostic failed at ID: " << canId << " while reading motorCalibrationMode register" << std::endl;
+		return false;
+	}
+	if (!md80Register->read(canId, mab::Md80Reg_E::shuntResistance, regR.RO.shuntResistance))
+	{
+		vout << "Extended diagnostic failed at ID: " << canId << " while reading shuntResistance register" << std::endl;
+		return false;
+	}
+
 	return true;
 }
 mab::CANdleBaudrate_E Candle::getCurrentBaudrate()
@@ -822,27 +907,12 @@ bool Candle::checkMd80ForBaudrate(uint16_t canId)
 	return false;
 }
 
-#if BENCHMARKING == 1
-bool Candle::benchGetFlagRx()
+std::string getVersionString(const version_ut* ver)
 {
-	return flag_glob_rx;
+	if ((char)ver->s.tag == 'r' || (char)ver->s.tag == 'R')
+		return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision));
+	else
+		return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision) + '.' + (char)ver->s.tag);
 }
-bool Candle::benchGetFlagTx()
-{
-	return flag_glob_tx;
-}
-void Candle::benchSetFlagRx(bool state)
-{
-	flag_glob_rx = state;
-}
-void Candle::benchSetFlagTx(bool state)
-{
-	flag_glob_tx = state;
-}
-long long Candle::benchGetTimeDelta()
-{
-	return time_delta;
-}
-#endif
 
 }  // namespace mab

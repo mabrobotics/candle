@@ -45,6 +45,8 @@ void Md80::setImpedanceControllerParams(float kp, float kd)
 }
 void Md80::__updateCommandFrame()
 {
+	txCallback();
+
 	switch (controlMode)
 	{
 		case Md80Mode_E::IDLE:
@@ -97,6 +99,10 @@ void Md80::__updateResponseData(StdMd80ResponseFrame_t* _responseFrame)
 	position = *(float*)&_responseFrame->fromMd80.data[4];
 	velocity = *(float*)&_responseFrame->fromMd80.data[8];
 	torque = *(float*)&_responseFrame->fromMd80.data[12];
+	outputEncoderPosition = *(float*)&_responseFrame->fromMd80.data[16];
+	outputEncoderVelocity = *(float*)&_responseFrame->fromMd80.data[20];
+
+	rxCallback();
 }
 void Md80::__updateRegulatorsAdjusted(bool adjusted)
 {
@@ -107,10 +113,12 @@ void Md80::__updateRegulatorsAdjusted(bool adjusted)
 void Md80::setMaxTorque(float _maxTorque)
 {
 	maxTorque = _maxTorque;
+	maxTorqueAdjusted = true;
 }
 void Md80::setMaxVelocity(float _maxVelocity)
 {
 	maxVelocity = _maxVelocity;
+	maxVelocityAdjusted = true;
 }
 void Md80::__setControlMode(Md80Mode_E mode)
 {
@@ -155,12 +163,14 @@ void Md80::packVelocityFrame()
 }
 void Md80::packMotionTargetsFrame()
 {
-	commandFrame.toMd80.length = 16;
+	commandFrame.toMd80.length = 24;
 	commandFrame.toMd80.data[0] = mab::Md80FrameId_E::FRAME_SET_MOTION_TARGETS;
 	commandFrame.toMd80.data[1] = 0x00;
 	*(float*)&commandFrame.toMd80.data[2] = velocityTarget;
 	*(float*)&commandFrame.toMd80.data[6] = positionTarget;
 	*(float*)&commandFrame.toMd80.data[10] = torqueSet;
+	*(float*)&commandFrame.toMd80.data[14] = maxTorqueAdjusted ? maxTorque : NAN;
+	*(float*)&commandFrame.toMd80.data[18] = maxVelocityAdjusted ? maxVelocity : NAN;
 }
 
 }  // namespace mab

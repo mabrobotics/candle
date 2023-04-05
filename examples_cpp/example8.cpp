@@ -27,11 +27,11 @@ int main()
 	// We will run both Position PID and Velocity PID at default settings. If you wish you can play with the parameters
 	// Using the methods below:
 	// candle.md80s[0].setPositionControllerParams(20.0f, 0.2f, 0.0f, 15.0f);
-	// candle.md80s[0].setVelocityControllerParams(0.0f, 0.1f, 0.0f, 1.5f);
-	// candle.md80s[0].setMaxVelocity(50.0);
+	// candle.md80s[0].setVelocityControllerParams(0.5f, 0.1f, 0.0f, 1.5f);
+	// candle.md80s[0].setMaxVelocity(5.0);
 	// candle.md80s[0].setMaxTorque(0.5f);
 
-	// To reload default regulator parameters, simply disable the drive (contorlMd80Enable(id, false)),
+	// To reload default controller parameters, simply disable the drive (contorlMd80Enable(id, false)),
 	// stop the communications (candle.end()) or power cycle the drive (off-on).
 
 	float t = 0.0f;
@@ -43,7 +43,7 @@ int main()
 	for (int i = 0; i < 1000; i++)
 	{
 		t += dt;
-		candle.md80s[0].setTargetPosition(sin(t) * 10.0f);
+		candle.md80s[0].setTargetPosition(sin(t) * 2.0f);
 		std::cout << "Drive ID = " << candle.md80s[0].getId() << " Velocity: " << candle.md80s[0].getVelocity() << std::endl;
 		usleep(10000);
 	}

@@ -15,11 +15,6 @@
 #include "uartDevice.hpp"
 #include "usbDevice.hpp"
 
-/* Turn on benchmarking */
-#define BENCHMARKING 0
-/* Turn on RX and TX timestamps */
-#define BENCHMARKING_VERBOSE 0
-
 namespace mab
 {
 enum CANdleMode_E
@@ -130,7 +125,7 @@ class Candle
 	@param timeoutMs timeout for receiving in milliseconds
 	@return true if received response, false otherwise
 	*/
-	bool sengGenericFDCanFrame(uint16_t canId, int msgLen, const char* txBuffer, char* rxBuffer, int timeoutMs = 100);
+	bool sendGenericFDCanFrame(uint16_t canId, int msgLen, const char* txBuffer, char* rxBuffer, int timeoutMs = 100);
 
 	/**
 	@brief Adds Md80 to auto update vector.
@@ -185,14 +180,13 @@ class Candle
 
 	/**
 	@brief Sets current motor position as zero position -> reference for any future movements.
-	@param drive reference to a Md80 class (candle.md80s memeber)
+	@param drive reference to a Md80 class (candle.md80s member)
 	@return true if setting was succesfull, false otherwise
 	*/
 	bool controlMd80SetEncoderZero(Md80& drive);
 	/**
-	@brief Changes max phase-to-phase motor current.
-	@param canId ID of the drive
-	@param currentLimit phase-to-phase current limit in Amps
+	@brief Sets current motor position as zero position -> reference for any future movements.
+	@param canId uint16_t drive CAN bus ID
 	@return true if setting was succesfull, false otherwise
 	*/
 	bool controlMd80SetEncoderZero(uint16_t canId);
@@ -261,6 +255,24 @@ class Candle
 	*/
 	bool setupMd80Calibration(uint16_t canId);
 	/**
+	@brief Triggers an output encoder calibration routine of the drive's internal electronics.
+	@param canId ID of the drive
+	@return true if the calibration started succesfully, false otherwise
+	*/
+	bool setupMd80CalibrationOutput(uint16_t canId);
+	/**
+	@brief Triggers an output encoder check routine. After routine completion min, max and stdDev error can be read from registers.
+	@param canId ID of the drive
+	@return true if the check routine started succesfully, false otherwise
+	*/
+	bool setupMd80TestOutputEncoder(uint16_t canId);
+	/**
+	@brief Triggers a main encoder check routine. After routine completion min, max and stdDev error can be read from registers.
+	@param canId ID of the drive
+	@return true if the check routine started succesfully, false otherwise
+	*/
+	bool setupMd80TestMainEncoder(uint16_t canId);
+	/**
 	@brief Prints diagnostic message from md80.
 	@param canId ID of the drive
 	@return true if the succesfull, false otherwise
@@ -310,22 +322,24 @@ class Candle
 		return md80Register->write(canId, regId, regValue, vs...);
 	}
 
-#if BENCHMARKING == 1
-	long long txTimestamp = 0;
-	bool flag_glob_tx = false;
-	bool flag_glob_rx = false;
-	long long time_delta;
-
-	bool benchGetFlagRx();
-	bool benchGetFlagTx();
-	void benchSetFlagRx(bool state);
-	void benchSetFlagTx(bool state);
-	long long benchGetTimeDelta();
-#endif
+   protected:
+	Register* md80Register = nullptr;
 
    private:
+	const uint8_t VMAJOR = 3;
+	const uint8_t VMINOR = 3;
+	const uint8_t VREVISION = 0;
+	const char VTAG = 'r';
+
+	version_ut candleDeviceVersion;
+	/* TODO make a proper version class as the reverse initalization is not elegant */
+	const version_ut candleDeviceCompatibleVersion = {{'d', 0, 2, 2}};
+	const version_ut md80CompatibleVersion = {{'d', 0, 2, 2}};
+
+	const version_ut candleLibVersion = {{VTAG, VREVISION, VMINOR, VMAJOR}};
+
 	static std::vector<Candle*> instances;
-	const std::string version = "v3.1";
+
 	std::thread receiverThread;
 	std::thread transmitterThread;
 	sem_t transmitted;
@@ -337,15 +351,8 @@ class Candle
 
 	Bus* bus = nullptr;
 
-	Register* md80Register = nullptr;
-
-	uint32_t candleDeviceVersion = 10;
-	const uint32_t candleCompatibleVersion = 14;
-	/* major version number - ex. 2 means all 2.X versions will be compatible */
-	const uint32_t md80CompatibleMajorVersion = 2;
-
 	const int idMax = 2000;
-	int maxDevices = 12;
+	static constexpr int maxDevices = 16;
 	bool shouldStopReceiver;
 	bool shouldStopTransmitter;
 	mab::CANdleBaudrate_E canBaudrate;
@@ -380,5 +387,7 @@ class Candle
 	virtual Bus* createUart() { return new UartDevice(); }
 	virtual Bus* createUsb(const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances) { return new UsbDevice(idVendor, idProduct, instances); }
 };
+
+std::string getVersionString(const version_ut* ver);
 
 }  // namespace mab

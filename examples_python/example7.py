@@ -16,16 +16,15 @@ if len(ids) == 0: # If no drives found -> quit
 for id in ids:
     candle.addMd80(id)
 
-candle.controlMd80SetEncoderZero(ids[0])       #  Reset encoder at current position
+candle.controlMd80SetEncoderZero(ids[0])               #  Reset encoder at current position
 
-candle.controlMd80Mode(ids[0], pyCandle.VELOCITY_PID)     # Set mode to velocity control
-candle.controlMd80Enable(ids[0], True)     # Enable the drive
+candle.controlMd80Mode(ids[0], pyCandle.VELOCITY_PID)  # Set mode to velocity control
+candle.controlMd80Enable(ids[0], True)                 # Enable the drive
 
-#  Now we set up Velocity Regulator, and additionaly max output velocity just to be on a safe side
-candle.md80s[0].setVelocityControllerParams(0.05, 0.25, 0.0, 1.0)
-candle.md80s[0].setMaxVelocity(30.0)
+#  Uncomment the line below to change the *.cfg file defaults
+# candle.md80s[0].setVelocityControllerParams(0.05, 0.25, 0.0, 1.0)
 
-#  To reload default regulator parameters, simply disable the drive (contorlMd80Enable(id, false)), 
+#  To reload default controller parameters, simply disable the drive (contorlMd80Enable(id, false)), 
 #  stop the communications (candle.end()) or power cycle the drive (off-on).
 
 t = 0.0
