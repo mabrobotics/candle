@@ -86,6 +86,8 @@ typedef struct
 	uint8_t runCalibrateCmd;
 	uint8_t runCalibrateOutpuEncoderCmd;
 	uint8_t runCalibratePiGains;
+	float maxAcceleration;
+	float maxDeceleration;
 } regRW_st;
 
 typedef struct
@@ -146,6 +148,9 @@ enum Md80Reg_E : uint16_t
 	motorImpPidKp = 0x050,
 	motorImpPidKd = 0x051,
 	motorImpPidOutMax = 0x052,
+
+	maxAcceleration = 0x056,
+	maxDeceleration = 0x057,
 
 	mainEncoderVelocity = 0x062,
 	mainEncoderPosition = 0x063,
