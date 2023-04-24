@@ -97,6 +97,7 @@ uint16_t Register::getSize(uint16_t regId)
 {
 	switch (regId)
 	{
+		case Md80Reg_E::homingMode:
 		case Md80Reg_E::motorThermistorType:
 		case Md80Reg_E::motorCalibrationMode:
 		case Md80Reg_E::outputEncoderCalibrationMode:
@@ -112,12 +113,17 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::runTestOutputEncoderCmd:
 		case Md80Reg_E::runTestMainEncoderCmd:
 		case Md80Reg_E::runSaveCmd:
+		case Md80Reg_E::runHoming:
 			return 1;
 		case Md80Reg_E::motorTorgueBandwidth:
 		case Md80Reg_E::canWatchdog:
 		case Md80Reg_E::errorVector:
 		case Md80Reg_E::motorKV:
 			return 2;
+		case Md80Reg_E::homingMaxTravel:
+		case Md80Reg_E::homingVelocity:
+		case Md80Reg_E::homingTorque:
+		case Md80Reg_E::homingPositionDeviationTrigger:
 		case Md80Reg_E::shuntResistance:
 		case Md80Reg_E::mainEncoderVelocity:
 		case Md80Reg_E::mainEncoderPosition:
@@ -160,6 +166,7 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::bridgeErrors:
 		case Md80Reg_E::hardwareErrors:
 		case Md80Reg_E::communicationErrors:
+		case Md80Reg_E::homingErrors:
 		case Md80Reg_E::calOutputEncoderStdDev:
 		case Md80Reg_E::calOutputEncoderMinE:
 		case Md80Reg_E::calOutputEncoderMaxE:
@@ -181,6 +188,7 @@ Register::type Register::getType(uint16_t regId)
 {
 	switch (regId)
 	{
+		case Md80Reg_E::homingMode:
 		case Md80Reg_E::motorThermistorType:
 		case Md80Reg_E::motorCalibrationMode:
 		case Md80Reg_E::outputEncoderCalibrationMode:
@@ -196,6 +204,7 @@ Register::type Register::getType(uint16_t regId)
 		case Md80Reg_E::runTestOutputEncoderCmd:
 		case Md80Reg_E::runTestMainEncoderCmd:
 		case Md80Reg_E::runSaveCmd:
+		case Md80Reg_E::runHoming:
 			return type::U8;
 		case Md80Reg_E::motorTorgueBandwidth:
 		case Md80Reg_E::canWatchdog:
@@ -212,9 +221,16 @@ Register::type Register::getType(uint16_t regId)
 		case Md80Reg_E::bridgeErrors:
 		case Md80Reg_E::hardwareErrors:
 		case Md80Reg_E::communicationErrors:
+		case Md80Reg_E::homingErrors:
 		case Md80Reg_E::firmwareVersion:
 		case Md80Reg_E::buildDate:
 			return type::U32;
+		case Md80Reg_E::homingMaxTravel:
+		case Md80Reg_E::homingVelocity:
+		case Md80Reg_E::homingTorque:
+		case Md80Reg_E::homingPositionDeviationTrigger:
+		case Md80Reg_E::positionLimitMax:
+		case Md80Reg_E::positionLimitMin:
 		case Md80Reg_E::shuntResistance:
 		case Md80Reg_E::mainEncoderVelocity:
 		case Md80Reg_E::mainEncoderPosition:

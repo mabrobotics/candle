@@ -16,7 +16,7 @@ class Candle;
 1. add a new field in the enum below (must be uniform with the same enum on MD80 side)
 2. add it to the "switch case" in register.cpp(regarding it's size)
 3. add it to the "switch case" in register.cpp(regarding it's type - this is needed for the python binding file)
-4. add it to either RO/RW structs on the end of this file */
+4. add it to either RO/RW structs */
 
 /* READ ONLY PARAMS */
 typedef struct
@@ -47,6 +47,7 @@ typedef struct
 	uint32_t bridgeErrors;
 	uint32_t hardwareErrors;
 	uint32_t communicationErrors;
+	uint32_t homingErrors;
 	float shuntResistance;
 } regRO_st;
 
@@ -86,6 +87,14 @@ typedef struct
 	uint8_t runCalibrateCmd;
 	uint8_t runCalibrateOutpuEncoderCmd;
 	uint8_t runCalibratePiGains;
+	uint8_t runHoming;
+	uint8_t homingMode;
+	float homingMaxTravel;
+	float homingVelocity;
+	float homingTorque;
+	float homingPositionDeviationTrigger;
+	float positionLimitMax;
+	float positionLimitMin;
 } regRW_st;
 
 typedef struct
@@ -150,12 +159,19 @@ enum Md80Reg_E : uint16_t
 	mainEncoderVelocity = 0x062,
 	mainEncoderPosition = 0x063,
 
+	homingMode = 0x070,
+	homingMaxTravel = 0x071,
+	homingVelocity = 0x072,
+	homingTorque = 0x073,
+	homingPositionDeviationTrigger = 0x074,
+
 	runSaveCmd = 0x080,
 	runTestMainEncoderCmd = 0x081,
 	runTestOutputEncoderCmd = 0x082,
 	runCalibrateCmd = 0x083,
 	runCalibrateOutpuEncoderCmd = 0x084,
 	runCalibratePiGains = 0x085,
+	runHoming = 0x086,
 
 	calOutputEncoderStdDev = 0x100,
 	calOutputEncoderMinE = 0x101,
@@ -163,6 +179,9 @@ enum Md80Reg_E : uint16_t
 	calMainEncoderStdDev = 0x103,
 	calMainEncoderMinE = 0x104,
 	calMainEncoderMaxE = 0x105,
+
+	positionLimitMax = 0x110,
+	positionLimitMin = 0x111,
 
 	shuntResistance = 0x700,
 
@@ -181,6 +200,7 @@ enum Md80Reg_E : uint16_t
 	bridgeErrors = 0x80C,
 	hardwareErrors = 0x80D,
 	communicationErrors = 0x80E,
+	homingErrors = 0x80F,
 };
 
 class Register
