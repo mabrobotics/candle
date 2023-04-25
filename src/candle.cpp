@@ -913,6 +913,13 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 		return false;
 	}
 
+	if (!md80Register->read(canId, mab::Md80Reg_E::positionLimitMin, regR.RW.positionLimitMin,
+							mab::Md80Reg_E::positionLimitMax, regR.RW.positionLimitMax))
+	{
+		vout << "Extended diagnostic failed at ID: " << canId << " while reading position limits registers" << std::endl;
+		return false;
+	}
+
 	return true;
 }
 mab::CANdleBaudrate_E Candle::getCurrentBaudrate()
