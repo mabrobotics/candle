@@ -145,12 +145,12 @@ enum Md80Reg_E : uint16_t
 	motorVelPidOutMax = 0x043,
 	motorVelPidWindup = 0x044,
 
+	maxAcceleration = 0x048,
+	maxDeceleration = 0x049,
+
 	motorImpPidKp = 0x050,
 	motorImpPidKd = 0x051,
 	motorImpPidOutMax = 0x052,
-
-	maxAcceleration = 0x056,
-	maxDeceleration = 0x057,
 
 	mainEncoderVelocity = 0x062,
 	mainEncoderPosition = 0x063,

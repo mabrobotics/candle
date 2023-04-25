@@ -120,10 +120,10 @@ void Md80::setMaxVelocity(float _maxVelocity)
 	maxVelocity = _maxVelocity;
 	maxVelocityAdjusted = true;
 }
-void Md80::setMaxAccelerationAndDeceleration(float _maxAcceleration)
+void Md80::setMaxAcceleration(float newMaxAcceleration)
 {
-	maxAcceleration = _maxAcceleration;
-	maxAccelerationAndDecelerationAdjusted = true;
+	maxAcceleration = newMaxAcceleration;
+	maxAccelerationAdjusted = true;
 }
 void Md80::__setControlMode(Md80Mode_E mode)
 {
@@ -165,7 +165,6 @@ void Md80::packVelocityFrame()
 	*(float*)&commandFrame.toMd80.data[14] = velocityController.i_windup;
 	*(float*)&commandFrame.toMd80.data[18] = maxTorque;
 	*(float*)&commandFrame.toMd80.data[22] = velocityTarget;
-
 }
 void Md80::packMotionTargetsFrame()
 {
@@ -177,7 +176,7 @@ void Md80::packMotionTargetsFrame()
 	*(float*)&commandFrame.toMd80.data[10] = torqueSet;
 	*(float*)&commandFrame.toMd80.data[14] = maxTorqueAdjusted ? maxTorque : NAN;
 	*(float*)&commandFrame.toMd80.data[18] = maxVelocityAdjusted ? maxVelocity : NAN;
-	*(float*)&commandFrame.toMd80.data[22] = maxAccelerationAndDecelerationAdjusted ? maxAcceleration : NAN;
+	*(float*)&commandFrame.toMd80.data[22] = maxAccelerationAdjusted ? maxAcceleration : NAN;
 }
 
 }  // namespace mab

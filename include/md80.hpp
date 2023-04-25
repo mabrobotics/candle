@@ -39,7 +39,7 @@ class Md80
 
 	bool maxTorqueAdjusted = false;
 	bool maxVelocityAdjusted = false;
-	bool maxAccelerationAndDecelerationAdjusted = false;
+	bool maxAccelerationAdjusted = false;
 	bool regulatorsAdjusted = false;
 	bool velocityRegulatorAdjusted = false;
 	StdMd80CommandFrame_t commandFrame;
@@ -115,7 +115,7 @@ class Md80
 	 * @note Has no effect in Torque or Impedance mode.
 	 * @param _maxAcceleration Maximal acceleration in rad/s^2 (radians per second squared) if set to 0 acceleration is unlimited.
 	 */
-	void setMaxAccelerationAndDeceleration(float _maxAcceleration);
+	void setMaxAcceleration(float newMaxAcceleration);
 	/**
 	 * @brief Set the Target Position for Position PID and Impedance modes.
 	 * @param target target position in radians
