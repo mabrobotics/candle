@@ -97,8 +97,6 @@ typedef struct
 	float positionLimitMin;
 	float maxAcceleration;
 	float maxDeceleration;
-	float maxAcceleration;
-	float maxDeceleration;
 } regRW_st;
 
 typedef struct
