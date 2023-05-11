@@ -920,6 +920,13 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 		return false;
 	}
 
+	if (!md80Register->read(canId, mab::Md80Reg_E::maxAcceleration, regR.RW.maxAcceleration,
+							mab::Md80Reg_E::maxDeceleration, regR.RW.maxDeceleration))
+	{
+		vout << "Extended diagnostic failed at ID: " << canId << " while reading acceleration control data registers" << std::endl;
+		return false;
+	}
+
 	return true;
 }
 mab::CANdleBaudrate_E Candle::getCurrentBaudrate()
