@@ -32,12 +32,14 @@ class Md80
 	float torqueSet = 0.0f;
 	float maxTorque = 1.0f;
 	float maxVelocity = 100.0f;
-	RegPid_t velocityController;
-	RegPid_t positionController;
-	RegImpedance_t impedanceController;
+	float maxAcceleration = 0.0f;
+	RegPid_t velocityController = {};
+	RegPid_t positionController = {};
+	RegImpedance_t impedanceController = {};
 
 	bool maxTorqueAdjusted = false;
 	bool maxVelocityAdjusted = false;
+	bool maxAccelerationAdjusted = false;
 	bool regulatorsAdjusted = false;
 	bool velocityRegulatorAdjusted = false;
 	StdMd80CommandFrame_t commandFrame;
@@ -107,6 +109,13 @@ class Md80
 	 * @param maxVelocity
 	 */
 	void setMaxVelocity(float maxVelocity);
+	/**
+	 * @brief Set the Max Acceleration and Deceleration for Position PID and Velocity PID modes.
+	 * @note This is only applied with CUSTOM Position PID and Velocity PID controller settings.
+	 * @note Has no effect in Torque or Impedance mode.
+	 * @param _maxAcceleration Maximal acceleration in rad/s^2 (radians per second squared) if set to 0 acceleration is unlimited.
+	 */
+	void setMaxAcceleration(float newMaxAcceleration);
 	/**
 	 * @brief Set the Target Position for Position PID and Impedance modes.
 	 * @param target target position in radians

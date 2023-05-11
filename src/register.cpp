@@ -127,6 +127,8 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::homingTorque:
 		case Md80Reg_E::homingPositionDeviationTrigger:
 		case Md80Reg_E::shuntResistance:
+		case Md80Reg_E::maxAcceleration:
+		case Md80Reg_E::maxDeceleration:
 		case Md80Reg_E::mainEncoderVelocity:
 		case Md80Reg_E::mainEncoderPosition:
 		case Md80Reg_E::mosfetTemperature:
@@ -234,6 +236,8 @@ Register::type Register::getType(uint16_t regId)
 		case Md80Reg_E::positionLimitMax:
 		case Md80Reg_E::positionLimitMin:
 		case Md80Reg_E::shuntResistance:
+		case Md80Reg_E::maxAcceleration:
+		case Md80Reg_E::maxDeceleration:
 		case Md80Reg_E::mainEncoderVelocity:
 		case Md80Reg_E::mainEncoderPosition:
 		case Md80Reg_E::mosfetTemperature:
