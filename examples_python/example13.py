@@ -17,6 +17,12 @@ text = sg.Text("Motor Output")
 # Define the window's contents
 layout = [[text],
             [sg.Combo(['Velocity Mode', 'Position Mode'], default_value='Velocity Mode', key='-MODE-')],
+            [sg.Text("Kp"),sg.InputText(0.0, key='-KP-')],
+            [sg.Text("Ki"),sg.InputText(0.0, key='-KI-')],
+            [sg.Text("Kd"),sg.InputText(0.0, key='-KD-')],
+            [sg.Text("Windup"),sg.InputText(0.0, key='-WINDUP-')],
+            [sg.Text("Max Velocity"),sg.InputText(0.0, key='-MAXVEL-')],
+            [sg.Text("Max Torque"),sg.InputText(0.0, key='-MAXTORQUE-')],
             [sg.Text("Time of test [s]"),sg.Slider(range=(0, 30), orientation='h', size=(50, 10), default_value=3, key='-TIMEOFTEST-')],
             [sg.Text("Setpoint") ,sg.InputText(VELOCITY_SETPOINT, key='-SETPOINT-')],
             [sg.Button('Run',highlight_colors=('black', 'green'), button_color=('black', 'green')),
@@ -49,8 +55,19 @@ async def EventLoop():
         candle.addMd80(id)
     for md in candle.md80s:
         candle.controlMd80SetEncoderZero(md)      #  Reset encoder at current position
+    
+    
+    event, values = window.read(timeout=0)
+    reg = candle.getMd80FromList(ids[0]).getReadReg()
+    window["-KP-"].update(str(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorVelPidKp, reg.RW.velocityPidGains.kp)))
+    window["-KI-"].update(str(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorVelPidKi, reg.RW.velocityPidGains.ki)))
+    window["-KD-"].update(str(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorVelPidKd, reg.RW.velocityPidGains.kd)))
+    window["-WINDUP-"].update(str(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorVelPidWindup, reg.RW.velocityPidGains.intWindup)))
+    window["-MAXTORQUE-"].update(str(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorVelPidOutMax, reg.RW.velocityPidGains.outMax)))
+    
+    
     while True:
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.2)
         event, values = window.read(timeout=0)
         if event == sg.WIN_CLOSED:
             StopRun(runTask)
@@ -59,24 +76,43 @@ async def EventLoop():
             StopRun(runTask)
         if event == 'Run':
             if(runTask == None):
-                runTask = asyncio.create_task(Run(mode=values['-MODE-'],setpoint=float(values['-SETPOINT-']), showVelocity=values['-VELOCITY-'], showPosition=values['-POSITION-'], showTorque=values['-TORQUE-'], showTemperature=values['-TEMP-'], timeOfTest=float(values['-TIMEOFTEST-'])))
+                runTask = asyncio.create_task(Run(mode=values['-MODE-'],setpoint=float(values['-SETPOINT-']), showVelocity=values['-VELOCITY-'],
+                                                showPosition=values['-POSITION-'], showTorque=values['-TORQUE-'],
+                                                showTemperature=values['-TEMP-'], timeOfTest=float(values['-TIMEOFTEST-']),
+                                                kp=float(values['-KP-']), ki=float(values['-KI-']), kd=float(values['-KD-']),
+                                                maxVel=float(values['-MAXVEL-']), maxTorque=float(values['-MAXTORQUE-']),
+                                                windup=float(values['-WINDUP-'])))
             else:
                 if(runTask.done()):
-                    runTask = asyncio.create_task(Run(mode=values['-MODE-'],setpoint=float(values['-SETPOINT-']), showVelocity=values['-VELOCITY-'], showPosition=values['-POSITION-'], showTorque=values['-TORQUE-'], showTemperature=values['-TEMP-'], timeOfTest=float(values['-TIMEOFTEST-'])))
+                    runTask = asyncio.create_task(Run(mode=values['-MODE-'],setpoint=float(values['-SETPOINT-']), showVelocity=values['-VELOCITY-'],
+                                                    showPosition=values['-POSITION-'], showTorque=values['-TORQUE-'],
+                                                    showTemperature=values['-TEMP-'], timeOfTest=float(values['-TIMEOFTEST-']),
+                                                    kp=float(values['-KP-']), ki=float(values['-KI-']), kd=float(values['-KD-']),
+                                                    maxVel=float(values['-MAXVEL-']), maxTorque=float(values['-MAXTORQUE-']),
+                                                    windup=float(values['-WINDUP-'])))
     candle.end()
     candle.controlMd80Enable(ids[0], False) # Enable the drive
     window.close()
 
-async def Run(mode='Velocity Mode', setpoint=VELOCITY_SETPOINT, showVelocity=True, showPosition=False, showTorque=False, showTemperature=False, timeOfTest=TIME_OF_TEST):
+async def Run(mode='Velocity Mode', setpoint=VELOCITY_SETPOINT, showVelocity=True, showPosition=False,
+               showTorque=False, showTemperature=False, timeOfTest=TIME_OF_TEST,
+               kp=0.0, ki=0.0, kd=0.0, maxVel=0.0, maxTorque=0.0, windup=0.0):
     lp = LivePlot(xlim=(0,timeOfTest),ylim=(0,setpoint*1.5))
+
+    candle.controlMd80SetEncoderZero(candle.md80s[0])
 
     if(mode == 'Velocity Mode'):
         candle.controlMd80Mode(candle.md80s[0], pyCandle.VELOCITY_PID)
+        candle.md80s[0].setVelocityControllerParams(kp, ki, kd, windup)
         candle.md80s[0].setTargetVelocity(0.0)
     else:
         candle.controlMd80Mode(candle.md80s[0], pyCandle.POSITION_PID)
         candle.md80s[0].setTargetPosition(0.0)
+        candle.md80s[0].setPositionControllerParams(kp, ki, kd, windup)
 
+    candle.md80s[0].setMaxVelocity(maxVel)
+    candle.md80s[0].setMaxTorque(maxTorque)
+        
     candle.controlMd80Enable(candle.md80s[0], True)    
     candle.begin()
     if(showVelocity):
