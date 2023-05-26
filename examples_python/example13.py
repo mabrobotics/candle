@@ -33,6 +33,9 @@ window = sg.Window('Example13', layout)
 
 def StopRun(runTask):
     print("Stopping program")
+    candle.end()
+    for md in candle.md80s:
+        candle.controlMd80Enable(md, False)
     if(runTask != None):
         runTask.cancel()
     
@@ -49,11 +52,17 @@ async def EventLoop():
     while True:
         await asyncio.sleep(0.1)
         event, values = window.read(timeout=0)
-        if event == sg.WIN_CLOSED or event == 'Stop':
+        if event == sg.WIN_CLOSED:
+            StopRun(runTask)
             break
+        if event == 'Stop':
+            StopRun(runTask)
         if event == 'Run':
             if(runTask == None):
                 runTask = asyncio.create_task(Run(mode=values['-MODE-'],setpoint=float(values['-SETPOINT-']), showVelocity=values['-VELOCITY-'], showPosition=values['-POSITION-'], showTorque=values['-TORQUE-'], showTemperature=values['-TEMP-'], timeOfTest=float(values['-TIMEOFTEST-'])))
+            else:
+                if(runTask.done()):
+                    runTask = asyncio.create_task(Run(mode=values['-MODE-'],setpoint=float(values['-SETPOINT-']), showVelocity=values['-VELOCITY-'], showPosition=values['-POSITION-'], showTorque=values['-TORQUE-'], showTemperature=values['-TEMP-'], timeOfTest=float(values['-TIMEOFTEST-'])))
     candle.end()
     candle.controlMd80Enable(ids[0], False) # Enable the drive
     window.close()
@@ -121,3 +130,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+#TODO: Add boxes for showing limits
+#TODO: Add option to change PID parameters
