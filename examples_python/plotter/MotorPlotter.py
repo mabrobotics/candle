@@ -49,6 +49,8 @@ class LivePlot:
         plt.pause(time)
     def isShowing(self):
         return plt.fignum_exists(self.fig.number)
+    def close(self):
+        plt.close(self.fig.number)
 
 # # Example usage
 # plot = LivePlot(num_lines=1)  # Create a LivePlot object with 1 line
