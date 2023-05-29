@@ -23,10 +23,12 @@ from MotorPlotter import LivePlot
 ################################################################################
 # Constants
 ################################################################################
+
 TIME_OF_TEST = 5.0  # seconds
 VELOCITY_SETPOINT = 50.0  # rad/s
 PLOT_UPDATE_RATE = 0.01  # seconds
 sg.theme('Dark')
+
 ################################################################################
 # Functions
 ################################################################################
@@ -41,12 +43,11 @@ layout = [[sg.Text("Motor Output")],
           [sg.Text("Windup"), sg.InputText(0.0, key='-WINDUP-')],
           [sg.Text("Max Velocity"), sg.InputText(0.0, key='-MAXVEL-')],
           [sg.Text("Max Torque"), sg.InputText(0.0, key='-MAXTORQUE-')],
-          [sg.Text("Time of test [s]"), sg.Slider(range=(0, 30), orientation='h', size=(
-              50, 10), default_value=3, key='-TIMEOFTEST-')],
-          [sg.Text("Setpoint"), sg.InputText(
-              VELOCITY_SETPOINT, key='-SETPOINT-')],
+          [sg.Text("Time of test [s]"), sg.Slider(range=(0, 30), orientation='h', size=(50, 10), default_value=3, key='-TIMEOFTEST-')],
+          [sg.Text("Setpoint"), sg.InputText(VELOCITY_SETPOINT, key='-SETPOINT-')],
           [sg.Button('Run', highlight_colors=('black', 'green'), button_color=('black', 'green')),
-           sg.Button('Stop', highlight_colors=('black', 'red'), button_color=('black', 'red'))],
+           sg.Button('Stop', highlight_colors=('black', 'red'), button_color=('black', 'red')),
+           sg.Button('Save', highlight_colors=('black', 'grey'), button_color=('black', 'grey'))],
           [sg.Checkbox('Velocity [rad/s]', default=True, key='-VELOCITY-')],
           [sg.Checkbox('Position [rad]', default=False, key='-POSITION-')],
           [sg.Checkbox('Torque [Nm]', default=False, key='-TORQUE-')],
@@ -76,7 +77,42 @@ def StopRun(runTask, taskFunction):
         try:
             runTask.cancel()
         finally:
-            pass
+            print("Task cancelled")
+
+def SaveCurrentConfig(id,mode,kp,ki,kd,windup,maxTorque,maxVel):
+    """
+    Save current PID settings in the drive
+    params:
+    mode: string, "Velocity Mode" or "Position Mode"
+    kp: float, proportional gain
+    ki: float, integral gain
+    kd: float, derivative gain
+    windup: float, windup limit
+    outMax: float, output limit
+    id: int, id of the drive
+    """
+    print("Saving current configuration")
+    print("Mode: " + mode)
+    print("Kp: " + str(kp))
+    print("Ki: " + str(ki))
+    print("Kd: " + str(kd))
+    print("Windup: " + str(windup))
+    print("Max Torque: " + str(maxTorque))
+    print("Max Velocity: " + str(maxVel))
+    if mode == "Velocity Mode":
+        candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorVelPidKp,float(kp))
+        candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorVelPidKi,float(ki))
+        candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorVelPidKd,float(kd))
+        candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorVelPidWindup,float(windup))
+        candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorVelPidOutMax,float(maxTorque))
+    elif mode == "Position Mode":
+        candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorPosPidKp,float(kp))
+        candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorPosPidKi,float(ki))
+        candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorPosPidKd,float(kd))
+        candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorPosPidWindup,float(windup))
+        candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorPosPidOutMax,float(maxVel))
+    
+    candle.configMd80Save(id) # Save the configuration in the drive
 
 
 async def EventLoop():
@@ -138,6 +174,19 @@ async def EventLoop():
                                                                windup=float(values['-WINDUP-'])))
                 else:  # If previous task is not done, cancel it
                     StopRun(runTask, taskFunction)
+        if event == 'Save':  # If user clicks save, save the data
+            SaveCurrentConfig(ids[0],values["-MODE-"],values["-KP-"],
+                              values["-KI-"],values["-KD-"],values["-WINDUP-"],
+                              values["-MAXTORQUE-"],values["-MAXVEL-"])
+            # After update of the config, wait for the drive to reboot
+            while(True):
+                ids = candle.ping() 
+                if len(ids) != 0:
+                    for id in ids:
+                        candle.addMd80(id)  # Add all drives to the candle object
+                    break
+                await asyncio.sleep(1.0)
+
 
         if event == '-MODE-':  # If user changes mode, load PID registers for apropriate PID controller
             print("Mode changed to: " + values['-MODE-'])

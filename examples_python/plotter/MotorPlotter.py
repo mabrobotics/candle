@@ -3,7 +3,18 @@ from matplotlib.animation import FuncAnimation
 import time
 
 class LivePlot:
+    """
+    A class for plotting live data
+    """
     def __init__(self, num_lines=1, interval=10,xlim=(0,10),ylim=(0,10)):
+        """
+        Initialize the plotter
+        :param num_lines: The number of lines to plot
+        :param interval: The interval between each frame in milliseconds
+        :param xlim: The x-axis dimesions
+        :param ylim: The y-axis dimesions
+        """
+
         self.fig, self.ax = plt.subplots()
         self.lines = {}
         self.num_lines = num_lines
@@ -14,13 +25,23 @@ class LivePlot:
         self.anim = FuncAnimation(self.fig, self.update, interval=self.interval, blit=True)
 
     def update(self, frame):
-        # Update line data
+        """
+        Update the plot
+        :param frame: The frame number
+        :return: The updated plot
+        """
         for line_name, line in self.lines.items():
             x_data, y_data = line["data"]
             line["line"].set_data(x_data, y_data)
         return list(line["line"] for line in self.lines.values())
 
     def add_line(self, name, x_data=None, y_data=None):
+        """
+        Add a line to the plot
+        :param name: The name of the data plot
+        :param x_data: The x data of the plot
+        :param y_data: The y data of the plot
+        """
         line, = self.ax.plot([], [])
         self.lines[name] = {"line": line, "data": ([], [])}
         self.num_lines += 1
@@ -31,6 +52,12 @@ class LivePlot:
             self.set_data(name, x_data, y_data)
 
     def set_data(self, name, x_data, y_data):
+        """
+        Set the data of a plot
+        :param name: The name of the plot
+        :param x_data: The x data of the plot
+        :param y_data: The y data of the plot
+        """
         if(self.lines.get(name) == None):
             self.add_line(name, x_data, y_data)
         line = self.lines.get(name)
