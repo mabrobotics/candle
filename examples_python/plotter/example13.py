@@ -71,7 +71,8 @@ def StopRun(runTask, taskFunction):
     for md in candle.md80s:
         candle.controlMd80Enable(md, False)
 
-    taskFunction.lp.close()  # Close the window of the live plot
+    if (taskFunction != None):
+        taskFunction.lp.close() # Close the window of the live plot
 
     if (runTask != None):
         try:
