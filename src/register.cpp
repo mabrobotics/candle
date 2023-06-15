@@ -120,6 +120,11 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::errorVector:
 		case Md80Reg_E::motorKV:
 			return 2;
+		case Md80Reg_E::maxTorque:
+		case Md80Reg_E::maxVelocity:
+		case Md80Reg_E::profileAcceleration:
+		case Md80Reg_E::profileDeceleration:
+		case Md80Reg_E::profileVelocity:
 		case Md80Reg_E::positionLimitMax:
 		case Md80Reg_E::positionLimitMin:
 		case Md80Reg_E::homingMaxTravel:
@@ -229,6 +234,11 @@ Register::type Register::getType(uint16_t regId)
 		case Md80Reg_E::firmwareVersion:
 		case Md80Reg_E::buildDate:
 			return type::U32;
+		case Md80Reg_E::maxTorque:
+		case Md80Reg_E::maxVelocity:
+		case Md80Reg_E::profileAcceleration:
+		case Md80Reg_E::profileDeceleration:
+		case Md80Reg_E::profileVelocity:
 		case Md80Reg_E::homingMaxTravel:
 		case Md80Reg_E::homingVelocity:
 		case Md80Reg_E::homingTorque:

@@ -92,11 +92,16 @@ typedef struct
 	float homingMaxTravel;
 	float homingVelocity;
 	float homingTorque;
-	float homingPositionDeviationTrigger;
 	float positionLimitMax;
 	float positionLimitMin;
 	float maxAcceleration;
 	float maxDeceleration;
+	float maxTorque;
+	float maxVelocity;
+	float profileAcceleration;
+	float profileDeceleration;
+	float profileVelocity;
+	float quickStopDeceleration;
 } regRW_st;
 
 typedef struct
@@ -110,7 +115,7 @@ typedef struct
 	regRW_st RW;
 } regWrite_st;
 
-enum Md80Reg_E : uint16_t
+typedef enum
 {
 	canId = 0x001,
 	canBaudrate = 0x002,
@@ -154,9 +159,6 @@ enum Md80Reg_E : uint16_t
 	motorVelPidOutMax = 0x043,
 	motorVelPidWindup = 0x044,
 
-	maxAcceleration = 0x048,
-	maxDeceleration = 0x049,
-
 	motorImpPidKp = 0x050,
 	motorImpPidKd = 0x051,
 	motorImpPidOutMax = 0x052,
@@ -187,6 +189,15 @@ enum Md80Reg_E : uint16_t
 
 	positionLimitMax = 0x110,
 	positionLimitMin = 0x111,
+	maxTorque = 0x112,
+	maxVelocity = 0x113,
+	maxAcceleration = 0x114,
+	maxDeceleration = 0x115,
+
+	profileVelocity = 0x120,
+	profileAcceleration = 0x121,
+	profileDeceleration = 0x122,
+	quickStopDeceleration = 0x123,
 
 	shuntResistance = 0x700,
 
@@ -206,8 +217,8 @@ enum Md80Reg_E : uint16_t
 	hardwareErrors = 0x80D,
 	communicationErrors = 0x80E,
 	homingErrors = 0x80F,
-};
 
+} Md80Reg_E;
 class Register
 {
    public:

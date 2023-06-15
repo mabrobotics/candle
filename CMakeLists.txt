@@ -77,4 +77,7 @@ if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
 
     add_executable(example12 examples_cpp/example12.cpp)
     target_link_libraries(example12 candle)
+
+    add_executable(example13 examples_cpp/example13.cpp)
+    target_link_libraries(example13 candle)
 endif()

@@ -29,17 +29,17 @@ class Md80
 	Md80Mode_E controlMode = Md80Mode_E::IDLE;
 	float positionTarget = 0.0f;
 	float velocityTarget = 0.0f;
-	float torqueSet = 0.0f;
+	float torqueTarget = 0.0f;
 	float maxTorque = 1.0f;
-	float maxVelocity = 100.0f;
-	float maxAcceleration = 0.0f;
+	float profileVelocity = 100.0f;
+	float profileAcceleration = 0.0f;
 	RegPid_t velocityController = {};
 	RegPid_t positionController = {};
 	RegImpedance_t impedanceController = {};
 
 	bool maxTorqueAdjusted = false;
-	bool maxVelocityAdjusted = false;
-	bool maxAccelerationAdjusted = false;
+	bool profileVelocityAdjusted = false;
+	bool profileAccelerationAdjusted = false;
 	bool regulatorsAdjusted = false;
 	bool velocityRegulatorAdjusted = false;
 	StdMd80CommandFrame_t commandFrame;
@@ -106,16 +106,16 @@ class Md80
 	 * @brief Set the Max Velocity for Position PID and Velocity PID modes.
 	 * @note This is only applied with CUSTOM Position PID and Velocity PID controller settings.
 	 * @note Has no effect in Torque or Impedance mode.
-	 * @param maxVelocity
+	 * @param profileVelocity
 	 */
-	void setMaxVelocity(float maxVelocity);
+	void setProfileVelocity(float profileVelocity);
 	/**
 	 * @brief Set the Max Acceleration and Deceleration for Position PID and Velocity PID modes.
 	 * @note This is only applied with CUSTOM Position PID and Velocity PID controller settings.
 	 * @note Has no effect in Torque or Impedance mode.
 	 * @param _maxAcceleration Maximal acceleration in rad/s^2 (radians per second squared) if set to 0 acceleration is unlimited.
 	 */
-	void setMaxAcceleration(float newMaxAcceleration);
+	void setProfileAcceleration(float newMaxAcceleration);
 	/**
 	 * @brief Set the Target Position for Position PID and Impedance modes.
 	 * @param target target position in radians
@@ -130,7 +130,7 @@ class Md80
 	 * @brief Set the Torque Command for TORQUE and Impedance (torque_ff) modes.
 	 * @param target target torque in Nm (Newton-meters)
 	 */
-	void setTorque(float target) { torqueSet = target; };
+	void setTorque(float target) { torqueTarget = target; };
 
 	// getters
 	/**

@@ -130,10 +130,11 @@ void Candle::receive()
 		}
 		else
 		{
+			if (!shouldStopReceiver)
+				vout << "Did not receive response from CANdle!" << statusFAIL << std::endl;
 			shouldStopReceiver = true;
 			shouldStopTransmitter = true;
 			sem_post(&received);
-			vout << "Did not receive response from CANdle!" << statusFAIL << std::endl;
 		}
 	}
 }
@@ -906,7 +907,6 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 							mab::Md80Reg_E::homingMaxTravel, regR.RW.homingMaxTravel,
 							mab::Md80Reg_E::homingTorque, regR.RW.homingTorque,
 							mab::Md80Reg_E::homingVelocity, regR.RW.homingVelocity,
-							mab::Md80Reg_E::homingPositionDeviationTrigger, regR.RW.homingPositionDeviationTrigger,
 							mab::Md80Reg_E::homingErrors, regR.RO.homingErrors))
 	{
 		vout << "Extended diagnostic failed at ID: " << canId << " while reading homing registers" << std::endl;
@@ -921,7 +921,18 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 	}
 
 	if (!md80Register->read(canId, mab::Md80Reg_E::maxAcceleration, regR.RW.maxAcceleration,
-							mab::Md80Reg_E::maxDeceleration, regR.RW.maxDeceleration))
+							mab::Md80Reg_E::maxDeceleration, regR.RW.maxDeceleration,
+							mab::Md80Reg_E::maxTorque, regR.RW.maxTorque,
+							mab::Md80Reg_E::maxVelocity, regR.RW.maxVelocity))
+	{
+		vout << "Extended diagnostic failed at ID: " << canId << " while reading motion limit registers" << std::endl;
+		return false;
+	}
+
+	if (!md80Register->read(canId, mab::Md80Reg_E::profileAcceleration, regR.RW.profileAcceleration,
+							mab::Md80Reg_E::profileDeceleration, regR.RW.profileDeceleration,
+							mab::Md80Reg_E::quickStopDeceleration, regR.RW.quickStopDeceleration,
+							mab::Md80Reg_E::profileVelocity, regR.RW.profileVelocity))
 	{
 		vout << "Extended diagnostic failed at ID: " << canId << " while reading acceleration control data registers" << std::endl;
 		return false;
