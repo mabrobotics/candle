@@ -273,6 +273,11 @@ class Candle
 	*/
 	bool setupMd80TestMainEncoder(uint16_t canId);
 	/**
+	@brief Triggers a homing routine.
+	@return true if the homing routine started succesfully, false otherwise.
+	*/
+	bool setupMd80PerformHoming(uint16_t canId);
+	/**
 	@brief Prints diagnostic message from md80.
 	@param canId ID of the drive
 	@return true if the succesfull, false otherwise

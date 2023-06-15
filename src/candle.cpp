@@ -782,6 +782,19 @@ bool Candle::setupMd80TestMainEncoder(uint16_t canId)
 	return true;
 }
 
+bool Candle::setupMd80PerformHoming(uint16_t canId)
+{
+	regWrite_st& regW = getMd80FromList(canId).getWriteReg();
+
+	if (!md80Register->write(canId, mab::Md80Reg_E::runHoming, regW.RW.runHoming))
+	{
+		vout << "Homing test failed at ID: " << canId << statusFAIL << std::endl;
+		return false;
+	}
+	vout << "Homing test in progress at ID: " << canId << statusOK << std::endl;
+	return true;
+}
+
 /* legacy */
 bool Candle::setupMd80Diagnostic(uint16_t canId)
 {
@@ -886,6 +899,31 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 	if (!md80Register->read(canId, mab::Md80Reg_E::shuntResistance, regR.RO.shuntResistance))
 	{
 		vout << "Extended diagnostic failed at ID: " << canId << " while reading shuntResistance register" << std::endl;
+		return false;
+	}
+
+	if (!md80Register->read(canId, mab::Md80Reg_E::homingMode, regR.RW.homingMode,
+							mab::Md80Reg_E::homingMaxTravel, regR.RW.homingMaxTravel,
+							mab::Md80Reg_E::homingTorque, regR.RW.homingTorque,
+							mab::Md80Reg_E::homingVelocity, regR.RW.homingVelocity,
+							mab::Md80Reg_E::homingPositionDeviationTrigger, regR.RW.homingPositionDeviationTrigger,
+							mab::Md80Reg_E::homingErrors, regR.RO.homingErrors))
+	{
+		vout << "Extended diagnostic failed at ID: " << canId << " while reading homing registers" << std::endl;
+		return false;
+	}
+
+	if (!md80Register->read(canId, mab::Md80Reg_E::positionLimitMin, regR.RW.positionLimitMin,
+							mab::Md80Reg_E::positionLimitMax, regR.RW.positionLimitMax))
+	{
+		vout << "Extended diagnostic failed at ID: " << canId << " while reading position limits registers" << std::endl;
+		return false;
+	}
+
+	if (!md80Register->read(canId, mab::Md80Reg_E::maxAcceleration, regR.RW.maxAcceleration,
+							mab::Md80Reg_E::maxDeceleration, regR.RW.maxDeceleration))
+	{
+		vout << "Extended diagnostic failed at ID: " << canId << " while reading acceleration control data registers" << std::endl;
 		return false;
 	}
 
