@@ -30,6 +30,7 @@ PLOT_UPDATE_RATE = 0.01  # seconds
 sg.theme('Dark')
 font = ('Helvetica', 14)
 digits_round = 4 # number of digits to round the data
+button_size = (35, 4) # size of the buttons
 
 ################################################################################
 # Functions
@@ -45,15 +46,19 @@ layout = [[sg.Text("Motor Output",font=font)],
           [sg.Text("Windup",font=font), sg.InputText(0.0, key='-WINDUP-',font=font)],
           [sg.Text("Max Velocity",font=font), sg.InputText(0.0, key='-MAXVEL-',font=font)],
           [sg.Text("Max Torque",font=font), sg.InputText(0.0, key='-MAXTORQUE-',font=font)],
+
+          [sg.Button('Save', highlight_colors=('black', 'grey'), button_color=('black', 'grey'),font=font)],
+
           [sg.Text("Time of test [s]",font=font), sg.Slider(range=(0, 30), orientation='h', size=(50, 10), default_value=3, key='-TIMEOFTEST-',font=font)],
           [sg.Text("Setpoint",font=font), sg.InputText(VELOCITY_SETPOINT, key='-SETPOINT-',font=font)],
-          [sg.Button('Run', highlight_colors=('black', 'green'), button_color=('black', 'green'),font=font),
-           sg.Button('Stop', highlight_colors=('black', 'red'), button_color=('black', 'red'),font=font),
-           sg.Button('Save', highlight_colors=('black', 'grey'), button_color=('black', 'grey'),font=font)],
+
           [sg.Checkbox('Velocity [rad/s]', default=True, key='-VELOCITY-',font=font)],
           [sg.Checkbox('Position [rad]', default=False, key='-POSITION-',font=font)],
           [sg.Checkbox('Torque [Nm]', default=False, key='-TORQUE-',font=font)],
-          [sg.Checkbox('Temperature [C]', default=False, key='-TEMP-',font=font)]]
+          [sg.Checkbox('Temperature [C]', default=False, key='-TEMP-',font=font)],
+
+          [sg.Button('Run', highlight_colors=('black', 'green'), button_color=('black', 'green'),font=font,size=button_size),
+           sg.Button('Stop', highlight_colors=('black', 'red'), button_color=('black', 'red'),font=font,size=button_size)],]
 
 
 # Create the window
@@ -147,7 +152,11 @@ async def EventLoop():
         ids[0], pyCandle.Md80Reg_E.motorVelPidOutMax, reg.RW.velocityPidGains.outMax),digits_round)))
     window["-MAXVEL-"].update(str(round(candle.readMd80Register(
         ids[0], pyCandle.Md80Reg_E.motorPosPidOutMax, reg.RW.positionPidGains.outMax),digits_round)))
+    if((round(candle.readMd80Register(
+        ids[0], pyCandle.Md80Reg_E.motorPosPidOutMax, reg.RW.positionPidGains.outMax),digits_round)) < VELOCITY_SETPOINT):
 
+        window["-SETPOINT-"].update(str(round(candle.readMd80Register(
+            ids[0], pyCandle.Md80Reg_E.motorPosPidOutMax, reg.RW.positionPidGains.outMax),digits_round)))
     # Run the GUI event loop
     while True:
         await asyncio.sleep(0.2)
