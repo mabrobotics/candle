@@ -29,6 +29,7 @@ VELOCITY_SETPOINT = 50.0  # rad/s
 PLOT_UPDATE_RATE = 0.01  # seconds
 sg.theme('Dark')
 font = ('Helvetica', 14)
+digits_round = 4 # number of digits to round the data
 
 ################################################################################
 # Functions
@@ -134,18 +135,18 @@ async def EventLoop():
     reg = candle.getMd80FromList(ids[0]).getReadReg()  # Get register object
 
     ###### Set initial values of PID registers (velocity by default) ######
-    window["-KP-"].update(str(candle.readMd80Register(ids[0],
-                          pyCandle.Md80Reg_E.motorVelPidKp, reg.RW.velocityPidGains.kp)))
-    window["-KI-"].update(str(candle.readMd80Register(ids[0],
-                          pyCandle.Md80Reg_E.motorVelPidKi, reg.RW.velocityPidGains.ki)))
-    window["-KD-"].update(str(candle.readMd80Register(ids[0],
-                          pyCandle.Md80Reg_E.motorVelPidKd, reg.RW.velocityPidGains.kd)))
-    window["-WINDUP-"].update(str(candle.readMd80Register(
-        ids[0], pyCandle.Md80Reg_E.motorVelPidWindup, reg.RW.velocityPidGains.intWindup)))
-    window["-MAXTORQUE-"].update(str(candle.readMd80Register(
-        ids[0], pyCandle.Md80Reg_E.motorVelPidOutMax, reg.RW.velocityPidGains.outMax)))
-    window["-MAXVEL-"].update(str(candle.readMd80Register(
-        ids[0], pyCandle.Md80Reg_E.motorPosPidOutMax, reg.RW.positionPidGains.outMax)))
+    window["-KP-"].update(str(round(candle.readMd80Register(ids[0],
+                          pyCandle.Md80Reg_E.motorVelPidKp, reg.RW.velocityPidGains.kp),digits_round)))
+    window["-KI-"].update(str(round(candle.readMd80Register(ids[0],
+                          pyCandle.Md80Reg_E.motorVelPidKi, reg.RW.velocityPidGains.ki),digits_round)))
+    window["-KD-"].update(str(round(candle.readMd80Register(ids[0],
+                          pyCandle.Md80Reg_E.motorVelPidKd, reg.RW.velocityPidGains.kd),digits_round)))
+    window["-WINDUP-"].update(str(round(candle.readMd80Register(
+        ids[0], pyCandle.Md80Reg_E.motorVelPidWindup, reg.RW.velocityPidGains.intWindup),digits_round)))
+    window["-MAXTORQUE-"].update(str(round(candle.readMd80Register(
+        ids[0], pyCandle.Md80Reg_E.motorVelPidOutMax, reg.RW.velocityPidGains.outMax),digits_round)))
+    window["-MAXVEL-"].update(str(round(candle.readMd80Register(
+        ids[0], pyCandle.Md80Reg_E.motorPosPidOutMax, reg.RW.positionPidGains.outMax),digits_round)))
 
     # Run the GUI event loop
     while True:
@@ -197,31 +198,31 @@ async def EventLoop():
             print("Mode changed to: " + values['-MODE-'])
             reg = candle.getMd80FromList(ids[0]).getReadReg()
             if values['-MODE-'] == 'Velocity Mode':
-                window['-KP-'].update(str(candle.readMd80Register(
-                    ids[0], pyCandle.Md80Reg_E.motorVelPidKp, reg.RW.velocityPidGains.kp)))
-                window['-KI-'].update(str(candle.readMd80Register(
-                    ids[0], pyCandle.Md80Reg_E.motorVelPidKi, reg.RW.velocityPidGains.ki)))
-                window['-KD-'].update(str(candle.readMd80Register(
-                    ids[0], pyCandle.Md80Reg_E.motorVelPidKd, reg.RW.velocityPidGains.kd)))
-                window['-WINDUP-'].update(str(candle.readMd80Register(
-                    ids[0], pyCandle.Md80Reg_E.motorVelPidWindup, reg.RW.velocityPidGains.intWindup)))
-                window['-MAXTORQUE-'].update(str(candle.readMd80Register(
-                    ids[0], pyCandle.Md80Reg_E.motorVelPidOutMax, reg.RW.velocityPidGains.outMax)))
-                window['-MAXVEL-'].update(str(candle.readMd80Register(
-                    ids[0], pyCandle.Md80Reg_E.motorPosPidOutMax, reg.RW.positionPidGains.outMax)))
+                window['-KP-'].update(str(round(candle.readMd80Register(
+                    ids[0], pyCandle.Md80Reg_E.motorVelPidKp, reg.RW.velocityPidGains.kp),digits_round)))
+                window['-KI-'].update(str(round(candle.readMd80Register(
+                    ids[0], pyCandle.Md80Reg_E.motorVelPidKi, reg.RW.velocityPidGains.ki),digits_round)))
+                window['-KD-'].update(str(round(candle.readMd80Register(
+                    ids[0], pyCandle.Md80Reg_E.motorVelPidKd, reg.RW.velocityPidGains.kd),digits_round)))
+                window['-WINDUP-'].update(str(round(candle.readMd80Register(
+                    ids[0], pyCandle.Md80Reg_E.motorVelPidWindup, reg.RW.velocityPidGains.intWindup),digits_round)))
+                window['-MAXTORQUE-'].update(str(round(candle.readMd80Register(
+                    ids[0], pyCandle.Md80Reg_E.motorVelPidOutMax, reg.RW.velocityPidGains.outMax),digits_round)))
+                window['-MAXVEL-'].update(str(round(candle.readMd80Register(
+                    ids[0], pyCandle.Md80Reg_E.motorPosPidOutMax, reg.RW.positionPidGains.outMax),digits_round)))
             if values['-MODE-'] == 'Position Mode':
-                window['-KP-'].update(str(candle.readMd80Register(
-                    ids[0], pyCandle.Md80Reg_E.motorPosPidKp, reg.RW.positionPidGains.kp)))
-                window['-KI-'].update(str(candle.readMd80Register(
-                    ids[0], pyCandle.Md80Reg_E.motorPosPidKi, reg.RW.positionPidGains.ki)))
-                window['-KD-'].update(str(candle.readMd80Register(
-                    ids[0], pyCandle.Md80Reg_E.motorPosPidKd, reg.RW.positionPidGains.kd)))
-                window['-WINDUP-'].update(str(candle.readMd80Register(
-                    ids[0], pyCandle.Md80Reg_E.motorPosPidWindup, reg.RW.positionPidGains.intWindup)))
-                window['-MAXTORQUE-'].update(str(candle.readMd80Register(
-                    ids[0], pyCandle.Md80Reg_E.motorVelPidOutMax, reg.RW.velocityPidGains.outMax)))
-                window['-MAXVEL-'].update(str(candle.readMd80Register(
-                    ids[0], pyCandle.Md80Reg_E.motorPosPidOutMax, reg.RW.positionPidGains.outMax)))
+                window['-KP-'].update(str(round(candle.readMd80Register(
+                    ids[0], pyCandle.Md80Reg_E.motorPosPidKp, reg.RW.positionPidGains.kp),digits_round)))
+                window['-KI-'].update(str(round(candle.readMd80Register(
+                    ids[0], pyCandle.Md80Reg_E.motorPosPidKi, reg.RW.positionPidGains.ki),digits_round)))
+                window['-KD-'].update(str(round(candle.readMd80Register(
+                    ids[0], pyCandle.Md80Reg_E.motorPosPidKd, reg.RW.positionPidGains.kd),digits_round)))
+                window['-WINDUP-'].update(str(round(candle.readMd80Register(
+                    ids[0], pyCandle.Md80Reg_E.motorPosPidWindup, reg.RW.positionPidGains.intWindup),digits_round)))
+                window['-MAXTORQUE-'].update(str(round(candle.readMd80Register(
+                    ids[0], pyCandle.Md80Reg_E.motorVelPidOutMax, reg.RW.velocityPidGains.outMax),digits_round)))
+                window['-MAXVEL-'].update(str(round(candle.readMd80Register(
+                    ids[0], pyCandle.Md80Reg_E.motorPosPidOutMax, reg.RW.positionPidGains.outMax),digits_round)))
     candle.end()  # Close connection to candle
     candle.controlMd80Enable(ids[0], False)  # Disable motor
     window.close()
@@ -339,6 +340,6 @@ if __name__ == "__main__":
 # - Add max velocity for velocity mode - DONE
 # - Change the name in header1 - DONE
 # - Bigger UI (maybe resizable) - DONE
-# - Rounding of variables (0.001)
+# - Rounding of variables - DONE
 # - Add max values to show
 # - Bind max vel to maximum setpoint
