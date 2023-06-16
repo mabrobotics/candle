@@ -178,6 +178,7 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::hardwareErrors:
 		case Md80Reg_E::communicationErrors:
 		case Md80Reg_E::homingErrors:
+		case Md80Reg_E::motionErrors:
 		case Md80Reg_E::calOutputEncoderStdDev:
 		case Md80Reg_E::calOutputEncoderMinE:
 		case Md80Reg_E::calOutputEncoderMaxE:
@@ -233,6 +234,7 @@ Register::type Register::getType(uint16_t regId)
 		case Md80Reg_E::hardwareErrors:
 		case Md80Reg_E::communicationErrors:
 		case Md80Reg_E::homingErrors:
+		case Md80Reg_E::motionErrors:
 		case Md80Reg_E::firmwareVersion:
 		case Md80Reg_E::buildDate:
 			return type::U32;

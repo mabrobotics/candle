@@ -48,6 +48,7 @@ typedef struct
 	uint32_t hardwareErrors;
 	uint32_t communicationErrors;
 	uint32_t homingErrors;
+	uint32_t motionErrors;
 	float shuntResistance;
 } regRO_st;
 
@@ -221,6 +222,7 @@ typedef enum
 	hardwareErrors = 0x80D,
 	communicationErrors = 0x80E,
 	homingErrors = 0x80F,
+	motionErrors = 0x810,
 
 } Md80Reg_E;
 class Register
