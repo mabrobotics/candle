@@ -94,15 +94,22 @@ void Md80::__updateCommandFrame()
 }
 void Md80::__updateResponseData(StdMd80ResponseFrame_t* _responseFrame)
 {
-	if (_responseFrame->canId != canId || _responseFrame->fromMd80.data[0] != Md80FrameId_E::RESPONSE_DEFAULT)
+	CanFrame_t frame = _responseFrame->fromMd80;
+
+	if (_responseFrame->canId != canId || frame.data[0] != Md80FrameId_E::RESPONSE_DEFAULT)
 		return;
-	errorVector = *(uint16_t*)&_responseFrame->fromMd80.data[1];
-	temperature = _responseFrame->fromMd80.data[3];
-	position = *(float*)&_responseFrame->fromMd80.data[4];
-	velocity = *(float*)&_responseFrame->fromMd80.data[8];
-	torque = *(float*)&_responseFrame->fromMd80.data[12];
-	outputEncoderPosition = *(float*)&_responseFrame->fromMd80.data[16];
-	outputEncoderVelocity = *(float*)&_responseFrame->fromMd80.data[20];
+	errorVector = *(uint16_t*)&frame.data[1];
+	temperature = frame.data[3];
+	position = *(float*)&frame.data[4];
+	velocity = *(float*)&frame.data[8];
+	torque = *(float*)&frame.data[12];
+	outputEncoderPosition = *(float*)&frame.data[16];
+	outputEncoderVelocity = *(float*)&frame.data[20];
+
+	if (controlMode == POSITION_PID || controlMode == POSITION_PROFILE)
+		targetPositionReached = static_cast<bool>(errorVector & 0x8000);
+	else if (controlMode == VELOCITY_PID || controlMode == VELOCITY_PROFILE)
+		targetVelocityReached = static_cast<bool>(errorVector & 0x8000);
 
 	rxCallback();
 }

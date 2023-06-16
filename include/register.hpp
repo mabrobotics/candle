@@ -102,6 +102,8 @@ typedef struct
 	float profileDeceleration;
 	float profileVelocity;
 	float quickStopDeceleration;
+	float positionWindow;
+	float velocityWindow;
 } regRW_st;
 
 typedef struct
@@ -198,6 +200,8 @@ typedef enum
 	profileAcceleration = 0x121,
 	profileDeceleration = 0x122,
 	quickStopDeceleration = 0x123,
+	positionWindow = 0x124,
+	velocityWindow = 0x125,
 
 	shuntResistance = 0x700,
 

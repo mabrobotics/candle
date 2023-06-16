@@ -42,6 +42,8 @@ class Md80
 	bool profileAccelerationAdjusted = false;
 	bool regulatorsAdjusted = false;
 	bool velocityRegulatorAdjusted = false;
+	bool targetVelocityReached = false;
+	bool targetPositionReached = false;
 	StdMd80CommandFrame_t commandFrame;
 	StdMd80ResponseFrame_t responseFrame;
 
@@ -120,12 +122,20 @@ class Md80
 	 * @brief Set the Target Position for Position PID and Impedance modes.
 	 * @param target target position in radians
 	 */
-	void setTargetPosition(float target) { positionTarget = target; };
+	void setTargetPosition(float target)
+	{
+		positionTarget = target;
+		targetPositionReached = false;
+	};
 	/**
 	 * @brief Set the Target Velocity for Velocity PID and Impedance modes.
 	 * @param target target velocity in rad/s (radians per second)
 	 */
-	void setTargetVelocity(float target) { velocityTarget = target; };
+	void setTargetVelocity(float target)
+	{
+		velocityTarget = target;
+		targetVelocityReached = false;
+	};
 	/**
 	 * @brief Set the Torque Command for TORQUE and Impedance (torque_ff) modes.
 	 * @param target target torque in Nm (Newton-meters)
@@ -208,12 +218,31 @@ class Md80
 	{
 		txCallback = std::bind(func, p);
 	}
+	/**
+	 * @brief check if actual target position is reached within positionWindow
+	 * @return true if reached, false otherwise
+	 */
+	bool isTargetPositionReached() const
+	{
+		return targetPositionReached;
+	}
+	/**
+	 * @brief check if actual target velocity is reached within velocityWindow
+	 * @return true if reached, false otherwise
+	 */
+	bool isTargetVelocityReached() const
+	{
+		return targetVelocityReached;
+	}
 
 	/**
 	 * @brief For internal use by CANdle only.
 	 * @private
 	 */
-	StdMd80CommandFrame_t __getCommandFrame() { return commandFrame; };
+	StdMd80CommandFrame_t __getCommandFrame()
+	{
+		return commandFrame;
+	};
 	/**
 	 * @brief For internal use by CANdle only. Updates FDCAN frame based on parameters.
 	 * @private

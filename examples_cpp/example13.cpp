@@ -19,30 +19,53 @@ int main()
 	for (auto& id : ids)
 		candle.addMd80(id);
 
-	candle.writeMd80Register(ids[0], mab::Md80Reg_E::maxAcceleration, 250.0f);
-	candle.writeMd80Register(ids[0], mab::Md80Reg_E::maxDeceleration, 250.0f);
-	candle.writeMd80Register(ids[0], mab::Md80Reg_E::maxVelocity, 110.0f);
-	// candle.writeMd80Register(ids[0], mab::Md80Reg_E::profileAcceleration, 250.0f);
-	// candle.writeMd80Register(ids[0], mab::Md80Reg_E::profileDeceleration, 250.0f);
-	// candle.writeMd80Register(ids[0], mab::Md80Reg_E::profileVelocity, 10.0f);
+	candle.writeMd80Register(ids[0], mab::Md80Reg_E::positionWindow, 0.05f);
+	candle.writeMd80Register(ids[0], mab::Md80Reg_E::velocityWindow, 1.0f);
+
+	candle.writeMd80Register(ids[0], mab::Md80Reg_E::profileAcceleration, 10.0f);
+	candle.writeMd80Register(ids[0], mab::Md80Reg_E::profileDeceleration, 5.0f);
+	candle.writeMd80Register(ids[0], mab::Md80Reg_E::profileVelocity, 15.0f);
 
 	candle.controlMd80SetEncoderZero(ids[0]);							// Reset encoder at current position
-	candle.controlMd80Mode(ids[0], mab::Md80Mode_E::POSITION_PROFILE);	// Set mode to position PID
+	candle.controlMd80Mode(ids[0], mab::Md80Mode_E::VELOCITY_PROFILE);	// Set mode to position PID
 	candle.controlMd80Enable(ids[0], true);								// Enable the drive
 
 	float t = 0.0f;
 	float dt = 0.02f;
 
-	candle.md80s[0].setProfileAcceleration(50.0f);
-	candle.md80s[0].setProfileVelocity(100.0f);
-
 	// Begin update loop (it starts in the background)
 	candle.begin();
 
-	candle.md80s[0].setTargetPosition(300.0f);
-	sleep(10);
-	candle.md80s[0].setTargetPosition(-300.0f);
-	sleep(10);
+	candle.md80s[0].setProfileAcceleration(5.0f);
+	candle.md80s[0].setProfileVelocity(20.0f);
+	// candle.md80s[0].setTargetPosition(10.0f);
+	candle.md80s[0].setTargetVelocity(10.0f);
+
+	// while (!candle.md80s[0].isTargetPositionReached())
+	// {
+	// 	sleep(1);
+	// };
+
+	while (!candle.md80s[0].isTargetVelocityReached())
+	{
+		sleep(1);
+	};
+
+	candle.md80s[0].setProfileAcceleration(20.0f);
+	candle.md80s[0].setProfileVelocity(30.0f);
+	// candle.md80s[0].setTargetPosition(-10.0f);
+
+	candle.md80s[0].setTargetVelocity(20.0f);
+
+	while (!candle.md80s[0].isTargetVelocityReached())
+	{
+		sleep(1);
+	};
+
+	// while (!candle.md80s[0].isTargetPositionReached())
+	// {
+	// 	sleep(1);
+	// };
 
 	// Close the update loop
 	candle.end();
