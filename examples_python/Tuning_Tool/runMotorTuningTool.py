@@ -354,11 +354,3 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 
-################################################################################################
-# TODO:
-# - Add max velocity for velocity mode - DONE
-# - Change the name in header1 - DONE
-# - Bigger UI (maybe resizable) - DONE
-# - Rounding of variables - DONE
-# - Add max values to show - DONE
-# - Bind max vel to maximum setpoint - DONE
