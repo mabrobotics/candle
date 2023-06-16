@@ -1,6 +1,6 @@
 ################################################################################
 #
-# This example shows how to run a motor and plot the data in real time.
+# This program shows how to run a motor and plot the data in real time.
 #
 #
 # Requirements:
@@ -107,6 +107,7 @@ def SaveCurrentConfig(id,mode,kp,ki,kd,windup,maxTorque,maxVel):
         candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorVelPidKd,float(kd))
         candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorVelPidWindup,float(windup))
         candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorVelPidOutMax,float(maxTorque))
+        candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorPosPidOutMax,float(maxVel))
     elif mode == "Position Mode":
         candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorPosPidKp,float(kp))
         candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorPosPidKi,float(ki))
@@ -143,6 +144,8 @@ async def EventLoop():
         ids[0], pyCandle.Md80Reg_E.motorVelPidWindup, reg.RW.velocityPidGains.intWindup)))
     window["-MAXTORQUE-"].update(str(candle.readMd80Register(
         ids[0], pyCandle.Md80Reg_E.motorVelPidOutMax, reg.RW.velocityPidGains.outMax)))
+    window["-MAXVEL-"].update(str(candle.readMd80Register(
+        ids[0], pyCandle.Md80Reg_E.motorPosPidOutMax, reg.RW.positionPidGains.outMax)))
 
     # Run the GUI event loop
     while True:
@@ -204,6 +207,8 @@ async def EventLoop():
                     ids[0], pyCandle.Md80Reg_E.motorVelPidWindup, reg.RW.velocityPidGains.intWindup)))
                 window['-MAXTORQUE-'].update(str(candle.readMd80Register(
                     ids[0], pyCandle.Md80Reg_E.motorVelPidOutMax, reg.RW.velocityPidGains.outMax)))
+                window['-MAXVEL-'].update(str(candle.readMd80Register(
+                    ids[0], pyCandle.Md80Reg_E.motorPosPidOutMax, reg.RW.positionPidGains.outMax)))
             if values['-MODE-'] == 'Position Mode':
                 window['-KP-'].update(str(candle.readMd80Register(
                     ids[0], pyCandle.Md80Reg_E.motorPosPidKp, reg.RW.positionPidGains.kp)))
@@ -331,8 +336,9 @@ if __name__ == "__main__":
 
 ################################################################################################
 # TODO:
-# - Add max velocity for velocity mode
-# - Change the name in header1
+# - Add max velocity for velocity mode - DONE
+# - Change the name in header1 - DONE
 # - Bigger UI (maybe resizable) - DONE
 # - Rounding of variables (0.001)
 # - Add max values to show
+# - Bind max vel to maximum setpoint
