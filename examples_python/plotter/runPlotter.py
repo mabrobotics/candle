@@ -28,34 +28,35 @@ TIME_OF_TEST = 5.0  # seconds
 VELOCITY_SETPOINT = 50.0  # rad/s
 PLOT_UPDATE_RATE = 0.01  # seconds
 sg.theme('Dark')
+font = ('Helvetica', 14)
 
 ################################################################################
 # Functions
 ################################################################################
 
 # Define the window's contents
-layout = [[sg.Text("Motor Output")],
+layout = [[sg.Text("Motor Output",font=font)],
           [sg.Combo(['Velocity Mode', 'Position Mode'],
-                    default_value='Velocity Mode', key='-MODE-', enable_events=True)],
-          [sg.Text("Kp"), sg.InputText(0.0, key='-KP-')],
-          [sg.Text("Ki"), sg.InputText(0.0, key='-KI-')],
-          [sg.Text("Kd"), sg.InputText(0.0, key='-KD-')],
-          [sg.Text("Windup"), sg.InputText(0.0, key='-WINDUP-')],
-          [sg.Text("Max Velocity"), sg.InputText(0.0, key='-MAXVEL-')],
-          [sg.Text("Max Torque"), sg.InputText(0.0, key='-MAXTORQUE-')],
-          [sg.Text("Time of test [s]"), sg.Slider(range=(0, 30), orientation='h', size=(50, 10), default_value=3, key='-TIMEOFTEST-')],
-          [sg.Text("Setpoint"), sg.InputText(VELOCITY_SETPOINT, key='-SETPOINT-')],
-          [sg.Button('Run', highlight_colors=('black', 'green'), button_color=('black', 'green')),
-           sg.Button('Stop', highlight_colors=('black', 'red'), button_color=('black', 'red')),
-           sg.Button('Save', highlight_colors=('black', 'grey'), button_color=('black', 'grey'))],
-          [sg.Checkbox('Velocity [rad/s]', default=True, key='-VELOCITY-')],
-          [sg.Checkbox('Position [rad]', default=False, key='-POSITION-')],
-          [sg.Checkbox('Torque [Nm]', default=False, key='-TORQUE-')],
-          [sg.Checkbox('Temperature [C]', default=False, key='-TEMP-')]]
+                    default_value='Velocity Mode', key='-MODE-', enable_events=True, font=font)],
+          [sg.Text("Kp",font=font), sg.InputText(0.0, key='-KP-',font=font)],
+          [sg.Text("Ki",font=font), sg.InputText(0.0, key='-KI-',font=font)],
+          [sg.Text("Kd",font=font), sg.InputText(0.0, key='-KD-',font=font)],
+          [sg.Text("Windup",font=font), sg.InputText(0.0, key='-WINDUP-',font=font)],
+          [sg.Text("Max Velocity",font=font), sg.InputText(0.0, key='-MAXVEL-',font=font)],
+          [sg.Text("Max Torque",font=font), sg.InputText(0.0, key='-MAXTORQUE-',font=font)],
+          [sg.Text("Time of test [s]",font=font), sg.Slider(range=(0, 30), orientation='h', size=(50, 10), default_value=3, key='-TIMEOFTEST-',font=font)],
+          [sg.Text("Setpoint",font=font), sg.InputText(VELOCITY_SETPOINT, key='-SETPOINT-',font=font)],
+          [sg.Button('Run', highlight_colors=('black', 'green'), button_color=('black', 'green'),font=font),
+           sg.Button('Stop', highlight_colors=('black', 'red'), button_color=('black', 'red'),font=font),
+           sg.Button('Save', highlight_colors=('black', 'grey'), button_color=('black', 'grey'),font=font)],
+          [sg.Checkbox('Velocity [rad/s]', default=True, key='-VELOCITY-',font=font)],
+          [sg.Checkbox('Position [rad]', default=False, key='-POSITION-',font=font)],
+          [sg.Checkbox('Torque [Nm]', default=False, key='-TORQUE-',font=font)],
+          [sg.Checkbox('Temperature [C]', default=False, key='-TEMP-',font=font)]]
 
 
 # Create the window
-window = sg.Window('Example13', layout)
+window = sg.Window('Motor Tuning Tool', layout)
 
 # Create global candle object
 candle = pyCandle.Candle(pyCandle.CAN_BAUD_1M, True)
@@ -306,10 +307,6 @@ async def Run(mode='Velocity Mode', setpoint=VELOCITY_SETPOINT, showVelocity=Tru
         Run.lp.show(time=0.0001)  # Show plot using plot (pause for x seconds)
         await asyncio.sleep(0.0002)  # Pause for x seconds so GUI can update
 
-    # End test
-    if (mode == 'Velocity Mode'):
-        candle.md80s[0].setTargetVelocity(0.0)
-
     await asyncio.sleep(1.0)  # Pause for x seconds to let motor stop
     candle.end()  # Close connection to candle
     candle.controlMd80Enable(candle.md80s[0], False)  # Disable motor
@@ -331,3 +328,11 @@ async def main():
 # Entry point
 if __name__ == "__main__":
     asyncio.run(main())
+
+################################################################################################
+# TODO:
+# - Add max velocity for velocity mode
+# - Change the name in header1
+# - Bigger UI (maybe resizable) - DONE
+# - Rounding of variables (0.001)
+# - Add max values to show
