@@ -35,7 +35,7 @@ class LivePlot:
             line["line"].set_data(x_data, y_data)
         return list(line["line"] for line in self.lines.values())
 
-    def add_line(self, name, x_data=None, y_data=None):
+    def add_line(self, name, x_data=None, y_data=None, style="solid"):
         """
         Add a line to the plot
         :param name: The name of the data plot
@@ -43,9 +43,11 @@ class LivePlot:
         :param y_data: The y data of the plot
         """
         line, = self.ax.plot([], [])
+        line.set_linestyle(style)
         self.lines[name] = {"line": line, "data": ([], [])}
         self.num_lines += 1
         line.set_label(name)
+        line.set_linestyle(style)
         self.ax.legend()
 
         if x_data is not None and y_data is not None:

@@ -52,9 +52,9 @@ layout = [[sg.Text("Motor Output",font=font)],
           [sg.Text("Time of test [s]",font=font), sg.Slider(range=(0, 30), orientation='h', size=(50, 10), default_value=3, key='-TIMEOFTEST-',font=font)],
           [sg.Text("Setpoint",font=font), sg.InputText(VELOCITY_SETPOINT, key='-SETPOINT-',font=font)],
 
-          [sg.Checkbox('Velocity [rad/s]', default=True, key='-VELOCITY-',font=font)],
+          [sg.Checkbox('Velocity [rad/s]', default=True, key='-VELOCITY-',font=font),sg.Checkbox('Velocity Max [rad/s]', default=False, key='-VELOCITYMAXSHOW-',font=font)],
           [sg.Checkbox('Position [rad]', default=False, key='-POSITION-',font=font)],
-          [sg.Checkbox('Torque [Nm]', default=False, key='-TORQUE-',font=font)],
+          [sg.Checkbox('Torque [Nm]', default=False, key='-TORQUE-',font=font),sg.Checkbox('Torque Max [Nm]', default=False, key='-TORQUEMAXSHOW-',font=font)],
           [sg.Checkbox('Temperature [C]', default=False, key='-TEMP-',font=font)],
 
           [sg.Button('Run', highlight_colors=('black', 'green'), button_color=('black', 'green'),font=font,size=button_size),
@@ -173,7 +173,8 @@ async def EventLoop():
             if (runTask == None):  # First time running
                 runTask = asyncio.create_task(taskFunction(mode=values['-MODE-'], setpoint=float(values['-SETPOINT-']), showVelocity=values['-VELOCITY-'],
                                                            showPosition=values['-POSITION-'], showTorque=values['-TORQUE-'],
-                                                           showTemperature=values['-TEMP-'], timeOfTest=float(
+                                                           showTemperature=values['-TEMP-'],showMaxTorque=values["-TORQUEMAXSHOW-"],
+                                                               showMaxVelocity=values["-VELOCITYMAXSHOW-"], timeOfTest=float(
                                                                values['-TIMEOFTEST-']),
                                                            kp=float(values['-KP-']), ki=float(values['-KI-']), kd=float(values['-KD-']),
                                                            maxVel=float(values['-MAXVEL-']), maxTorque=float(values['-MAXTORQUE-']),
@@ -182,7 +183,8 @@ async def EventLoop():
                 if (runTask.done()):  # Another time running, check for previous task to be done
                     runTask = asyncio.create_task(taskFunction(mode=values['-MODE-'], setpoint=float(values['-SETPOINT-']), showVelocity=values['-VELOCITY-'],
                                                                showPosition=values['-POSITION-'], showTorque=values['-TORQUE-'],
-                                                               showTemperature=values['-TEMP-'], timeOfTest=float(
+                                                               showTemperature=values['-TEMP-'],showMaxTorque=values["-TORQUEMAXSHOW-"],
+                                                               showMaxVelocity=values["-VELOCITYMAXSHOW-"],  timeOfTest=float(
                                                                    values['-TIMEOFTEST-']),
                                                                kp=float(values['-KP-']), ki=float(values['-KI-']), kd=float(values['-KD-']),
                                                                maxVel=float(values['-MAXVEL-']), maxTorque=float(values['-MAXTORQUE-']),
@@ -238,7 +240,7 @@ async def EventLoop():
 
 
 async def Run(mode='Velocity Mode', setpoint=VELOCITY_SETPOINT, showVelocity=True, showPosition=False,
-              showTorque=False, showTemperature=False, timeOfTest=TIME_OF_TEST,
+              showTorque=False, showTemperature=False, timeOfTest=TIME_OF_TEST, showMaxTorque=False, showMaxVelocity=False,
               kp=0.0, ki=0.0, kd=0.0, maxVel=0.0, maxTorque=0.0, windup=0.0):
     """
     Run a test with the selected parameters and display it live on a plot
@@ -286,6 +288,10 @@ async def Run(mode='Velocity Mode', setpoint=VELOCITY_SETPOINT, showVelocity=Tru
         Run.lp.add_line("Torque")
     if (showTemperature):
         Run.lp.add_line("Temperature")
+    if (showMaxTorque):
+        Run.lp.add_line("Max Torque",style='--')
+    if (showMaxVelocity):
+        Run.lp.add_line("Max Velocity",style='--')
     Run.lp.add_line("Setpoint")
 
     startTime = time.time()  # Start time of test
@@ -309,6 +315,10 @@ async def Run(mode='Velocity Mode', setpoint=VELOCITY_SETPOINT, showVelocity=Tru
         if (showTemperature):
             Run.lp.append_data("Temperature", timeStamp, float(
                 candle.md80s[0].getTemperature()))
+        if (showMaxTorque):
+            Run.lp.append_data("Max Torque", timeStamp, maxTorque)
+        if (showMaxVelocity):
+            Run.lp.append_data("Max Velocity", timeStamp, maxVel)
         Run.lp.append_data("Setpoint", timeStamp, trueSetpoint)
 
         # Set setpoint at appropriate time
@@ -350,5 +360,5 @@ if __name__ == "__main__":
 # - Change the name in header1 - DONE
 # - Bigger UI (maybe resizable) - DONE
 # - Rounding of variables - DONE
-# - Add max values to show
-# - Bind max vel to maximum setpoint
+# - Add max values to show - DONE
+# - Bind max vel to maximum setpoint - DONE
