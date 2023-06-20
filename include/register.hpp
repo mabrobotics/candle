@@ -278,14 +278,14 @@ class Register
 	@param regId register's ID
 	@return register size in bytes
 	*/
-	uint16_t getSize(uint16_t regId);
+	static uint16_t getSize(uint16_t regId);
 
 	/**
 	@brief returns the type of a register field based on it's id
 	@param regId register's ID
 	@return register type (Register::type enum class)
 	*/
-	type getType(uint16_t regId);
+	static type getType(uint16_t regId);
 
    private:
 	Candle* candle;

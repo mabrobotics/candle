@@ -759,9 +759,7 @@ bool Candle::setupMd80CalibrationOutput(uint16_t canId)
 
 bool Candle::setupMd80TestOutputEncoder(uint16_t canId)
 {
-	regWrite_st& regW = getMd80FromList(canId).getWriteReg();
-
-	if (!md80Register->write(canId, mab::Md80Reg_E::runTestOutputEncoderCmd, regW.RW.runTestOutputEncoderCmd))
+	if (!md80Register->write(canId, mab::Md80Reg_E::runTestOutputEncoderCmd, true))
 	{
 		vout << "Output encoder test failed at ID: " << canId << statusFAIL << std::endl;
 		return false;
@@ -772,27 +770,34 @@ bool Candle::setupMd80TestOutputEncoder(uint16_t canId)
 
 bool Candle::setupMd80TestMainEncoder(uint16_t canId)
 {
-	regWrite_st& regW = getMd80FromList(canId).getWriteReg();
-
-	if (!md80Register->write(canId, mab::Md80Reg_E::runTestMainEncoderCmd, regW.RW.runTestMainEncoderCmd))
+	if (!md80Register->write(canId, mab::Md80Reg_E::runTestMainEncoderCmd, true))
 	{
 		vout << "Main encoder test failed at ID: " << canId << statusFAIL << std::endl;
 		return false;
 	}
-	vout << "Output encoder test in progress at ID: " << canId << statusOK << std::endl;
+	vout << "Main encoder test in progress at ID: " << canId << statusOK << std::endl;
 	return true;
 }
 
 bool Candle::setupMd80PerformHoming(uint16_t canId)
 {
-	regWrite_st& regW = getMd80FromList(canId).getWriteReg();
-
-	if (!md80Register->write(canId, mab::Md80Reg_E::runHoming, regW.RW.runHoming))
+	if (!md80Register->write(canId, mab::Md80Reg_E::runHoming, true))
 	{
 		vout << "Homing test failed at ID: " << canId << statusFAIL << std::endl;
 		return false;
 	}
 	vout << "Homing test in progress at ID: " << canId << statusOK << std::endl;
+	return true;
+}
+
+bool Candle::setupMd80PerformReset(uint16_t canId)
+{
+	if (!md80Register->write(canId, mab::Md80Reg_E::runReset, true))
+	{
+		vout << "Reset failed at ID: " << canId << statusFAIL << std::endl;
+		return false;
+	}
+	vout << "Reset in progress at ID: " << canId << statusOK << std::endl;
 	return true;
 }
 

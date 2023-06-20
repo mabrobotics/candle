@@ -278,6 +278,11 @@ class Candle
 	*/
 	bool setupMd80PerformHoming(uint16_t canId);
 	/**
+	@brief Triggers a controller reset.
+	@return true if the reset routine started succesfully, false otherwise.
+	*/
+	bool setupMd80PerformReset(uint16_t canId);
+	/**
 	@brief Prints diagnostic message from md80.
 	@param canId ID of the drive
 	@return true if the succesfull, false otherwise
