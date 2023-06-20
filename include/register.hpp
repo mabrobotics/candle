@@ -13,7 +13,7 @@ namespace mab
 class Candle;
 
 /* adding a new field:
-1. add a new field in the enum below (must be uniform with the same enum on MD80 side)
+1. add a new field in the Md80Reg_E enum (must be uniform with the same enum on MD80 side)
 2. add it to the "switch case" in register.cpp(regarding it's size)
 3. add it to the "switch case" in register.cpp(regarding it's type - this is needed for the python binding file)
 4. add it to either RO/RW structs */
@@ -82,13 +82,6 @@ typedef struct
 	ImpedanceControllerGains_t impedancePdGains;
 	PidControllerGains_t velocityPidGains;
 	PidControllerGains_t positionPidGains;
-	uint8_t runSaveCmd;
-	uint8_t runTestOutputEncoderCmd;
-	uint8_t runTestMainEncoderCmd;
-	uint8_t runCalibrateCmd;
-	uint8_t runCalibrateOutpuEncoderCmd;
-	uint8_t runCalibratePiGains;
-	uint8_t runHoming;
 	uint8_t homingMode;
 	float homingMaxTravel;
 	float homingVelocity;
@@ -182,6 +175,8 @@ typedef enum
 	runCalibrateOutpuEncoderCmd = 0x084,
 	runCalibratePiGains = 0x085,
 	runHoming = 0x086,
+	runRestoreFactoryConfig = 0x087,
+	runReset = 0x088,
 
 	calOutputEncoderStdDev = 0x100,
 	calOutputEncoderMinE = 0x101,
