@@ -126,6 +126,7 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::velocityWindow:
 		case Md80Reg_E::maxTorque:
 		case Md80Reg_E::maxVelocity:
+		case Md80Reg_E::quickStopDeceleration:
 		case Md80Reg_E::profileAcceleration:
 		case Md80Reg_E::profileDeceleration:
 		case Md80Reg_E::profileVelocity:
@@ -246,6 +247,7 @@ Register::type Register::getType(uint16_t regId)
 		case Md80Reg_E::velocityWindow:
 		case Md80Reg_E::maxTorque:
 		case Md80Reg_E::maxVelocity:
+		case Md80Reg_E::quickStopDeceleration:
 		case Md80Reg_E::profileAcceleration:
 		case Md80Reg_E::profileDeceleration:
 		case Md80Reg_E::profileVelocity:
