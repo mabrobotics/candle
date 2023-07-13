@@ -801,6 +801,16 @@ bool Candle::setupMd80PerformReset(uint16_t canId)
 	return true;
 }
 
+bool Candle::setupMd80ClearErrors(uint16_t canId)
+{
+	return md80Register->write(canId, mab::Md80Reg_E::runClearErrors, true);
+}
+
+bool Candle::setupMd80ClearWarnings(uint16_t canId)
+{
+	return md80Register->write(canId, mab::Md80Reg_E::runClearWarnings, true);
+}
+
 /* legacy */
 bool Candle::setupMd80Diagnostic(uint16_t canId)
 {

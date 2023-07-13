@@ -177,6 +177,8 @@ typedef enum
 	runHoming = 0x086,
 	runRestoreFactoryConfig = 0x087,
 	runReset = 0x088,
+	runClearWarnings = 0x089,
+	runClearErrors = 0x08A,
 
 	calOutputEncoderStdDev = 0x100,
 	calOutputEncoderMinE = 0x101,

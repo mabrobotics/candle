@@ -116,6 +116,8 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::runHoming:
 		case Md80Reg_E::runRestoreFactoryConfig:
 		case Md80Reg_E::runReset:
+		case Md80Reg_E::runClearWarnings:
+		case Md80Reg_E::runClearErrors:
 			return 1;
 		case Md80Reg_E::motorTorgueBandwidth:
 		case Md80Reg_E::canWatchdog:
@@ -222,6 +224,8 @@ Register::type Register::getType(uint16_t regId)
 		case Md80Reg_E::runHoming:
 		case Md80Reg_E::runRestoreFactoryConfig:
 		case Md80Reg_E::runReset:
+		case Md80Reg_E::runClearWarnings:
+		case Md80Reg_E::runClearErrors:
 			return type::U8;
 		case Md80Reg_E::motorTorgueBandwidth:
 		case Md80Reg_E::canWatchdog:

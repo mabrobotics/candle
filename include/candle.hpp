@@ -283,6 +283,16 @@ class Candle
 	*/
 	bool setupMd80PerformReset(uint16_t canId);
 	/**
+	@brief Clears all non-critical errors.
+	@return true if succeded, false otherwise.
+	*/
+	bool setupMd80ClearErrors(uint16_t canId);
+	/**
+	@brief Clears all warnings.
+	@return true if succeded, false otherwise.
+	*/
+	bool setupMd80ClearWarnings(uint16_t canId);
+	/**
 	@brief Prints diagnostic message from md80.
 	@param canId ID of the drive
 	@return true if the succesfull, false otherwise
