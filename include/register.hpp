@@ -179,6 +179,8 @@ typedef enum
 	runReset = 0x088,
 	runClearWarnings = 0x089,
 	runClearErrors = 0x08A,
+	runBlink = 0x08B,
+	runZero = 0x08C,
 
 	calOutputEncoderStdDev = 0x100,
 	calOutputEncoderMinE = 0x101,
