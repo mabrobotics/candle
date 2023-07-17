@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 14)
 project(md80)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 add_compile_options(-Wall -Wextra -Wpedantic)
 
 if(ARCH STREQUAL "armhf")

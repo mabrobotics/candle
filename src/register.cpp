@@ -97,6 +97,7 @@ uint16_t Register::getSize(uint16_t regId)
 {
 	switch (regId)
 	{
+		case Md80Reg_E::motionMode:
 		case Md80Reg_E::homingMode:
 		case Md80Reg_E::motorThermistorType:
 		case Md80Reg_E::motorCalibrationMode:
@@ -121,6 +122,7 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::runBlink:
 		case Md80Reg_E::runZero:
 			return 1;
+		case Md80Reg_E::state:
 		case Md80Reg_E::motorTorgueBandwidth:
 		case Md80Reg_E::canWatchdog:
 		case Md80Reg_E::errorVector:
@@ -207,6 +209,7 @@ Register::type Register::getType(uint16_t regId)
 {
 	switch (regId)
 	{
+		case Md80Reg_E::motionMode:
 		case Md80Reg_E::homingMode:
 		case Md80Reg_E::motorThermistorType:
 		case Md80Reg_E::motorCalibrationMode:
@@ -235,6 +238,7 @@ Register::type Register::getType(uint16_t regId)
 		case Md80Reg_E::canWatchdog:
 		case Md80Reg_E::errorVector:
 		case Md80Reg_E::motorKV:
+		case Md80Reg_E::state:
 			return type::U16;
 		case Md80Reg_E::outputEncoderDefaultBaud:
 		case Md80Reg_E::canBaudrate:

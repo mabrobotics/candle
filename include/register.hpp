@@ -98,6 +98,8 @@ typedef struct
 	float quickStopDeceleration;
 	float positionWindow;
 	float velocityWindow;
+	uint8_t motionMode;
+	uint16_t state;
 } regRW_st;
 
 typedef struct
@@ -202,6 +204,9 @@ typedef enum
 	quickStopDeceleration = 0x123,
 	positionWindow = 0x124,
 	velocityWindow = 0x125,
+
+	motionMode = 0x140,
+	state = 0x141,
 
 	shuntResistance = 0x700,
 
