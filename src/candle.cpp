@@ -408,53 +408,34 @@ bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newB
 }
 bool Candle::configMd80Save(uint16_t canId)
 {
-	GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CAN_SAVE);
-	char tx[64];
-	int len = sizeof(frame);
-	memcpy(tx, &frame, len);
-	if (bus->transmit(tx, len, true, 500, 66))
-		if (*bus->getRxBuffer(1) == true)
-		{
-			vout << "Saving in flash successful at ID: " << canId << statusOK << std::endl;
-			return true;
-		}
-	vout << "Saving in flash failed at ID: " << canId << statusFAIL << std::endl;
-	return false;
+	if (!md80Register->write(canId, mab::Md80Reg_E::runSaveCmd, true))
+	{
+		vout << "Saving in flash failed at ID: " << canId << statusFAIL << std::endl;
+		return false;
+	}
+	vout << "Saving in flash successful at ID: " << canId << statusOK << std::endl;
+	return true;
 }
 bool Candle::configMd80Blink(uint16_t canId)
 {
-	GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_FLASH_LED);
-	char tx[64];
-	int len = sizeof(frame);
-	memcpy(tx, &frame, len);
-	if (bus->transmit(tx, len, true, 500, 66))
-		if (*bus->getRxBuffer(1) == true)
-		{
-			vout << "LEDs blining at ID: " << canId << statusOK << std::endl;
-			return true;
-		}
-	vout << "Blinking failed at ID: " << canId << statusFAIL << std::endl;
-	return false;
+	if (!md80Register->write(canId, mab::Md80Reg_E::runBlink, true))
+	{
+		vout << "Blinking failed at ID: " << canId << statusFAIL << std::endl;
+		return false;
+	}
+	vout << "LEDs blining at ID:" << canId << statusOK << std::endl;
+	return true;
 }
 
 bool Candle::controlMd80SetEncoderZero(uint16_t canId)
 {
-	GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_ZERO_ENCODER);
-	char tx[64];
-	int len = sizeof(frame);
-	memcpy(tx, &frame, len);
-	if (bus->transmit(tx, len, true, 50, 66))
-		if (*bus->getRxBuffer(1) == true)
-		{
-			/* set target position to 0.0f to avoid jerk at startup */
-			Md80& drive = getMd80FromList(canId);
-			sendMotionCommand(drive, 0.0f, 0.0f, 0.0f);
-			drive.setTargetPosition(0.0f);
-			vout << "Setting new zero position successful at ID: " << canId << statusOK << std::endl;
-			return true;
-		}
-	vout << "Setting new zero position failed at ID: " << canId << statusFAIL << std::endl;
-	return false;
+	if (!md80Register->write(canId, mab::Md80Reg_E::runZero, true))
+	{
+		vout << "Setting new zero position failed at ID: " << canId << statusFAIL << std::endl;
+		return false;
+	}
+	vout << "Setting new zero position successful at ID: " << canId << statusOK << std::endl;
+	return true;
 }
 bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
 {
@@ -469,19 +450,13 @@ bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
 		currentLimit = driverMinCurrent;
 	}
 
-	GenericMd80Frame32 frame = _packMd80Frame(canId, 6, Md80FrameId_E::FRAME_BASE_CONFIG);
-	*(float*)&frame.canMsg[2] = currentLimit;
-	char tx[64];
-	int len = sizeof(frame);
-	memcpy(tx, &frame, len);
-	if (bus->transmit(tx, len, true, 50, 66))
-		if (*bus->getRxBuffer(0) == BUS_FRAME_MD80_GENERIC_FRAME && *bus->getRxBuffer(1) == true)
-		{
-			vout << "Setting new current limit successful at ID: " << canId << statusOK << std::endl;
-			return true;
-		}
-	vout << "Setting new current limit failed at ID: " << canId << statusFAIL << std::endl;
-	return false;
+	if (!md80Register->write(canId, mab::Md80Reg_E::motorIMax, currentLimit))
+	{
+		vout << "Setting new current limit failed at ID: " << canId << statusFAIL << std::endl;
+		return false;
+	}
+	vout << "Setting new current limit successful at ID: " << canId << statusOK << std::endl;
+	return true;
 }
 
 bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersionInfo)
@@ -525,20 +500,14 @@ bool Candle::configMd80TorqueBandwidth(uint16_t canId, uint16_t torqueBandwidth)
 		torqueBandwidth = driverMinBandwidth;
 	}
 
-	GenericMd80Frame32 frame = _packMd80Frame(canId, 4, Md80FrameId_E::FRAME_SET_BANDWIDTH);
-	char tx[64];
-	frame.canMsg[2] = (uint8_t)(torqueBandwidth & 0xff);
-	frame.canMsg[3] = (uint8_t)(torqueBandwidth >> 8);
-	int len = sizeof(frame);
-	memcpy(tx, &frame, len);
-	if (bus->transmit(tx, len, true, 500, 66))
-		if (*bus->getRxBuffer(1) == true)
-		{
-			vout << "Bandwidth succesfully changed at ID: " << canId << statusOK << std::endl;
-			return true;
-		}
-	vout << "Bandwidth change failed at ID: " << canId << statusFAIL << std::endl;
-	return false;
+	if (!md80Register->write(canId, mab::Md80Reg_E::motorTorgueBandwidth, torqueBandwidth,
+							 mab::Md80Reg_E::runCalibratePiGains, true))
+	{
+		vout << "Bandwidth change failed at ID: " << canId << statusFAIL << std::endl;
+		return false;
+	}
+	vout << "Bandwidth succesfully changed at ID: " << canId << statusOK << std::endl;
+	return true;
 }
 
 Md80& Candle::getMd80FromList(uint16_t id)
@@ -727,34 +696,24 @@ void Candle::transmitNewStdFrame()
 
 bool Candle::setupMd80Calibration(uint16_t canId)
 {
-	GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CALIBRATION);
-	char tx[64];
-	int len = sizeof(frame);
-	memcpy(tx, &frame, len);
-	if (bus->transmit(tx, len, true, 50, 66))
-		if (*bus->getRxBuffer(1) == true)
-		{
-			vout << "Starting calibration at ID: " << canId << statusOK << std::endl;
-			return true;
-		}
+	if (!md80Register->write(canId, mab::Md80Reg_E::runCalibrateCmd, true))
+	{
+		vout << "Starting calibration at ID: " << canId << statusOK << std::endl;
+		return false;
+	}
 	vout << "Starting calibration failed at ID: " << canId << statusFAIL << std::endl;
-	return false;
+	return true;
 }
 
 bool Candle::setupMd80CalibrationOutput(uint16_t canId)
 {
-	GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_CALIBRATION_OUTPUT);
-	char tx[64];
-	int len = sizeof(frame);
-	memcpy(tx, &frame, len);
-	if (bus->transmit(tx, len, true, 50, 66))
-		if (*bus->getRxBuffer(1) == true)
-		{
-			vout << "Starting output encoder calibration at ID: " << canId << statusOK << std::endl;
-			return true;
-		}
+	if (!md80Register->write(canId, mab::Md80Reg_E::runCalibrateOutpuEncoderCmd, true))
+	{
+		vout << "Starting output encoder calibration at ID: " << canId << statusOK << std::endl;
+		return false;
+	}
 	vout << "Starting output encoder calibration failed at ID: " << canId << statusFAIL << std::endl;
-	return false;
+	return true;
 }
 
 bool Candle::setupMd80TestOutputEncoder(uint16_t canId)
@@ -811,22 +770,6 @@ bool Candle::setupMd80ClearWarnings(uint16_t canId)
 	return md80Register->write(canId, mab::Md80Reg_E::runClearWarnings, true);
 }
 
-/* legacy */
-bool Candle::setupMd80Diagnostic(uint16_t canId)
-{
-	GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_DIAGNOSTIC);
-	char tx[64];
-	int len = sizeof(frame);
-	memcpy(tx, &frame, len);
-	if (bus->transmit(tx, len, true, 50, 66))
-	{
-		vout << "Library version: " << getVersion() << std::endl;
-		vout << "DIAG at ID: " << canId << ": " << std::string(bus->getRxBuffer(2)) << std::endl;
-		return true;
-	}
-	vout << "Diagnostic failed at ID: " << canId << std::endl;
-	return false;
-}
 bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 {
 	regRead_st& regR = getMd80FromList(canId).getReadReg();
