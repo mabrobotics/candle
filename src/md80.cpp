@@ -55,6 +55,7 @@ void Md80::__updateCommandFrame()
 			commandFrame.toMd80.data[1] = 0;
 			break;
 		case Md80Mode_E::IMPEDANCE:
+		case Md80Mode_E::RAW_TORQUE:
 			if (regulatorsAdjusted)
 			{
 				packImpedanceFrame();

@@ -137,10 +137,10 @@ class Md80
 		targetVelocityReached = false;
 	};
 	/**
-	 * @brief Set the Torque Command for TORQUE and Impedance (torque_ff) modes.
+	 * @brief Set the Torque target for RAW_TORQUE and IMPEDANCE modes.
 	 * @param target target torque in Nm (Newton-meters)
 	 */
-	void setTorque(float target) { torqueTarget = target; };
+	void setTorqueTarget(float target) { torqueTarget = target; };
 
 	// getters
 	/**

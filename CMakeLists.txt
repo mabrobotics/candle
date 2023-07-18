@@ -80,4 +80,7 @@ if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
 
     add_executable(example13 examples_cpp/example13.cpp)
     target_link_libraries(example13 candle)
+
+    add_executable(example15 examples_cpp/example15.cpp)
+    target_link_libraries(example15 candle)
 endif()
