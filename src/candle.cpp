@@ -235,21 +235,7 @@ void Candle::sendGetInfoFrame(mab::Md80& drive)
 		drive.__updateResponseData((mab::StdMd80ResponseFrame_t*)cheaterBuffer);
 	}
 }
-// void Candle::sendMotionCommand(mab::Md80& drive, float pos, float vel, float torque)
-// {
-// 	GenericMd80Frame32 motionCommandFrame = _packMd80Frame(drive.getId(), 16, Md80FrameId_E::FRAME_SET_MOTION_TARGETS);
-// 	*(float*)&motionCommandFrame.canMsg[2] = vel;
-// 	*(float*)&motionCommandFrame.canMsg[6] = pos;
-// 	*(float*)&motionCommandFrame.canMsg[10] = torque;
-// 	if (bus->transmit((char*)&motionCommandFrame, sizeof(motionCommandFrame), true, 100, 66))
-// 	{
-// 		uint8_t cheaterBuffer[72];
-// 		memcpy(&cheaterBuffer[1], bus->getRxBuffer(), bus->getBytesReceived());
-// 		*(uint16_t*)&cheaterBuffer[0] = drive.getId();
-// 		cheaterBuffer[2] = 16;	// Cheater buffer is a dirty trick to make BUS_FRAME_MD80_GENERIC_FRAME response compatibile with __updateResponseData
-// 		drive.__updateResponseData((mab::StdMd80ResponseFrame_t*)cheaterBuffer);
-// 	}
-// }
+
 bool Candle::addMd80(uint16_t canId, bool printFailure)
 {
 	if (inUpdateMode())
