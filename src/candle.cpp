@@ -621,6 +621,9 @@ bool Candle::end()
 		if (*bus->getRxBuffer(0) == BUS_FRAME_END && *bus->getRxBuffer(1) == 1)
 			mode = CANdleMode_E::CONFIG;
 
+	for (auto& md : md80s)
+		controlMd80Enable(md, false);
+
 	vout << "Ending auto update loop mode" << (mode == CANdleMode_E::CONFIG ? statusOK : statusFAIL) << std::endl;
 
 	return mode == CANdleMode_E::CONFIG ? true : false;

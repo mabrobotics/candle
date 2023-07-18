@@ -38,13 +38,7 @@ int main()
 
 	candle.md80s[0].setProfileAcceleration(5.0f);
 	candle.md80s[0].setProfileVelocity(20.0f);
-	// candle.md80s[0].setTargetPosition(10.0f);
 	candle.md80s[0].setTargetVelocity(10.0f);
-
-	// while (!candle.md80s[0].isTargetPositionReached())
-	// {
-	// 	sleep(1);
-	// };
 
 	while (!candle.md80s[0].isTargetVelocityReached())
 	{
@@ -53,8 +47,6 @@ int main()
 
 	candle.md80s[0].setProfileAcceleration(20.0f);
 	candle.md80s[0].setProfileVelocity(30.0f);
-	// candle.md80s[0].setTargetPosition(-10.0f);
-
 	candle.md80s[0].setTargetVelocity(20.0f);
 
 	while (!candle.md80s[0].isTargetVelocityReached())
@@ -62,14 +54,8 @@ int main()
 		sleep(1);
 	};
 
-	// while (!candle.md80s[0].isTargetPositionReached())
-	// {
-	// 	sleep(1);
-	// };
-
 	// Close the update loop
 	candle.end();
-	candle.controlMd80Enable(ids[0], false);
 
 	return EXIT_SUCCESS;
 }
