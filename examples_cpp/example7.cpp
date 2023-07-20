@@ -36,7 +36,7 @@ int main()
 	// Begin update loop (it starts in the background)
 	candle.begin();
 
-	float targetVelocity = 20.0f;
+	float targetVelocity = 1.0f;
 	for (int i = 0; i < 2000; i++)
 	{
 		if (i % 200 == 0)

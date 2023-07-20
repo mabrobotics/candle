@@ -658,10 +658,11 @@ bool Candle::setupMd80Calibration(uint16_t canId)
 {
 	if (inUpdateMode() || !md80Register->write(canId, mab::Md80Reg_E::runCalibrateCmd, true))
 	{
-		vout << "Starting calibration at ID: " << canId << statusOK << std::endl;
+		vout << "Starting calibration failed at ID: " << canId << statusFAIL << std::endl;
 		return false;
 	}
-	vout << "Starting calibration failed at ID: " << canId << statusFAIL << std::endl;
+
+	vout << "Starting calibration at ID: " << canId << statusOK << std::endl;
 	return true;
 }
 
@@ -669,10 +670,10 @@ bool Candle::setupMd80CalibrationOutput(uint16_t canId)
 {
 	if (inUpdateMode() || !md80Register->write(canId, mab::Md80Reg_E::runCalibrateOutpuEncoderCmd, true))
 	{
-		vout << "Starting output encoder calibration at ID: " << canId << statusOK << std::endl;
+		vout << "Starting output encoder calibration failed at ID: " << canId << statusFAIL << std::endl;
 		return false;
 	}
-	vout << "Starting output encoder calibration failed at ID: " << canId << statusFAIL << std::endl;
+	vout << "Starting output encoder calibration at ID: " << canId << statusOK << std::endl;
 	return true;
 }
 
