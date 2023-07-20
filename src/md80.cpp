@@ -15,11 +15,8 @@ Md80::Md80(uint16_t _canID)
 {
 	canId = _canID;
 	commandFrame.canId = _canID;
-	memset(&regRead, 0, sizeof(regRead));
-	memset(&regWrite, 0, sizeof(regWrite));
-}
-Md80::~Md80()
-{
+	regRead = {};
+	regWrite = {};
 }
 void Md80::setPositionControllerParams(float kp, float ki, float kd, float iWindup)
 {
@@ -93,24 +90,31 @@ void Md80::__updateCommandFrame()
 			break;
 	}
 }
+
+void Md80::__updateResponseData(const State& state)
+{
+	this->state = state;
+}
+
 void Md80::__updateResponseData(StdMd80ResponseFrame_t* _responseFrame)
 {
 	CanFrame_t frame = _responseFrame->fromMd80;
 
 	if (_responseFrame->canId != canId || frame.data[0] != Md80FrameId_E::RESPONSE_DEFAULT)
 		return;
-	errorVector = *(uint16_t*)&frame.data[1];
-	temperature = frame.data[3];
-	position = *(float*)&frame.data[4];
-	velocity = *(float*)&frame.data[8];
-	torque = *(float*)&frame.data[12];
-	outputEncoderPosition = *(float*)&frame.data[16];
-	outputEncoderVelocity = *(float*)&frame.data[20];
+
+	state.errorVector = *(uint16_t*)&frame.data[1];
+	state.temperature = frame.data[3];
+	state.position = *(float*)&frame.data[4];
+	state.velocity = *(float*)&frame.data[8];
+	state.torque = *(float*)&frame.data[12];
+	state.outputEncoderPosition = *(float*)&frame.data[16];
+	state.outputEncoderVelocity = *(float*)&frame.data[20];
 
 	if (controlMode == POSITION_PID || controlMode == POSITION_PROFILE)
-		targetPositionReached = static_cast<bool>(errorVector & 0x8000);
+		targetPositionReached = static_cast<bool>(state.errorVector & 0x8000);
 	else if (controlMode == VELOCITY_PID || controlMode == VELOCITY_PROFILE)
-		targetVelocityReached = static_cast<bool>(errorVector & 0x8000);
+		targetVelocityReached = static_cast<bool>(state.errorVector & 0x8000);
 
 	rxCallback();
 }
@@ -121,17 +125,17 @@ void Md80::__updateRegulatorsAdjusted(bool adjusted)
 
 void Md80::setMaxTorque(float maxTorque)
 {
-	this->maxTorque = maxTorque;
+	targets.maxTorque = maxTorque;
 	maxTorqueAdjusted = true;
 }
 void Md80::setProfileVelocity(float profileVelocity)
 {
-	this->profileVelocity = profileVelocity;
+	targets.profileVelocity = profileVelocity;
 	profileVelocityAdjusted = true;
 }
 void Md80::setProfileAcceleration(float profileAcceleration)
 {
-	this->profileAcceleration = profileAcceleration;
+	targets.profileAcceleration = profileAcceleration;
 	profileAccelerationAdjusted = true;
 }
 void Md80::__setControlMode(Md80Mode_E mode)
@@ -146,10 +150,10 @@ void Md80::packImpedanceFrame()
 	commandFrame.toMd80.data[1] = 0x00;
 	*(float*)&commandFrame.toMd80.data[2] = impedanceController.kp;
 	*(float*)&commandFrame.toMd80.data[6] = impedanceController.kd;
-	*(float*)&commandFrame.toMd80.data[10] = positionTarget;
-	*(float*)&commandFrame.toMd80.data[14] = velocityTarget;
-	*(float*)&commandFrame.toMd80.data[18] = torqueTarget;
-	*(float*)&commandFrame.toMd80.data[22] = maxTorque;
+	*(float*)&commandFrame.toMd80.data[10] = targets.positionTarget;
+	*(float*)&commandFrame.toMd80.data[14] = targets.velocityTarget;
+	*(float*)&commandFrame.toMd80.data[18] = targets.torqueTarget;
+	*(float*)&commandFrame.toMd80.data[22] = targets.maxTorque;
 }
 void Md80::packPositionFrame()
 {
@@ -160,8 +164,8 @@ void Md80::packPositionFrame()
 	*(float*)&commandFrame.toMd80.data[6] = positionController.ki;
 	*(float*)&commandFrame.toMd80.data[10] = positionController.kd;
 	*(float*)&commandFrame.toMd80.data[14] = positionController.i_windup;
-	*(float*)&commandFrame.toMd80.data[18] = profileVelocity;
-	*(float*)&commandFrame.toMd80.data[22] = positionTarget;
+	*(float*)&commandFrame.toMd80.data[18] = targets.profileVelocity;
+	*(float*)&commandFrame.toMd80.data[22] = targets.positionTarget;
 }
 void Md80::packVelocityFrame()
 {
@@ -172,20 +176,20 @@ void Md80::packVelocityFrame()
 	*(float*)&commandFrame.toMd80.data[6] = velocityController.ki;
 	*(float*)&commandFrame.toMd80.data[10] = velocityController.kd;
 	*(float*)&commandFrame.toMd80.data[14] = velocityController.i_windup;
-	*(float*)&commandFrame.toMd80.data[18] = maxTorque;
-	*(float*)&commandFrame.toMd80.data[22] = velocityTarget;
+	*(float*)&commandFrame.toMd80.data[18] = targets.maxTorque;
+	*(float*)&commandFrame.toMd80.data[22] = targets.velocityTarget;
 }
 void Md80::packMotionTargetsFrame()
 {
 	commandFrame.toMd80.length = 28;
 	commandFrame.toMd80.data[0] = mab::Md80FrameId_E::FRAME_SET_MOTION_TARGETS;
 	commandFrame.toMd80.data[1] = 0x00;
-	*(float*)&commandFrame.toMd80.data[2] = velocityTarget;
-	*(float*)&commandFrame.toMd80.data[6] = positionTarget;
-	*(float*)&commandFrame.toMd80.data[10] = torqueTarget;
-	*(float*)&commandFrame.toMd80.data[14] = maxTorqueAdjusted ? maxTorque : NAN;
-	*(float*)&commandFrame.toMd80.data[18] = profileVelocityAdjusted ? profileVelocity : NAN;
-	*(float*)&commandFrame.toMd80.data[22] = profileAccelerationAdjusted ? profileAcceleration : NAN;
+	*(float*)&commandFrame.toMd80.data[2] = targets.velocityTarget;
+	*(float*)&commandFrame.toMd80.data[6] = targets.positionTarget;
+	*(float*)&commandFrame.toMd80.data[10] = targets.torqueTarget;
+	*(float*)&commandFrame.toMd80.data[14] = maxTorqueAdjusted ? targets.maxTorque : NAN;
+	*(float*)&commandFrame.toMd80.data[18] = profileVelocityAdjusted ? targets.profileVelocity : NAN;
+	*(float*)&commandFrame.toMd80.data[22] = profileAccelerationAdjusted ? targets.profileAcceleration : NAN;
 }
 
 }  // namespace mab

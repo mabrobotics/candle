@@ -15,24 +15,35 @@ namespace mab
  */
 class Md80
 {
+   public:
+	struct State
+	{
+		float position;
+		float velocity;
+		float torque;
+		float outputEncoderPosition;
+		float outputEncoderVelocity;
+		uint8_t temperature;
+		uint16_t errorVector;
+	};
+
+	struct Targets
+	{
+		float positionTarget;
+		float velocityTarget;
+		float torqueTarget;
+		float maxTorque;
+		float profileVelocity;
+		float profileAcceleration;
+	};
+
    private:
 	uint16_t canId;
-
-	float position = 0.0f;
-	float velocity = 0.0f;
-	float torque = 0.0f;
-	float outputEncoderPosition = 0.0f;
-	float outputEncoderVelocity = 0.0f;
-	uint8_t temperature = 0;
-	uint16_t errorVector = 0;
-
 	Md80Mode_E controlMode = Md80Mode_E::IDLE;
-	float positionTarget = 0.0f;
-	float velocityTarget = 0.0f;
-	float torqueTarget = 0.0f;
-	float maxTorque = 1.0f;
-	float profileVelocity = 100.0f;
-	float profileAcceleration = 0.0f;
+
+	State state;
+	Targets targets;
+
 	RegPid_t velocityController = {};
 	RegPid_t positionController = {};
 	RegImpedance_t impedanceController = {};
@@ -42,8 +53,10 @@ class Md80
 	bool profileAccelerationAdjusted = false;
 	bool regulatorsAdjusted = false;
 	bool velocityRegulatorAdjusted = false;
+
 	bool targetVelocityReached = false;
 	bool targetPositionReached = false;
+
 	StdMd80CommandFrame_t commandFrame;
 	StdMd80ResponseFrame_t responseFrame;
 
@@ -66,10 +79,6 @@ class Md80
 	 * @param canID FDACN Id of the drive
 	 */
 	Md80(uint16_t canID);
-	/**
-	 * @brief Destroy the Md80 objec
-	 */
-	~Md80();
 	/**
 	 * @brief Set the Position PID Regulator parameters.
 	 * @note Regulator output is target velocity in rad/s. The output is then passed as input to Velocity PID regulator.
@@ -124,7 +133,7 @@ class Md80
 	 */
 	void setTargetPosition(float target)
 	{
-		positionTarget = target;
+		targets.positionTarget = target;
 		targetPositionReached = false;
 	};
 	/**
@@ -133,14 +142,14 @@ class Md80
 	 */
 	void setTargetVelocity(float target)
 	{
-		velocityTarget = target;
+		targets.velocityTarget = target;
 		targetVelocityReached = false;
 	};
 	/**
 	 * @brief Set the Torque target for RAW_TORQUE and IMPEDANCE modes.
 	 * @param target target torque in Nm (Newton-meters)
 	 */
-	void setTorqueTarget(float target) { torqueTarget = target; };
+	void setTorqueTarget(float target) { targets.torqueTarget = target; };
 
 	// getters
 	/**
@@ -158,17 +167,17 @@ class Md80
 	 * @brief Get the Position of md80
 	 * @return float angular position in radians
 	 */
-	float getPosition() { return position; };
+	float getPosition() { return state.position; };
 	/**
 	 * @brief Get the Velocity of md80
 	 * @return float angular velocity in rad/s (radians per second)
 	 */
-	float getVelocity() { return velocity; };
+	float getVelocity() { return state.velocity; };
 	/**
 	 * @brief Get the Torque of md80
 	 * @return float torque in Nm (Newton-meters)
 	 */
-	float getTorque() { return torque; };
+	float getTorque() { return state.torque; };
 
 	/**
 	 * @brief Get the Position of md80
@@ -184,7 +193,7 @@ class Md80
 	 * @brief Get the exteral thermistor temperature reading (motor thermistor)
 	 * @return uint8_t temperature value in *C
 	 */
-	uint8_t getTemperature() { return temperature; };
+	uint8_t getTemperature() { return state.temperature; };
 
 	/**
 	 * @brief Get the read register struct
@@ -248,6 +257,11 @@ class Md80
 	 * @private
 	 */
 	void __updateCommandFrame();
+	/**
+	 * @brief For internal use by CANdle only. Updates FDCAN frame parameters.
+	 * @private
+	 */
+	void __updateResponseData(const State& state);
 	/**
 	 * @brief For internal use by CANdle only. Updates FDCAN frame parameters.
 	 * @private

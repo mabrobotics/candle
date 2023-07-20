@@ -128,6 +128,7 @@ uint16_t Register::getSize(uint16_t regId)
 		case Md80Reg_E::errorVector:
 		case Md80Reg_E::motorKV:
 			return 2;
+		case Md80Reg_E::motorTorque:
 		case Md80Reg_E::positionWindow:
 		case Md80Reg_E::velocityWindow:
 		case Md80Reg_E::maxTorque:
@@ -255,6 +256,7 @@ Register::type Register::getType(uint16_t regId)
 		case Md80Reg_E::firmwareVersion:
 		case Md80Reg_E::buildDate:
 			return type::U32;
+		case Md80Reg_E::motorTorque:
 		case Md80Reg_E::positionWindow:
 		case Md80Reg_E::velocityWindow:
 		case Md80Reg_E::maxTorque:

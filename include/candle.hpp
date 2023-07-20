@@ -397,8 +397,7 @@ class Candle
 	bool inUpdateMode();
 	bool inConfigMode();
 
-	void sendGetInfoFrame(mab::Md80& drive);
-	void sendMotionCommand(mab::Md80& drive, float pos, float vel, float torque);
+	void updateMd80State(mab::Md80& drive);
 
 	Bus* makeBus(mab::BusType_E busType, std::string device);
 

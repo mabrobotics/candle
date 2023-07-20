@@ -30,9 +30,6 @@ int main()
 	candle.controlMd80Mode(ids[0], mab::Md80Mode_E::VELOCITY_PROFILE);	// Set mode to position PID
 	candle.controlMd80Enable(ids[0], true);								// Enable the drive
 
-	float t = 0.0f;
-	float dt = 0.02f;
-
 	// Begin update loop (it starts in the background)
 	candle.begin();
 

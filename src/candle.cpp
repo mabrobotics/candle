@@ -223,17 +223,19 @@ GenericMd80Frame32 _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameI
 	frame.canMsg[1] = 0x00;
 	return frame;
 }
-void Candle::sendGetInfoFrame(mab::Md80& drive)
+void Candle::updateMd80State(mab::Md80& drive)
 {
-	GenericMd80Frame32 getInfoFrame = _packMd80Frame(drive.getId(), 2, Md80FrameId_E::FRAME_GET_INFO);
-	if (bus->transmit((char*)&getInfoFrame, sizeof(getInfoFrame), true, 100, 66))
-	{
-		uint8_t cheaterBuffer[72];
-		memcpy(&cheaterBuffer[1], bus->getRxBuffer(), bus->getBytesReceived());
-		*(uint16_t*)&cheaterBuffer[0] = drive.getId();
-		cheaterBuffer[2] = 16;	// Cheater buffer is a dirty trick to make BUS_FRAME_MD80_GENERIC_FRAME response compatibile with __updateResponseData
-		drive.__updateResponseData((mab::StdMd80ResponseFrame_t*)cheaterBuffer);
-	}
+	Md80::State state{};
+
+	md80Register->read(drive.getId(), mab::Md80Reg_E::mainEncoderPosition, state.position,
+					   mab::Md80Reg_E::mainEncoderVelocity, state.velocity,
+					   mab::Md80Reg_E::motorTorque, state.torque,
+					   mab::Md80Reg_E::outputEncoderPosition, state.outputEncoderPosition,
+					   mab::Md80Reg_E::outputEncoderVelocity, state.outputEncoderVelocity,
+					   mab::Md80Reg_E::motorTemperature, state.temperature,
+					   mab::Md80Reg_E::errorVector, state.errorVector);
+
+	drive.__updateResponseData(state);
 }
 
 bool Candle::addMd80(uint16_t canId, bool printFailure)
@@ -277,7 +279,7 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 				vout << "Added MD80 with ID: " + std::to_string(canId) << statusOK << std::endl;
 				md80s.push_back(Md80(canId));
 				mab::Md80& newDrive = md80s.back();
-				sendGetInfoFrame(newDrive);
+				updateMd80State(newDrive);
 				return true;
 			}
 	if (printFailure) vout << "Failed to add MD80 with ID: " + std::to_string(canId) << statusFAIL << std::endl;

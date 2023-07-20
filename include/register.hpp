@@ -33,6 +33,7 @@ typedef struct
 	float motorTemperature;
 	float mainEncoderVelocity;
 	float mainEncoderPosition;
+	float motorTorque;
 	float outputEncoderVelocity;
 	float outputEncoderPosition;
 	float calOutputEncoderStdDev;
@@ -163,6 +164,7 @@ typedef enum
 
 	mainEncoderVelocity = 0x062,
 	mainEncoderPosition = 0x063,
+	motorTorque = 0x064,
 
 	homingMode = 0x070,
 	homingMaxTravel = 0x071,
