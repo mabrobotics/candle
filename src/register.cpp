@@ -97,7 +97,8 @@ uint16_t Register::getSize(uint16_t regId)
 {
 	switch (regId)
 	{
-		case Md80Reg_E::motionMode:
+		case Md80Reg_E::motionModeStatus:
+		case Md80Reg_E::motionModeCommand:
 		case Md80Reg_E::homingMode:
 		case Md80Reg_E::motorThermistorType:
 		case Md80Reg_E::motorCalibrationMode:
@@ -210,7 +211,8 @@ Register::type Register::getType(uint16_t regId)
 {
 	switch (regId)
 	{
-		case Md80Reg_E::motionMode:
+		case Md80Reg_E::motionModeStatus:
+		case Md80Reg_E::motionModeCommand:
 		case Md80Reg_E::homingMode:
 		case Md80Reg_E::motorThermistorType:
 		case Md80Reg_E::motorCalibrationMode:

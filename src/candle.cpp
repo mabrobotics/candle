@@ -519,7 +519,7 @@ bool Candle::controlMd80Mode(uint16_t canId, Md80Mode_E mode)
 {
 	Md80& drive = getMd80FromList(canId);
 
-	if (inUpdateMode() || !md80Register->write(canId, mab::Md80Reg_E::motionMode, static_cast<uint8_t>(mode)))
+	if (inUpdateMode() || !md80Register->write(canId, mab::Md80Reg_E::motionModeCommand, static_cast<uint8_t>(mode)))
 	{
 		vout << "Setting control mode failed at ID: " << canId << statusFAIL << std::endl;
 		return false;

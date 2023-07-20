@@ -207,8 +207,9 @@ typedef enum
 	positionWindow = 0x124,
 	velocityWindow = 0x125,
 
-	motionMode = 0x140,
-	state = 0x141,
+	motionModeCommand = 0x140,
+	motionModeStatus = 0x141,
+	state = 0x142,
 
 	shuntResistance = 0x700,
 
