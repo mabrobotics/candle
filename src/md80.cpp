@@ -17,6 +17,8 @@ Md80::Md80(uint16_t _canID)
 	commandFrame.canId = _canID;
 	regRead = {};
 	regWrite = {};
+	targets = {};
+	state = {};
 }
 void Md80::setPositionControllerParams(float kp, float ki, float kd, float iWindup)
 {
