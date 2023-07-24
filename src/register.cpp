@@ -97,6 +97,7 @@ uint16_t Register::getSize(uint16_t regId)
 {
 	switch (regId)
 	{
+		case Md80Reg_E::reverseDirection:
 		case Md80Reg_E::motionModeStatus:
 		case Md80Reg_E::motionModeCommand:
 		case Md80Reg_E::homingMode:
@@ -211,6 +212,7 @@ Register::type Register::getType(uint16_t regId)
 {
 	switch (regId)
 	{
+		case Md80Reg_E::reverseDirection:
 		case Md80Reg_E::motionModeStatus:
 		case Md80Reg_E::motionModeCommand:
 		case Md80Reg_E::homingMode:

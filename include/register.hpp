@@ -101,6 +101,7 @@ typedef struct
 	float velocityWindow;
 	uint8_t motionMode;
 	uint16_t state;
+	uint8_t reverseDirection;
 } regRW_st;
 
 typedef struct
@@ -210,6 +211,8 @@ typedef enum
 	motionModeCommand = 0x140,
 	motionModeStatus = 0x141,
 	state = 0x142,
+
+	reverseDirection = 0x600,
 
 	shuntResistance = 0x700,
 
