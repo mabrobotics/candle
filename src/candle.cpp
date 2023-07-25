@@ -369,28 +369,22 @@ bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newB
 		return false;
 	}
 
-	GenericMd80Frame32 frame = _packMd80Frame(canId, 11, Md80FrameId_E::FRAME_CAN_CONFIG);
-	frame.frameId = BUS_FRAME_MD80_CONFIG_CAN;
-	*(uint16_t*)&frame.canMsg[2] = newId;
-	*(uint32_t*)&frame.canMsg[4] = newBaudrateMbps * 1000000;
-	*(uint16_t*)&frame.canMsg[8] = newTimeout;
-	*(uint8_t*)&frame.canMsg[10] = (uint8_t)canTermination == true ? 1 : 0;
+	if (!md80Register->write(canId, Md80Reg_E::canId, newId,
+							 Md80Reg_E::canBaudrate, newBaudrateMbps * 1000000,
+							 Md80Reg_E::canWatchdog, newTimeout,
+							 Md80Reg_E::canTermination, (uint8_t)canTermination,
+							 Md80Reg_E::runCanReinit, true))
+	{
+		return false;
+		vout << "CAN config change failed!" << statusFAIL << std::endl;
+	}
 
-	char tx[63];
-	int len = sizeof(frame);
-	memcpy(tx, &frame, len);
-	if (bus->transmit(tx, len, true, 100, 2))
-		if (*bus->getRxBuffer(1) == 1)
-		{
-			vout << "CAN config change successful!" << statusOK << std::endl;
-			vout << "Drive ID: " << std::to_string(canId) << " was changed to ID: " << std::to_string(newId) << std::endl;
-			vout << "It's baudrate is now " << std::to_string(newBaudrateMbps) << "Mbps" << std::endl;
-			vout << "It's CAN timeout (watchdog) is now " << (newTimeout == 0 ? "Disabled" : std::to_string(newTimeout) + "ms") << std::endl;
-			vout << "It's CAN termination resistor is " << (canTermination == true ? "enabled" : "disabled") << std::endl;
-			return true;
-		}
-	vout << "CAN config change failed!" << statusFAIL << std::endl;
-	return false;
+	vout << "Drive ID: " << std::to_string(canId) << " was changed to ID: " << std::to_string(newId) << std::endl;
+	vout << "It's baudrate is now " << std::to_string(newBaudrateMbps) << "Mbps" << std::endl;
+	vout << "It's CAN timeout (watchdog) is now " << (newTimeout == 0 ? "disabled" : std::to_string(newTimeout) + "ms") << std::endl;
+	vout << "It's CAN termination resistor is " << (canTermination == true ? "enabled" : "disabled") << std::endl;
+	vout << "CAN config change successful!" << statusOK << std::endl;
+	return true;
 }
 bool Candle::configMd80Save(uint16_t canId)
 {
