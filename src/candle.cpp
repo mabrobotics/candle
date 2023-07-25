@@ -39,7 +39,7 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::Bus* bus)
 {
 	vout << "CANdle library version: v" << getVersion() << std::endl;
 
-	this->reset();
+	reset();
 	usleep(5000);
 
 	if (!configCandleBaudrate(canBaudrate, true))
@@ -49,21 +49,20 @@ Candle::Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::Bus* bus)
 	}
 
 	if (bus->getType() == mab::BusType_E::USB)
-		vout << "CANdle at " << bus->getDeviceName() << ", ID: 0x" << std::hex << this->getDeviceId() << std::dec << " ready (USB)" << std::endl;
+		vout << "CANdle at " << bus->getDeviceName() << ", ID: 0x" << std::hex << getDeviceId() << std::dec << " ready (USB)" << std::endl;
 	else if (bus->getType() == mab::BusType_E::SPI)
 		vout << "CANdle ready (SPI)" << std::endl;
 	else if (bus->getType() == mab::BusType_E::UART)
 		vout << "CANdle ready (UART)" << std::endl;
 
-	md80Register = new Register(this);
-
+	md80Register = std::make_shared<Register>(this);
 	Candle::instances.push_back(this);
 }
 
 Candle::~Candle()
 {
-	if (this->inUpdateMode())
-		this->end();
+	if (inUpdateMode())
+		end();
 }
 
 Bus* Candle::makeBus(mab::BusType_E busType, std::string device)
@@ -102,15 +101,15 @@ const std::string Candle::getVersion()
 {
 	return getVersionString(&candleLibVersion);
 }
+
 int Candle::getActualCommunicationFrequency()
 {
-	return (int)this->usbCommsFreq;
+	return static_cast<int>(usbCommsFreq);
 }
 
 void Candle::setTransmitDelayUs(uint32_t delayUs)
 {
-	if (delayUs < 20) delayUs = 20;
-	transmitterDelay = delayUs;
+	transmitterDelay = delayUs < 20 ? 20 : delayUs;
 }
 
 void Candle::receive()
@@ -146,7 +145,7 @@ void Candle::transmit()
 	{
 		if (++txCounter == 250)
 		{
-			this->usbCommsFreq = 250.0 / (float)(getTimestamp() - freqCheckStart) * 1000000.0f;
+			usbCommsFreq = 250.0 / (float)(getTimestamp() - freqCheckStart) * 1000000.0f;
 			freqCheckStart = getTimestamp();
 			txCounter = 0;
 		}
@@ -287,7 +286,7 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 }
 std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
 {
-	if (!this->configCandleBaudrate(baudrate))
+	if (!configCandleBaudrate(baudrate))
 		return std::vector<uint16_t>();
 	vout << "Starting pinging drives at baudrate: " << std::to_string(baudrate) << "M" << std::endl;
 	char tx[128];
@@ -492,22 +491,22 @@ bool Candle::configMd80TorqueBandwidth(uint16_t canId, uint16_t torqueBandwidth)
 
 Md80& Candle::getMd80FromList(uint16_t id)
 {
-	for (size_t i = 0; i < md80s.size(); i++)
-		if (md80s[i].getId() == id)
-			return md80s[i];
+	for (auto& md : md80s)
+		if (md.getId() == id)
+			return md;
 	throw "getMd80FromList(id): Id not found on the list!";
 }
 bool Candle::controlMd80SetEncoderZero(Md80& drive)
 {
-	return this->controlMd80SetEncoderZero(drive.getId());
+	return controlMd80SetEncoderZero(drive.getId());
 }
 bool Candle::controlMd80Enable(Md80& drive, bool enable)
 {
-	return this->controlMd80Enable(drive.getId(), enable);
+	return controlMd80Enable(drive.getId(), enable);
 }
 bool Candle::controlMd80Mode(Md80& drive, Md80Mode_E mode)
 {
-	return this->controlMd80Mode(drive.getId(), mode);
+	return controlMd80Mode(drive.getId(), mode);
 }
 bool Candle::controlMd80Mode(uint16_t canId, Md80Mode_E mode)
 {
@@ -535,10 +534,8 @@ bool Candle::controlMd80Enable(uint16_t canId, bool enable)
 	if (enable)
 		vout << "Enabling successful at ID: " << canId << statusOK << std::endl;
 	else
-	{
 		vout << "Disabling successful at ID: " << canId << statusOK << std::endl;
-		this->getMd80FromList(canId).__updateRegulatorsAdjusted(false);	 // Drive will operate at default params
-	}
+
 	return true;
 }
 bool Candle::begin()
@@ -620,32 +617,26 @@ bool Candle::reset()
 }
 bool Candle::inUpdateMode()
 {
-	if (mode == CANdleMode_E::UPDATE)
-		return true;
-	return false;
-}
-bool Candle::inConfigMode()
-{
-	if (mode == CANdleMode_E::CONFIG)
-		return true;
-	return false;
+	return mode == CANdleMode_E::UPDATE;
 }
 void Candle::transmitNewStdFrame()
 {
 	char tx[1 + sizeof(StdMd80CommandFrame_t) * maxDevices];
 	tx[0] = BUS_FRAME_UPDATE;
-	for (int i = 0; i < (int)md80s.size(); i++)
+
+	for (size_t i = 0; i < md80s.size(); i++)
 	{
 		md80s[i].__updateCommandFrame();
 		*(StdMd80CommandFrame_t*)&tx[1 + i * sizeof(StdMd80CommandFrame_t)] = md80s[i].__getCommandFrame();
 	}
 
-	int length = 1 + md80s.size() * sizeof(StdMd80CommandFrame_t);
+	uint32_t cmdSize = 1 + md80s.size() * sizeof(StdMd80CommandFrame_t);
+	uint32_t respSize = 1 + md80s.size() * sizeof(StdMd80ResponseFrame_t);
 
 	if (bus->getType() == BusType_E::SPI)
-		bus->transfer(tx, length, sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1);
+		bus->transfer(tx, cmdSize, respSize);
 	else
-		bus->transmit(tx, length, false, 100, sizeof(StdMd80ResponseFrame_t) * md80s.size() + 1);
+		bus->transmit(tx, cmdSize, false, 100, respSize);
 }
 
 bool Candle::setupMd80Calibration(uint16_t canId)
@@ -856,7 +847,7 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 }
 mab::CANdleBaudrate_E Candle::getCurrentBaudrate()
 {
-	return this->canBaudrate;
+	return canBaudrate;
 }
 bool Candle::checkMd80ForBaudrate(uint16_t canId)
 {
@@ -872,10 +863,10 @@ bool Candle::checkMd80ForBaudrate(uint16_t canId)
 
 std::string getVersionString(const version_ut* ver)
 {
-	if ((char)ver->s.tag == 'r' || (char)ver->s.tag == 'R')
+	if (ver->s.tag == 'r' || ver->s.tag == 'R')
 		return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision));
 	else
-		return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision) + '.' + (char)ver->s.tag);
+		return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision) + '.' + ver->s.tag);
 }
 
 }  // namespace mab

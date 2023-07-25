@@ -343,7 +343,7 @@ class Candle
 	}
 
    protected:
-	Register* md80Register = nullptr;
+	std::shared_ptr<Register> md80Register;
 
    private:
 	const uint8_t VMAJOR = 3;
@@ -395,7 +395,6 @@ class Candle
 	void transmit();
 
 	bool inUpdateMode();
-	bool inConfigMode();
 
 	void updateMd80State(mab::Md80& drive);
 

@@ -120,10 +120,6 @@ void Md80::__updateResponseData(StdMd80ResponseFrame_t* _responseFrame)
 
 	rxCallback();
 }
-void Md80::__updateRegulatorsAdjusted(bool adjusted)
-{
-	this->regulatorsAdjusted = adjusted;
-}
 
 void Md80::setMaxTorque(float maxTorque)
 {
@@ -166,7 +162,7 @@ void Md80::packPositionFrame()
 	*(float*)&commandFrame.toMd80.data[6] = positionController.ki;
 	*(float*)&commandFrame.toMd80.data[10] = positionController.kd;
 	*(float*)&commandFrame.toMd80.data[14] = positionController.i_windup;
-	*(float*)&commandFrame.toMd80.data[18] = targets.profileVelocity;
+	*(float*)&commandFrame.toMd80.data[18] = profileVelocityAdjusted ? targets.profileVelocity : NAN;
 	*(float*)&commandFrame.toMd80.data[22] = targets.positionTarget;
 }
 void Md80::packVelocityFrame()

@@ -268,11 +268,6 @@ class Md80
 	 */
 	void __updateResponseData(StdMd80ResponseFrame_t* _responseFrame);
 	/**
-	 * @brief For internal use by CANdle only. Updates regulatorsAdjusted.
-	 * @private
-	 */
-	void __updateRegulatorsAdjusted(bool adjusted);
-	/**
 	 * @brief For internal use by CANdle only.
 	 * @private
 	 */
