@@ -95,117 +95,25 @@ bool Register::prepareFrame(mab::Md80FrameId_E frameId, Md80Reg_E regId, char* v
 
 uint16_t Register::getSize(uint16_t regId)
 {
-	switch (regId)
+	if (regId == Md80Reg_E::commitHash)
+		return 8;
+	if (regId == Md80Reg_E::motorName)
+		return 24;
+
+	switch (getType(regId))
 	{
-		case Md80Reg_E::reverseDirection:
-		case Md80Reg_E::motionModeStatus:
-		case Md80Reg_E::motionModeCommand:
-		case Md80Reg_E::homingMode:
-		case Md80Reg_E::motorThermistorType:
-		case Md80Reg_E::motorCalibrationMode:
-		case Md80Reg_E::outputEncoderCalibrationMode:
-		case Md80Reg_E::outputEncoderMode:
-		case Md80Reg_E::bridgeType:
-		case Md80Reg_E::outputEncoder:
-		case Md80Reg_E::hardwareVersion:
-		case Md80Reg_E::canTermination:
-		case Md80Reg_E::motorShutdownTemp:
-		case Md80Reg_E::runCalibrateCmd:
-		case Md80Reg_E::runCalibrateOutpuEncoderCmd:
-		case Md80Reg_E::runCalibratePiGains:
-		case Md80Reg_E::runTestOutputEncoderCmd:
-		case Md80Reg_E::runTestMainEncoderCmd:
-		case Md80Reg_E::runSaveCmd:
-		case Md80Reg_E::runHoming:
-		case Md80Reg_E::runRestoreFactoryConfig:
-		case Md80Reg_E::runReset:
-		case Md80Reg_E::runClearWarnings:
-		case Md80Reg_E::runClearErrors:
-		case Md80Reg_E::runBlink:
-		case Md80Reg_E::runZero:
+		case type::I8:
+		case type::U8:
 			return 1;
-		case Md80Reg_E::state:
-		case Md80Reg_E::motorTorgueBandwidth:
-		case Md80Reg_E::canWatchdog:
-		case Md80Reg_E::errorVector:
-		case Md80Reg_E::motorKV:
+		case type::I16:
+		case type::U16:
 			return 2;
-		case Md80Reg_E::motorTorque:
-		case Md80Reg_E::positionWindow:
-		case Md80Reg_E::velocityWindow:
-		case Md80Reg_E::maxTorque:
-		case Md80Reg_E::maxVelocity:
-		case Md80Reg_E::quickStopDeceleration:
-		case Md80Reg_E::profileAcceleration:
-		case Md80Reg_E::profileDeceleration:
-		case Md80Reg_E::profileVelocity:
-		case Md80Reg_E::positionLimitMax:
-		case Md80Reg_E::positionLimitMin:
-		case Md80Reg_E::homingMaxTravel:
-		case Md80Reg_E::homingVelocity:
-		case Md80Reg_E::homingTorque:
-		case Md80Reg_E::homingPositionDeviationTrigger:
-		case Md80Reg_E::shuntResistance:
-		case Md80Reg_E::maxAcceleration:
-		case Md80Reg_E::maxDeceleration:
-		case Md80Reg_E::mainEncoderVelocity:
-		case Md80Reg_E::mainEncoderPosition:
-		case Md80Reg_E::mosfetTemperature:
-		case Md80Reg_E::motorTemperature:
-		case Md80Reg_E::motorInductance:
-		case Md80Reg_E::motorResistance:
-		case Md80Reg_E::firmwareVersion:
-		case Md80Reg_E::buildDate:
-		case Md80Reg_E::motorImpPidKp:
-		case Md80Reg_E::motorImpPidKd:
-		case Md80Reg_E::motorImpPidOutMax:
-		case Md80Reg_E::motorPosPidKp:
-		case Md80Reg_E::motorPosPidKi:
-		case Md80Reg_E::motorPosPidKd:
-		case Md80Reg_E::motorPosPidOutMax:
-		case Md80Reg_E::motorPosPidWindup:
-		case Md80Reg_E::motorVelPidKp:
-		case Md80Reg_E::motorVelPidKi:
-		case Md80Reg_E::motorVelPidKd:
-		case Md80Reg_E::motorVelPidOutMax:
-		case Md80Reg_E::motorVelPidWindup:
-		case Md80Reg_E::motorFriction:
-		case Md80Reg_E::motorStiction:
-		case Md80Reg_E::outputEncoderDir:
-		case Md80Reg_E::outputEncoderDefaultBaud:
-		case Md80Reg_E::outputEncoderVelocity:
-		case Md80Reg_E::outputEncoderPosition:
-		case Md80Reg_E::canBaudrate:
-		case Md80Reg_E::motorGearRatio:
-		case Md80Reg_E::motorPolePairs:
-		case Md80Reg_E::motorKt:
-		case Md80Reg_E::motorKt_a:
-		case Md80Reg_E::motorKt_b:
-		case Md80Reg_E::motorKt_c:
-		case Md80Reg_E::motorIMax:
-		case Md80Reg_E::mainEncoderErrors:
-		case Md80Reg_E::outputEncoderErrors:
-		case Md80Reg_E::calibrationErrors:
-		case Md80Reg_E::bridgeErrors:
-		case Md80Reg_E::hardwareErrors:
-		case Md80Reg_E::communicationErrors:
-		case Md80Reg_E::homingErrors:
-		case Md80Reg_E::motionErrors:
-		case Md80Reg_E::calOutputEncoderStdDev:
-		case Md80Reg_E::calOutputEncoderMinE:
-		case Md80Reg_E::calOutputEncoderMaxE:
-		case Md80Reg_E::calMainEncoderStdDev:
-		case Md80Reg_E::calMainEncoderMinE:
-		case Md80Reg_E::calMainEncoderMaxE:
-		case Md80Reg_E::canId:
+		case type::I32:
+		case type::U32:
+		case type::F32:
 			return 4;
-		case Md80Reg_E::commitHash:
-			return 8;
-		case Md80Reg_E::motorName:
-			return 24;
-		default:
-			return 0;
 	}
+	return 0;
 }
 
 Register::type Register::getType(uint16_t regId)
@@ -238,6 +146,7 @@ Register::type Register::getType(uint16_t regId)
 		case Md80Reg_E::runClearErrors:
 		case Md80Reg_E::runBlink:
 		case Md80Reg_E::runZero:
+		case Md80Reg_E::runCanReinit:
 			return type::U8;
 		case Md80Reg_E::motorTorgueBandwidth:
 		case Md80Reg_E::canWatchdog:
@@ -260,6 +169,9 @@ Register::type Register::getType(uint16_t regId)
 		case Md80Reg_E::firmwareVersion:
 		case Md80Reg_E::buildDate:
 			return type::U32;
+		case Md80Reg_E::targetPosition:
+		case Md80Reg_E::targetVelocity:
+		case Md80Reg_E::targetTorque:
 		case Md80Reg_E::motorTorque:
 		case Md80Reg_E::positionWindow:
 		case Md80Reg_E::velocityWindow:

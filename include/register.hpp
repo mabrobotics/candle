@@ -14,9 +14,8 @@ class Candle;
 
 /* adding a new field:
 1. add a new field in the Md80Reg_E enum (must be uniform with the same enum on MD80 side)
-2. add it to the "switch case" in register.cpp(regarding it's size)
-3. add it to the "switch case" in register.cpp(regarding it's type - this is needed for the python binding file)
-4. add it to either RO/RW structs */
+2. add it to the "switch case" in register.cpp in getType() this switch is also used for the size
+3. add it to either RO/RW structs */
 
 /* READ ONLY PARAMS */
 typedef struct
@@ -99,6 +98,9 @@ typedef struct
 	float quickStopDeceleration;
 	float positionWindow;
 	float velocityWindow;
+	float targetPosition;
+	float targetVelocity;
+	float targetTorque;
 	uint8_t motionMode;
 	uint16_t state;
 	uint8_t reverseDirection;
@@ -186,6 +188,7 @@ typedef enum
 	runClearErrors = 0x08A,
 	runBlink = 0x08B,
 	runZero = 0x08C,
+	runCanReinit = 0x08D,
 
 	calOutputEncoderStdDev = 0x100,
 	calOutputEncoderMinE = 0x101,
@@ -211,6 +214,10 @@ typedef enum
 	motionModeCommand = 0x140,
 	motionModeStatus = 0x141,
 	state = 0x142,
+
+	targetPosition = 0x150,
+	targetVelocity = 0x151,
+	targetTorque = 0x152,
 
 	reverseDirection = 0x600,
 
