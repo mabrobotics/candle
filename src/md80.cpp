@@ -155,7 +155,7 @@ void Md80::packImpedanceFrame()
 	*(float*)&commandFrame.toMd80.data[10] = targets.positionTarget;
 	*(float*)&commandFrame.toMd80.data[14] = targets.velocityTarget;
 	*(float*)&commandFrame.toMd80.data[18] = targets.torqueTarget;
-	*(float*)&commandFrame.toMd80.data[22] = targets.maxTorque;
+	*(float*)&commandFrame.toMd80.data[22] = maxTorqueAdjusted ? targets.maxTorque : NAN;
 }
 void Md80::packPositionFrame()
 {
@@ -178,7 +178,7 @@ void Md80::packVelocityFrame()
 	*(float*)&commandFrame.toMd80.data[6] = velocityController.ki;
 	*(float*)&commandFrame.toMd80.data[10] = velocityController.kd;
 	*(float*)&commandFrame.toMd80.data[14] = velocityController.i_windup;
-	*(float*)&commandFrame.toMd80.data[18] = targets.maxTorque;
+	*(float*)&commandFrame.toMd80.data[18] = maxTorqueAdjusted ? targets.maxTorque : NAN;
 	*(float*)&commandFrame.toMd80.data[22] = targets.velocityTarget;
 }
 void Md80::packMotionTargetsFrame()
