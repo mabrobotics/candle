@@ -9,12 +9,12 @@
 #include <vector>
 
 #include "bus.hpp"
+#include "candle_protocol.hpp"
 #include "mab_types.hpp"
 #include "md80.hpp"
 #include "spiDevice.hpp"
 #include "uartDevice.hpp"
 #include "usbDevice.hpp"
-
 namespace mab
 {
 enum CANdleMode_E
@@ -382,12 +382,6 @@ class Candle
 	float usbCommsFreq = 0.0f;
 	uint32_t transmitterDelay = 20;
 
-	/* controller limits */
-	static const uint16_t driverMinBandwidth = 50;
-	static const uint16_t driverMaxBandwidth = 2500;
-	const float driverMaxCurrent = 40.0f;
-	const float driverMinCurrent = 1.0f;
-
 	void transmitNewStdFrame();
 
 	void receive();
@@ -401,6 +395,8 @@ class Candle
 	Bus* makeBus(mab::BusType_E busType, std::string device);
 
 	bool executeCommand(uint16_t canId, Md80Reg_E reg, const char* failMsg, const char* successMsg);
+	// bool sendBusFrame(BusFrameId_t id, uint8_t byte, uint32_t timeout);
+	bool sendBusFrame(BusFrameId_t id, uint32_t timeout, char* payload = nullptr, uint32_t cmdLen = 2, uint32_t respLen = 2);
 
 	/* virtual methods for testing purposes */
 	virtual Bus* createSpi() { return new SpiDevice(); }

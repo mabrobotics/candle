@@ -248,35 +248,35 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 		return false;
 	}
 
-	AddMd80Frame_t add = {BUS_FRAME_MD80_ADD, canId};
-	if (bus->transmit((char*)&add, sizeof(AddMd80Frame_t), true, 2, 2))
-		if (*bus->getRxBuffer(0) == BUS_FRAME_MD80_ADD)
-			if (*bus->getRxBuffer(1) == true)
-			{
-				version_ut firmwareVersion = {{0, 0, 0, 0}};
+	char payload[2]{};
+	*(uint16_t*)payload = canId;
 
-				if (!md80Register->read(canId, mab::Md80Reg_E::firmwareVersion, firmwareVersion.i))
-				{
-					vout << "Unable to read MD80's firmware version! Probably MD80's firmware is outdated. Please update it using MAB_CAN_Flasher." << statusFAIL << std::endl;
-					return false;
-				}
+	if (sendBusFrame(BUS_FRAME_MD80_ADD, 2, payload, 3, 2))
+	{
+		version_ut firmwareVersion = {{0, 0, 0, 0}};
 
-				if (firmwareVersion.i < md80CompatibleVersion.i)
-				{
-					vout << "MD80's firmware with ID: " + std::to_string(canId) + " is outdated. Please update it using MAB_CAN_Flasher." << statusFAIL << std::endl;
-					return false;
-				}
-				else if (firmwareVersion.s.major > md80CompatibleVersion.s.major || firmwareVersion.s.minor > md80CompatibleVersion.s.minor)
-				{
-					vout << "MD80's firmware with ID: " + std::to_string(canId) + " is a future version. Please update your CANdle library." << statusFAIL << std::endl;
-					return false;
-				}
-				vout << "Added MD80 with ID: " + std::to_string(canId) << statusOK << std::endl;
-				md80s.push_back(Md80(canId));
-				mab::Md80& newDrive = md80s.back();
-				updateMd80State(newDrive);
-				return true;
-			}
+		if (!md80Register->read(canId, mab::Md80Reg_E::firmwareVersion, firmwareVersion.i))
+		{
+			vout << "Unable to read MD80's firmware version! Probably MD80's firmware is outdated. Please update it using MAB_CAN_Flasher." << statusFAIL << std::endl;
+			return false;
+		}
+
+		if (firmwareVersion.i < md80CompatibleVersion.i)
+		{
+			vout << "MD80's firmware with ID: " + std::to_string(canId) + " is outdated. Please update it using MAB_CAN_Flasher." << statusFAIL << std::endl;
+			return false;
+		}
+		else if (firmwareVersion.s.major > md80CompatibleVersion.s.major || firmwareVersion.s.minor > md80CompatibleVersion.s.minor)
+		{
+			vout << "MD80's firmware with ID: " + std::to_string(canId) + " is a future version. Please update your CANdle library." << statusFAIL << std::endl;
+			return false;
+		}
+		vout << "Added MD80 with ID: " + std::to_string(canId) << statusOK << std::endl;
+		md80s.push_back(Md80(canId));
+		mab::Md80& newDrive = md80s.back();
+		updateMd80State(newDrive);
+		return true;
+	}
 
 	if (printFailure) vout << "Failed to add MD80 with ID: " + std::to_string(canId) << statusFAIL << std::endl;
 	return false;
@@ -286,11 +286,9 @@ std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
 	if (!configCandleBaudrate(baudrate))
 		return std::vector<uint16_t>();
 	vout << "Starting pinging drives at baudrate: " << std::to_string(baudrate) << "M" << std::endl;
-	char tx[128];
-	tx[0] = BUS_FRAME_PING_START;
-	tx[1] = 0x00;
 	std::vector<uint16_t> ids;
-	if (bus->transmit(tx, 2, true, 2000, 33))
+
+	if (sendBusFrame(BUS_FRAME_PING_START, 2000, nullptr, 2, 33))
 	{
 		uint16_t* idsPointer = (uint16_t*)bus->getRxBuffer(1);
 		for (int i = 0; i < maxDevices; i++)
@@ -394,17 +392,6 @@ bool Candle::controlMd80SetEncoderZero(uint16_t canId)
 
 bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
 {
-	if (currentLimit > driverMaxCurrent)
-	{
-		vout << "Current setting above limit (" << driverMaxCurrent << " A)! Setting current limit to maximum (" << driverMaxCurrent << " A)" << std::endl;
-		currentLimit = driverMaxCurrent;
-	}
-	else if (currentLimit < driverMinCurrent)
-	{
-		vout << "Current setting below limit (" << driverMinCurrent << " A)! Setting current limit to minimum (" << driverMinCurrent << " A)" << std::endl;
-		currentLimit = driverMinCurrent;
-	}
-
 	if (inUpdateMode() || !md80Register->write(canId, mab::Md80Reg_E::motorIMax, currentLimit))
 	{
 		vout << "Setting new current limit failed at ID: " << canId << statusFAIL << std::endl;
@@ -417,44 +404,27 @@ bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
 bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersionInfo)
 {
 	this->canBaudrate = canBaudrate;
-	char tx[10];
-	tx[0] = BUS_FRAME_CANDLE_CONFIG_BAUDRATE;
-	tx[1] = (uint8_t)canBaudrate;
 
-	if (bus->transmit(tx, 2, true, 50, 6))
+	if (sendBusFrame(BUS_FRAME_CANDLE_CONFIG_BAUDRATE, 50, nullptr, 2, 6))
 	{
-		if (*bus->getRxBuffer(0) == BUS_FRAME_CANDLE_CONFIG_BAUDRATE && *bus->getRxBuffer(1) == true)
-		{
-			candleDeviceVersion.i = *(uint32_t*)bus->getRxBuffer(2);
+		candleDeviceVersion.i = *(uint32_t*)bus->getRxBuffer(2);
 
-			if (printVersionInfo)
+		if (printVersionInfo)
+		{
+			if (candleDeviceVersion.i < candleDeviceCompatibleVersion.i)
 			{
-				if (candleDeviceVersion.i < candleDeviceCompatibleVersion.i)
-				{
-					vout << "Your CANdle device firmware seems to be out-dated. Please see the manual for intructions on how to update." << std::endl;
-					return false;
-				}
-				vout << "Device firmware version: v" << mab::getVersionString(&candleDeviceVersion) << std::endl;
+				vout << "Your CANdle device firmware seems to be out-dated. Please see the manual for intructions on how to update." << std::endl;
+				return false;
 			}
-			return true;
+			vout << "Device firmware version: v" << mab::getVersionString(&candleDeviceVersion) << std::endl;
 		}
+		return true;
 	}
 	return false;
 }
 
 bool Candle::configMd80TorqueBandwidth(uint16_t canId, uint16_t torqueBandwidth)
 {
-	if (torqueBandwidth > driverMaxBandwidth)
-	{
-		vout << "Bandwidth setting above limit (" << driverMaxBandwidth << " Hz)! Setting bandwidth to maximum (" << driverMaxBandwidth << " Hz)" << std::endl;
-		torqueBandwidth = driverMaxBandwidth;
-	}
-	else if (torqueBandwidth < driverMinBandwidth)
-	{
-		vout << "Bandwidth setting below limit (" << driverMinBandwidth << " Hz)! Setting bandwidth to minimum (" << driverMinBandwidth << " Hz)" << std::endl;
-		torqueBandwidth = driverMinBandwidth;
-	}
-
 	if (inUpdateMode() || !md80Register->write(canId, mab::Md80Reg_E::motorTorgueBandwidth, torqueBandwidth,
 											   mab::Md80Reg_E::runCalibratePiGains, true))
 	{
@@ -521,10 +491,8 @@ bool Candle::begin()
 		vout << "Cannot run 'begin', already in update mode." << statusFAIL << std::endl;
 		return false;
 	}
-	char tx[128];
-	tx[0] = BUS_FRAME_BEGIN;
-	tx[1] = 0x00;
-	if (bus->transmit(tx, 2, true, 10, 2))
+
+	if (sendBusFrame(BUS_FRAME_BEGIN, 10))
 	{
 		vout << "Beginnig auto update loop mode" << statusOK << std::endl;
 		mode = CANdleMode_E::UPDATE;
@@ -564,15 +532,10 @@ bool Candle::end()
 			receiverThread.join();
 	}
 
-	char tx[128];
-	tx[0] = BUS_FRAME_END;
-	tx[1] = 0x00;
-
 	bus->flushReceiveBuffer();
 
-	if (bus->transmit(tx, 2, true, 100, 2))
-		if (*bus->getRxBuffer(0) == BUS_FRAME_END && *bus->getRxBuffer(1) == 1)
-			mode = CANdleMode_E::CONFIG;
+	if (sendBusFrame(BUS_FRAME_END, 100))
+		mode = CANdleMode_E::CONFIG;
 
 	for (auto& md : md80s)
 		controlMd80Enable(md, false);
@@ -583,13 +546,7 @@ bool Candle::end()
 }
 bool Candle::reset()
 {
-	char tx[128];
-	tx[0] = BUS_FRAME_RESET;
-	tx[1] = 0x00;
-	if (bus->transmit(tx, 2, true, 100, 2))
-		return true;
-
-	return false;
+	return sendBusFrame(BUS_FRAME_RESET, 100);
 }
 bool Candle::inUpdateMode()
 {
@@ -811,6 +768,22 @@ bool Candle::executeCommand(uint16_t canId, Md80Reg_E reg, const char* failMsg, 
 	}
 	vout << successMsg << canId << statusOK << std::endl;
 	return true;
+}
+
+bool Candle::sendBusFrame(BusFrameId_t id, uint32_t timeout, char* payload, uint32_t cmdLen, uint32_t respLen)
+{
+	char tx[128]{};
+	tx[0] = id;
+	tx[1] = 0x00;
+
+	if (payload)
+		memcpy(&tx[1], payload, cmdLen - 1);
+
+	char* rx = bus->getRxBuffer(0);
+
+	if (bus->transmit(tx, cmdLen, true, timeout, respLen))
+		return ((rx[0] == id && rx[1] == true) || (rx[0] == BUS_FRAME_PING_START));
+	return false;
 }
 
 }  // namespace mab
