@@ -149,7 +149,7 @@ class Md80
 	 * @brief Set the Torque target for RAW_TORQUE and IMPEDANCE modes.
 	 * @param target target torque in Nm (Newton-meters)
 	 */
-	void setTorqueTarget(float target) { targets.torqueTarget = target; };
+	void setTargetTorque(float target) { targets.torqueTarget = target; };
 
 	// getters
 	/**

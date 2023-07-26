@@ -23,7 +23,7 @@ int main()
 
 	// Begin update loop (it starts in the background)
 	candle.begin();
-	candle.md80s[0].setTorqueTarget(0.1f);
+	candle.md80s[0].setTargetTorque(0.1f);
 	sleep(5);
 	candle.end();
 
