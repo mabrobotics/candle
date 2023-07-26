@@ -8,8 +8,6 @@
 
 namespace mab
 {
-void packImpedanceFrame(CanFrame_t* frame, RegImpedance_t* reg);
-void packPidFrame(CanFrame_t* frame, RegPid_t* reg);
 
 Md80::Md80(uint16_t _canID)
 {

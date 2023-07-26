@@ -33,7 +33,7 @@ int main()
 	// Begin update loop (it starts in the background)
 	candle.begin();
 
-	candle.md80s[0].setProfileAcceleration(5.0f);
+	candle.md80s[0].setProfileAcceleration(1.0f);
 	candle.md80s[0].setProfileVelocity(20.0f);
 	candle.md80s[0].setTargetVelocity(10.0f);
 
@@ -43,7 +43,7 @@ int main()
 	};
 
 	candle.md80s[0].setProfileAcceleration(20.0f);
-	candle.md80s[0].setProfileVelocity(30.0f);
+	candle.md80s[0].setProfileVelocity(50.0f);
 	candle.md80s[0].setTargetVelocity(20.0f);
 
 	while (!candle.md80s[0].isTargetVelocityReached())

@@ -207,21 +207,12 @@ void Candle::setVebose(bool enable)
 {
 	printVerbose = enable;
 }
+
 unsigned long Candle::getDeviceId()
 {
 	return bus->getId();
 }
-GenericMd80Frame32 _packMd80Frame(int canId, int msgLen, Md80FrameId_E canFrameId)
-{
-	GenericMd80Frame32 frame;
-	frame.frameId = BUS_FRAME_MD80_GENERIC_FRAME;
-	frame.driveCanId = canId;
-	frame.canMsgLen = msgLen;
-	frame.timeoutMs = 10;
-	frame.canMsg[0] = canFrameId;
-	frame.canMsg[1] = 0x00;
-	return frame;
-}
+
 void Candle::updateMd80State(mab::Md80& drive)
 {
 	Md80::State state{};
@@ -241,17 +232,22 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 {
 	if (inUpdateMode())
 		return false;
+
 	for (auto& d : md80s)
+	{
 		if (d.getId() == canId)
 		{
 			vout << "MD80 with ID: " << canId << " is already on the update list." << statusOK << std::endl;
 			return true;
 		}
+	}
+
 	if (md80s.size() >= maxDevices)
 	{
 		vout << "Cannot add more than " << maxDevices << " MD80s" << statusFAIL << std::endl;
 		return false;
 	}
+
 	AddMd80Frame_t add = {BUS_FRAME_MD80_ADD, canId};
 	if (bus->transmit((char*)&add, sizeof(AddMd80Frame_t), true, 2, 2))
 		if (*bus->getRxBuffer(0) == BUS_FRAME_MD80_ADD)
@@ -281,6 +277,7 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 				updateMd80State(newDrive);
 				return true;
 			}
+
 	if (printFailure) vout << "Failed to add MD80 with ID: " + std::to_string(canId) << statusFAIL << std::endl;
 	return false;
 }
@@ -332,22 +329,16 @@ std::vector<uint16_t> Candle::ping()
 }
 bool Candle::sendGenericFDCanFrame(uint16_t canId, int msgLen, const char* txBuffer, char* rxBuffer, int timeoutMs)
 {
-	int fdcanTimeout = timeoutMs - 3;
-	if (timeoutMs < 3)
-	{
-		timeoutMs = 3;
-		fdcanTimeout = 1;
-	}
 	GenericMd80Frame64 frame;
 	frame.frameId = mab::BusFrameId_t::BUS_FRAME_MD80_GENERIC_FRAME;
 	frame.driveCanId = canId;
 	frame.canMsgLen = msgLen;
-	frame.timeoutMs = fdcanTimeout;
+	frame.timeoutMs = timeoutMs < 3 ? 3 : timeoutMs - 3;
 	memcpy(frame.canMsg, txBuffer, msgLen);
 	char tx[96];
 	int len = sizeof(frame) - sizeof(frame.canMsg) + msgLen;
 	memcpy(tx, &frame, len);
-	if (bus->transmit(tx, len, true, timeoutMs, 66))  // Got some response
+	if (bus->transmit(tx, len, true, timeoutMs, 66, false))	 // Got some response
 	{
 		if (*bus->getRxBuffer(0) == tx[0] &&  // USB Frame ID matches
 			*bus->getRxBuffer(1) == true &&
@@ -385,37 +376,22 @@ bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newB
 	vout << "CAN config change successful!" << statusOK << std::endl;
 	return true;
 }
+
 bool Candle::configMd80Save(uint16_t canId)
 {
-	if (inUpdateMode() || !md80Register->write(canId, mab::Md80Reg_E::runSaveCmd, true))
-	{
-		vout << "Saving in flash failed at ID: " << canId << statusFAIL << std::endl;
-		return false;
-	}
-	vout << "Saving in flash successful at ID: " << canId << statusOK << std::endl;
-	return true;
+	return executeCommand(canId, mab::Md80Reg_E::runSaveCmd, "Saving in flash failed at ID: ", "Saving in flash successful at ID: ");
 }
+
 bool Candle::configMd80Blink(uint16_t canId)
 {
-	if (inUpdateMode() || !md80Register->write(canId, mab::Md80Reg_E::runBlink, true))
-	{
-		vout << "Blinking failed at ID: " << canId << statusFAIL << std::endl;
-		return false;
-	}
-	vout << "LEDs blining at ID:" << canId << statusOK << std::endl;
-	return true;
+	return executeCommand(canId, mab::Md80Reg_E::runBlink, "Blinking failed at ID: ", "LEDs blining at ID:");
 }
 
 bool Candle::controlMd80SetEncoderZero(uint16_t canId)
 {
-	if (inUpdateMode() || !md80Register->write(canId, mab::Md80Reg_E::runZero, true))
-	{
-		vout << "Setting new zero position failed at ID: " << canId << statusFAIL << std::endl;
-		return false;
-	}
-	vout << "Setting new zero position successful at ID: " << canId << statusOK << std::endl;
-	return true;
+	return executeCommand(canId, mab::Md80Reg_E::runZero, "Setting new zero position failed at ID: ", "Setting new zero position successful at ID: ");
 }
+
 bool Candle::configMd80SetCurrentLimit(uint16_t canId, float currentLimit)
 {
 	if (currentLimit > driverMaxCurrent)
@@ -641,69 +617,32 @@ void Candle::transmitNewStdFrame()
 
 bool Candle::setupMd80Calibration(uint16_t canId)
 {
-	if (inUpdateMode() || !md80Register->write(canId, mab::Md80Reg_E::runCalibrateCmd, true))
-	{
-		vout << "Starting calibration failed at ID: " << canId << statusFAIL << std::endl;
-		return false;
-	}
-
-	vout << "Starting calibration at ID: " << canId << statusOK << std::endl;
-	return true;
+	return executeCommand(canId, mab::Md80Reg_E::runCalibrateCmd, "Starting calibration failed at ID: ", "Starting calibration at ID: ");
 }
 
 bool Candle::setupMd80CalibrationOutput(uint16_t canId)
 {
-	if (inUpdateMode() || !md80Register->write(canId, mab::Md80Reg_E::runCalibrateOutpuEncoderCmd, true))
-	{
-		vout << "Starting output encoder calibration failed at ID: " << canId << statusFAIL << std::endl;
-		return false;
-	}
-	vout << "Starting output encoder calibration at ID: " << canId << statusOK << std::endl;
-	return true;
+	return executeCommand(canId, mab::Md80Reg_E::runCalibrateOutpuEncoderCmd, "Starting output encoder calibration failed at ID: ", "Starting output encoder calibration at ID: ");
 }
 
 bool Candle::setupMd80TestOutputEncoder(uint16_t canId)
 {
-	if (inUpdateMode() || !md80Register->write(canId, mab::Md80Reg_E::runTestOutputEncoderCmd, true))
-	{
-		vout << "Output encoder test failed at ID: " << canId << statusFAIL << std::endl;
-		return false;
-	}
-	vout << "Output encoder test in progress at ID: " << canId << statusOK << std::endl;
-	return true;
+	return executeCommand(canId, mab::Md80Reg_E::runTestOutputEncoderCmd, "Output encoder test failed at ID: ", "Output encoder test in progress at ID: ");
 }
 
 bool Candle::setupMd80TestMainEncoder(uint16_t canId)
 {
-	if (inUpdateMode() || !md80Register->write(canId, mab::Md80Reg_E::runTestMainEncoderCmd, true))
-	{
-		vout << "Main encoder test failed at ID: " << canId << statusFAIL << std::endl;
-		return false;
-	}
-	vout << "Main encoder test in progress at ID: " << canId << statusOK << std::endl;
-	return true;
+	return executeCommand(canId, mab::Md80Reg_E::runTestMainEncoderCmd, "Main encoder test failed at ID: ", "Main encoder test in progress at ID: ");
 }
 
 bool Candle::setupMd80PerformHoming(uint16_t canId)
 {
-	if (inUpdateMode() || !md80Register->write(canId, mab::Md80Reg_E::runHoming, true))
-	{
-		vout << "Homing test failed at ID: " << canId << statusFAIL << std::endl;
-		return false;
-	}
-	vout << "Homing test in progress at ID: " << canId << statusOK << std::endl;
-	return true;
+	return executeCommand(canId, mab::Md80Reg_E::runHoming, "Homing test failed at ID: ", "Homing test in progress at ID: ");
 }
 
 bool Candle::setupMd80PerformReset(uint16_t canId)
 {
-	if (inUpdateMode() || !md80Register->write(canId, mab::Md80Reg_E::runReset, true))
-	{
-		vout << "Reset failed at ID: " << canId << statusFAIL << std::endl;
-		return false;
-	}
-	vout << "Reset in progress at ID: " << canId << statusOK << std::endl;
-	return true;
+	return executeCommand(canId, mab::Md80Reg_E::runReset, "Reset failed at ID: ", "Reset in progress at ID: ");
 }
 
 bool Candle::setupMd80ClearErrors(uint16_t canId)
@@ -851,14 +790,8 @@ mab::CANdleBaudrate_E Candle::getCurrentBaudrate()
 }
 bool Candle::checkMd80ForBaudrate(uint16_t canId)
 {
-	GenericMd80Frame32 frame = _packMd80Frame(canId, 2, Md80FrameId_E::FRAME_GET_INFO);
-	char tx[64];
-	int len = sizeof(frame);
-	memcpy(tx, &frame, len);
-	if (bus->transmit(tx, len, true, 300, 66, false))
-		if (*bus->getRxBuffer(1) == true)
-			return true;
-	return false;
+	uint16_t status;
+	return md80Register->read(canId, Md80Reg_E::errorVector, status);
 }
 
 std::string getVersionString(const version_ut* ver)
@@ -867,6 +800,17 @@ std::string getVersionString(const version_ut* ver)
 		return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision));
 	else
 		return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision) + '.' + ver->s.tag);
+}
+
+bool Candle::executeCommand(uint16_t canId, Md80Reg_E reg, const char* failMsg, const char* successMsg)
+{
+	if (inUpdateMode() || !md80Register->write(canId, reg, true))
+	{
+		vout << failMsg << canId << statusFAIL << std::endl;
+		return false;
+	}
+	vout << successMsg << canId << statusOK << std::endl;
+	return true;
 }
 
 }  // namespace mab

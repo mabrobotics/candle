@@ -400,6 +400,8 @@ class Candle
 
 	Bus* makeBus(mab::BusType_E busType, std::string device);
 
+	bool executeCommand(uint16_t canId, Md80Reg_E reg, const char* failMsg, const char* successMsg);
+
 	/* virtual methods for testing purposes */
 	virtual Bus* createSpi() { return new SpiDevice(); }
 	virtual Bus* createUart() { return new UartDevice(); }
