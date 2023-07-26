@@ -27,7 +27,7 @@ typedef struct
 	uint8_t bridgeType;
 	float resistance;
 	float inductance;
-	uint16_t errorVector;
+	uint16_t quickStatus;
 	float mosfetTemperature;
 	float motorTemperature;
 	float mainEncoderVelocity;
@@ -228,7 +228,7 @@ typedef enum
 	firmwareVersion = 0x802,
 	hardwareVersion = 0x803,
 	bridgeType = 0x804,
-	errorVector = 0x805,
+	quickStatus = 0x805,
 	mosfetTemperature = 0x806,
 	motorTemperature = 0x807,
 	motorShutdownTemp = 0x808,

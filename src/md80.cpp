@@ -103,7 +103,7 @@ void Md80::__updateResponseData(StdMd80ResponseFrame_t* _responseFrame)
 	if (_responseFrame->canId != canId || frame.data[0] != Md80FrameId_E::RESPONSE_DEFAULT)
 		return;
 
-	state.errorVector = *(uint16_t*)&frame.data[1];
+	state.quickStatus = *(uint16_t*)&frame.data[1];
 	state.temperature = frame.data[3];
 	state.position = *(float*)&frame.data[4];
 	state.velocity = *(float*)&frame.data[8];
@@ -112,9 +112,9 @@ void Md80::__updateResponseData(StdMd80ResponseFrame_t* _responseFrame)
 	state.outputEncoderVelocity = *(float*)&frame.data[20];
 
 	if (controlMode == POSITION_PID || controlMode == POSITION_PROFILE)
-		targetPositionReached = static_cast<bool>(state.errorVector & 0x8000);
+		targetPositionReached = static_cast<bool>(state.quickStatus & 0x8000);
 	else if (controlMode == VELOCITY_PID || controlMode == VELOCITY_PROFILE)
-		targetVelocityReached = static_cast<bool>(state.errorVector & 0x8000);
+		targetVelocityReached = static_cast<bool>(state.quickStatus & 0x8000);
 
 	rxCallback();
 }

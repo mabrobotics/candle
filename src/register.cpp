@@ -150,7 +150,7 @@ Register::type Register::getType(uint16_t regId)
 			return type::U8;
 		case Md80Reg_E::motorTorgueBandwidth:
 		case Md80Reg_E::canWatchdog:
-		case Md80Reg_E::errorVector:
+		case Md80Reg_E::quickStatus:
 		case Md80Reg_E::motorKV:
 		case Md80Reg_E::state:
 			return type::U16;

@@ -24,7 +24,7 @@ class Md80
 		float outputEncoderPosition;
 		float outputEncoderVelocity;
 		uint8_t temperature;
-		uint16_t errorVector;
+		uint16_t quickStatus;
 	};
 
 	struct Targets
@@ -156,7 +156,7 @@ class Md80
 	 * @brief Get the Error Vector of the md80
 	 * @return uint16_t vector with per-bit coded errors. Refer to documentation for meaning of error codes.
 	 */
-	uint16_t getErrorVector() { return errorVector; };
+	uint16_t getQuickStatus() { return state.quickStatus; };
 
 	/**
 	 * @brief Get the FDCAN Id of the drive
