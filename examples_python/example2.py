@@ -16,12 +16,12 @@ for id in ids:
 candle.begin()
 
 # Auto update loop is running in the background updating data in candle.md80s vector. Each md80 object can be 
-# called for data at any time
+# Called for data at any time
 for i in range(1000):
     print("Drive Id: " + str(candle.md80s[0].getId()) + " Position: " + str(candle.md80s[0].getPosition()))
     time.sleep(0.1)
 
-#Close the update loop
+# Close the update loop
 candle.end()
 
 sys.exit("EXIT SUCCESS")

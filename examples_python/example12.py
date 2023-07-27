@@ -7,8 +7,6 @@ import sys
 candle = pyCandle.Candle(pyCandle.CAN_BAUD_1M,True)
 ids = candle.ping()
 
-# Blink LEDs on each drive found
-
 candle.addMd80(ids[0])
 
 reg = candle.getMd80FromList(ids[0]).getReadReg()
