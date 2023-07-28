@@ -44,7 +44,7 @@ layout = [[sg.Text("Motor Output",font=font)],
           [sg.Text("Ki",font=font), sg.InputText(0.0, key='-KI-',font=font)],
           [sg.Text("Kd",font=font), sg.InputText(0.0, key='-KD-',font=font)],
           [sg.Text("Windup",font=font), sg.InputText(0.0, key='-WINDUP-',font=font)],
-          [sg.Text("Max Velocity",font=font), sg.InputText(0.0, key='-MAXVEL-',font=font)],
+          [sg.Text("Profile Velocity",font=font), sg.InputText(0.0, key='-MAXVEL-',font=font)],
           [sg.Text("Max Torque",font=font), sg.InputText(0.0, key='-MAXTORQUE-',font=font)],
 
           [sg.Button('Save', highlight_colors=('black', 'grey'), button_color=('black', 'grey'),font=font)],
@@ -52,8 +52,8 @@ layout = [[sg.Text("Motor Output",font=font)],
           [sg.Text("Time of test [s]",font=font), sg.Slider(range=(0, 30), orientation='h', size=(50, 10), default_value=3, key='-TIMEOFTEST-',font=font)],
           [sg.Text("Setpoint",font=font), sg.InputText(VELOCITY_SETPOINT, key='-SETPOINT-',font=font)],
 
-          [sg.Checkbox('Velocity [rad/s]', default=True, key='-VELOCITY-',font=font),sg.Checkbox('Velocity Max [rad/s]', default=False, key='-VELOCITYMAXSHOW-',font=font)],
-          [sg.Checkbox('Position [rad]', default=False, key='-POSITION-',font=font)],
+          [sg.Checkbox('Velocity [rad/s]', default=True, key='-VELOCITY-',font=font)],
+          [sg.Checkbox('Position [rad]', default=False, key='-POSITION-',font=font),sg.Checkbox('Profile Velocity [rad/s]', default=False, key='-VELOCITYMAXSHOW-',font=font)],
           [sg.Checkbox('Torque [Nm]', default=False, key='-TORQUE-',font=font),sg.Checkbox('Torque Max [Nm]', default=False, key='-TORQUEMAXSHOW-',font=font)],
           [sg.Checkbox('Temperature [C]', default=False, key='-TEMP-',font=font)],
 
@@ -106,20 +106,19 @@ def SaveCurrentConfig(id,mode,kp,ki,kd,windup,maxTorque,maxVel):
     print("Kd: " + str(kd))
     print("Windup: " + str(windup))
     print("Max Torque: " + str(maxTorque))
-    print("Max Velocity: " + str(maxVel))
+    print("Profile Velocity: " + str(maxVel))
     if mode == "Velocity Mode":
         candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorVelPidKp,float(kp))
         candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorVelPidKi,float(ki))
         candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorVelPidKd,float(kd))
         candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorVelPidWindup,float(windup))
         candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorVelPidOutMax,float(maxTorque))
-        candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorPosPidOutMax,float(maxVel))
     elif mode == "Position Mode":
         candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorPosPidKp,float(kp))
         candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorPosPidKi,float(ki))
         candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorPosPidKd,float(kd))
         candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorPosPidWindup,float(windup))
-        candle.writeMd80Register(id,pyCandle.Md80Reg_E.motorPosPidOutMax,float(maxVel))
+        candle.writeMd80Register(id,pyCandle.Md80Reg_E.profileVelocity,float(maxVel))
     
     candle.configMd80Save(id) # Save the configuration in the drive
 
@@ -151,7 +150,7 @@ async def EventLoop():
     window["-MAXTORQUE-"].update(str(round(candle.readMd80Register(
         ids[0], pyCandle.Md80Reg_E.motorVelPidOutMax, reg.RW.velocityPidGains.outMax),digits_round)))
     window["-MAXVEL-"].update(str(round(candle.readMd80Register(
-        ids[0], pyCandle.Md80Reg_E.motorPosPidOutMax, reg.RW.positionPidGains.outMax),digits_round)))
+        ids[0], pyCandle.Md80Reg_E.profileVelocity, reg.RW.profileVelocity),digits_round)))
     if((round(candle.readMd80Register(
         ids[0], pyCandle.Md80Reg_E.motorPosPidOutMax, reg.RW.positionPidGains.outMax),digits_round)) < VELOCITY_SETPOINT):
 
@@ -220,7 +219,7 @@ async def EventLoop():
                 window['-MAXTORQUE-'].update(str(round(candle.readMd80Register(
                     ids[0], pyCandle.Md80Reg_E.motorVelPidOutMax, reg.RW.velocityPidGains.outMax),digits_round)))
                 window['-MAXVEL-'].update(str(round(candle.readMd80Register(
-                    ids[0], pyCandle.Md80Reg_E.motorPosPidOutMax, reg.RW.positionPidGains.outMax),digits_round)))
+                    ids[0], pyCandle.Md80Reg_E.profileVelocity, reg.RW.profileVelocity),digits_round)))
             if values['-MODE-'] == 'Position Mode':
                 window['-KP-'].update(str(round(candle.readMd80Register(
                     ids[0], pyCandle.Md80Reg_E.motorPosPidKp, reg.RW.positionPidGains.kp),digits_round)))
@@ -233,7 +232,7 @@ async def EventLoop():
                 window['-MAXTORQUE-'].update(str(round(candle.readMd80Register(
                     ids[0], pyCandle.Md80Reg_E.motorVelPidOutMax, reg.RW.velocityPidGains.outMax),digits_round)))
                 window['-MAXVEL-'].update(str(round(candle.readMd80Register(
-                    ids[0], pyCandle.Md80Reg_E.motorPosPidOutMax, reg.RW.positionPidGains.outMax),digits_round)))
+                    ids[0], pyCandle.Md80Reg_E.profileVelocity, reg.RW.profileVelocity),digits_round)))
     candle.end()  # Close connection to candle
     candle.controlMd80Enable(ids[0], False)  # Disable motor
     window.close()
@@ -274,7 +273,7 @@ async def Run(mode='Velocity Mode', setpoint=VELOCITY_SETPOINT, showVelocity=Tru
         candle.md80s[0].setTargetPosition(0.0)
         candle.md80s[0].setPositionControllerParams(kp, ki, kd, windup)
 
-    candle.md80s[0].setMaxVelocity(maxVel)
+    candle.md80s[0].setProfileVelocity(maxVel)
     candle.md80s[0].setMaxTorque(maxTorque)
 
     candle.controlMd80Enable(candle.md80s[0], True)  # Enable motor
@@ -291,7 +290,7 @@ async def Run(mode='Velocity Mode', setpoint=VELOCITY_SETPOINT, showVelocity=Tru
     if (showMaxTorque):
         Run.lp.add_line("Max Torque",style='--')
     if (showMaxVelocity):
-        Run.lp.add_line("Max Velocity",style='--')
+        Run.lp.add_line("Profile Velocity",style='--')
     Run.lp.add_line("Setpoint")
 
     startTime = time.time()  # Start time of test
@@ -318,7 +317,7 @@ async def Run(mode='Velocity Mode', setpoint=VELOCITY_SETPOINT, showVelocity=Tru
         if (showMaxTorque):
             Run.lp.append_data("Max Torque", timeStamp, maxTorque)
         if (showMaxVelocity):
-            Run.lp.append_data("Max Velocity", timeStamp, maxVel)
+            Run.lp.append_data("Profile Velocity", timeStamp, maxVel)
         Run.lp.append_data("Setpoint", timeStamp, trueSetpoint)
 
         # Set setpoint at appropriate time
