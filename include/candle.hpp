@@ -346,17 +346,9 @@ class Candle
 	std::shared_ptr<Register> md80Register;
 
    private:
-	const uint8_t VMAJOR = 3;
-	const uint8_t VMINOR = 3;
-	const uint8_t VREVISION = 0;
-	const char VTAG = 'r';
-
-	version_ut candleDeviceVersion;
 	/* TODO make a proper version class as the reverse initalization is not elegant */
-	const version_ut candleDeviceCompatibleVersion = {{'d', 0, 2, 2}};
-	const version_ut md80CompatibleVersion = {{'d', 0, 2, 2}};
-
-	const version_ut candleLibVersion = {{VTAG, VREVISION, VMINOR, VMAJOR}};
+	const version_ut candleDeviceCompatibleVersion = {'d', 0, 2, 2};
+	const version_ut md80CompatibleVersion = {'d', 0, 3, 2};
 
 	static std::vector<Candle*> instances;
 
@@ -371,7 +363,7 @@ class Candle
 
 	Bus* bus = nullptr;
 
-	const int idMax = 2000;
+	static constexpr uint16_t idMax = 2000;
 	static constexpr int maxDevices = 16;
 	bool shouldStopReceiver;
 	bool shouldStopTransmitter;
@@ -404,6 +396,6 @@ class Candle
 	virtual Bus* createUsb(const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances) { return new UsbDevice(idVendor, idProduct, instances); }
 };
 
-std::string getVersionString(const version_ut* ver);
+std::string getVersionString(const version_ut& ver);
 
 }  // namespace mab

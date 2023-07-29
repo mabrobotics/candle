@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_STANDARD 14)
 
-project(md80)
+project(candle_lib)
+
+set(CANDLE_LIB_VERSION 3.3.1)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_BUILD_TYPE Release)
@@ -34,6 +36,13 @@ message(STATUS "\nCANDLE_BUILD_SHARED: ${CANDLE_BUILD_SHARED}\nCANDLE_BUILD_STAT
 target_include_directories(candle PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(candle pthread)
 set_target_properties(candle PROPERTIES PUBLIC_HEADER candle.hpp)
+
+string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" _ "${CANDLE_LIB_VERSION}")
+target_compile_definitions(candle
+    PRIVATE CANDLE_VMAJOR=${CMAKE_MATCH_1}
+    PRIVATE CANDLE_VMINOR=${CMAKE_MATCH_2}
+    PRIVATE CANDLE_VREVISION=${CMAKE_MATCH_3}
+)
 
 if(MAKE_TESTS)
     enable_testing()

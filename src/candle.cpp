@@ -99,7 +99,7 @@ Bus* Candle::makeBus(mab::BusType_E busType, std::string device)
 
 const std::string Candle::getVersion()
 {
-	return getVersionString(&candleLibVersion);
+	return getVersionString({'d', CANDLE_VREVISION, CANDLE_VMINOR, CANDLE_VMAJOR});
 }
 
 int Candle::getActualCommunicationFrequency()
@@ -405,6 +405,7 @@ bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersio
 
 	if (sendBusFrame(BUS_FRAME_CANDLE_CONFIG_BAUDRATE, 50, nullptr, 2, 6))
 	{
+		version_ut candleDeviceVersion{};
 		candleDeviceVersion.i = *(uint32_t*)bus->getRxBuffer(2);
 
 		if (printVersionInfo)
@@ -414,7 +415,7 @@ bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersio
 				vout << "Your CANdle device firmware seems to be out-dated. Please see the manual for intructions on how to update." << std::endl;
 				return false;
 			}
-			vout << "Device firmware version: v" << mab::getVersionString(&candleDeviceVersion) << std::endl;
+			vout << "Device firmware version: v" << mab::getVersionString(candleDeviceVersion) << std::endl;
 		}
 		return true;
 	}
@@ -749,12 +750,12 @@ bool Candle::checkMd80ForBaudrate(uint16_t canId)
 	return md80Register->read(canId, Md80Reg_E::quickStatus, status);
 }
 
-std::string getVersionString(const version_ut* ver)
+std::string getVersionString(const version_ut& ver)
 {
-	if (ver->s.tag == 'r' || ver->s.tag == 'R')
-		return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision));
+	if (ver.s.tag == 'r' || ver.s.tag == 'R')
+		return std::string(std::to_string(ver.s.major) + '.' + std::to_string(ver.s.minor) + '.' + std::to_string(ver.s.revision));
 	else
-		return std::string(std::to_string(ver->s.major) + '.' + std::to_string(ver->s.minor) + '.' + std::to_string(ver->s.revision) + '.' + ver->s.tag);
+		return std::string(std::to_string(ver.s.major) + '.' + std::to_string(ver.s.minor) + '.' + std::to_string(ver.s.revision) + '.' + ver.s.tag);
 }
 
 bool Candle::executeCommand(uint16_t canId, Md80Reg_E reg, const char* failMsg, const char* successMsg)
