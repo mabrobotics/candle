@@ -60,7 +60,7 @@ class Candle
 	 * @param bus a bus object pointer to be used in CANdle class instance
 	 * @return A functional CANdle class object if succesfull, a nullptr if critical failure occured.
 	 */
-	explicit Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, mab::Bus* bus);
+	explicit Candle(CANdleBaudrate_E canBaudrate, bool printVerbose, std::shared_ptr<Bus> bus);
 	/**
 	 * @brief A destructor of Candle class. Takes care of all started threads that need to be stopped before clean exit
 	 */
@@ -361,7 +361,7 @@ class Candle
 
 	CANdleMode_E mode = CANdleMode_E::CONFIG;
 
-	Bus* bus = nullptr;
+	std::shared_ptr<Bus> bus = nullptr;
 
 	static constexpr uint16_t idMax = 2000;
 	static constexpr int maxDevices = 16;
@@ -384,16 +384,16 @@ class Candle
 
 	void updateMd80State(mab::Md80& drive);
 
-	Bus* makeBus(mab::BusType_E busType, std::string device);
+	std::shared_ptr<Bus> makeBus(mab::BusType_E busType, std::string device);
 
 	bool executeCommand(uint16_t canId, Md80Reg_E reg, const char* failMsg, const char* successMsg);
 	// bool sendBusFrame(BusFrameId_t id, uint8_t byte, uint32_t timeout);
 	bool sendBusFrame(BusFrameId_t id, uint32_t timeout, char* payload = nullptr, uint32_t cmdLen = 2, uint32_t respLen = 2);
 
 	/* virtual methods for testing purposes */
-	virtual Bus* createSpi() { return new SpiDevice(); }
-	virtual Bus* createUart() { return new UartDevice(); }
-	virtual Bus* createUsb(const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances) { return new UsbDevice(idVendor, idProduct, instances); }
+	virtual std::shared_ptr<Bus> createSpi() { return std::make_shared<SpiDevice>(); }
+	virtual std::shared_ptr<Bus> createUart() { return std::make_shared<UartDevice>(); }
+	virtual std::shared_ptr<Bus> createUsb(const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances) { return std::make_shared<UsbDevice>(idVendor, idProduct, instances); }
 };
 
 std::string getVersionString(const version_ut& ver);
