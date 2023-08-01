@@ -284,7 +284,7 @@ std::vector<uint16_t> Candle::ping(mab::CANdleBaudrate_E baudrate)
 	if (!configCandleBaudrate(baudrate))
 		return std::vector<uint16_t>();
 	vout << "Starting pinging drives at baudrate: " << std::to_string(baudrate) << "M" << std::endl;
-	std::vector<uint16_t> ids;
+	std::vector<uint16_t> ids{};
 
 	if (sendBusFrame(BUS_FRAME_PING_START, 2000, nullptr, 2, 33))
 	{
@@ -403,7 +403,10 @@ bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersio
 {
 	this->canBaudrate = canBaudrate;
 
-	if (sendBusFrame(BUS_FRAME_CANDLE_CONFIG_BAUDRATE, 50, nullptr, 2, 6))
+	char payload[1]{};
+	payload[0] = static_cast<uint8_t>(canBaudrate);
+
+	if (sendBusFrame(BUS_FRAME_CANDLE_CONFIG_BAUDRATE, 50, payload, 2, 6))
 	{
 		version_ut candleDeviceVersion{};
 		candleDeviceVersion.i = *(uint32_t*)bus->getRxBuffer(2);
