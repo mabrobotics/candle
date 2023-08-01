@@ -198,16 +198,13 @@ Register::type Register::getType(uint16_t regId)
 		case Md80Reg_E::motorResistance:
 		case Md80Reg_E::motorImpPidKp:
 		case Md80Reg_E::motorImpPidKd:
-		case Md80Reg_E::motorImpPidOutMax:
 		case Md80Reg_E::motorPosPidKp:
 		case Md80Reg_E::motorPosPidKi:
 		case Md80Reg_E::motorPosPidKd:
-		case Md80Reg_E::motorPosPidOutMax:
 		case Md80Reg_E::motorPosPidWindup:
 		case Md80Reg_E::motorVelPidKp:
 		case Md80Reg_E::motorVelPidKi:
 		case Md80Reg_E::motorVelPidKd:
-		case Md80Reg_E::motorVelPidOutMax:
 		case Md80Reg_E::motorVelPidWindup:
 		case Md80Reg_E::motorFriction:
 		case Md80Reg_E::motorStiction:

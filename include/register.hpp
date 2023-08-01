@@ -152,18 +152,15 @@ typedef enum
 	motorPosPidKp = 0x030,
 	motorPosPidKi = 0x031,
 	motorPosPidKd = 0x032,
-	motorPosPidOutMax = 0x033,
 	motorPosPidWindup = 0x034,
 
 	motorVelPidKp = 0x040,
 	motorVelPidKi = 0x041,
 	motorVelPidKd = 0x042,
-	motorVelPidOutMax = 0x043,
 	motorVelPidWindup = 0x044,
 
 	motorImpPidKp = 0x050,
 	motorImpPidKd = 0x051,
-	motorImpPidOutMax = 0x052,
 
 	mainEncoderVelocity = 0x062,
 	mainEncoderPosition = 0x063,

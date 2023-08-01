@@ -355,14 +355,14 @@ bool Candle::configMd80Can(uint16_t canId, uint16_t newId, CANdleBaudrate_E newB
 		return false;
 	}
 
-	if (!md80Register->write(canId, Md80Reg_E::canId, newId,
+	if (!md80Register->write(canId, Md80Reg_E::canId, (uint32_t)newId,
 							 Md80Reg_E::canBaudrate, newBaudrateMbps * 1000000,
 							 Md80Reg_E::canWatchdog, newTimeout,
 							 Md80Reg_E::canTermination, (uint8_t)canTermination,
 							 Md80Reg_E::runCanReinit, true))
 	{
-		return false;
 		vout << "CAN config change failed!" << statusFAIL << std::endl;
+		return false;
 	}
 
 	vout << "Drive ID: " << std::to_string(canId) << " was changed to ID: " << std::to_string(newId) << std::endl;
