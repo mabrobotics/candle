@@ -11,7 +11,7 @@ bool Register::prepare(uint16_t canId, mab::Md80FrameId_E frameType)
 	(void)frameType;
 	/* clear the RX buffer and send register request */
 	memset(regRxBuffer, 0, sizeof(regRxBuffer));
-	bool status = candle->sendGenericFDCanFrame(canId, regTxPtr - regTxBuffer, regTxBuffer, regRxBuffer, 100);
+	bool status = candle->sendGenericFDCanFrame(canId, regTxPtr - regTxBuffer, regTxBuffer, regRxBuffer, 10);
 	regTxPtr = nullptr;
 	regRxPtr = nullptr;
 	return status;
