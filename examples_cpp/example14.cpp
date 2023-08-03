@@ -24,7 +24,7 @@ int main()
 
 	candle.writeMd80Register(ids[0], mab::Md80Reg_E::profileAcceleration, 5.0f);
 	candle.writeMd80Register(ids[0], mab::Md80Reg_E::profileDeceleration, 10.0f);
-	candle.writeMd80Register(ids[0], mab::Md80Reg_E::profileVelocity, 30.0f);
+	candle.writeMd80Register(ids[0], mab::Md80Reg_E::profileVelocity, 10.0f);
 
 	candle.writeMd80Register(ids[0], mab::Md80Reg_E::quickStopDeceleration, 200.0f);
 
@@ -35,16 +35,16 @@ int main()
 	// Begin update loop (it starts in the background)
 	candle.begin();
 
-	candle.md80s[0].setTargetPosition(40.0f);
+	candle.md80s[0].setTargetPosition(10.0f);
 
 	while (!candle.md80s[0].isTargetPositionReached())
 	{
 		sleep(1);
 	};
 
-	candle.md80s[0].setProfileAcceleration(40.0f);
-	candle.md80s[0].setProfileVelocity(50.0f);
-	candle.md80s[0].setTargetPosition(-40.0f);
+	candle.md80s[0].setProfileAcceleration(20.0f);
+	candle.md80s[0].setProfileVelocity(15.0f);
+	candle.md80s[0].setTargetPosition(-10.0f);
 
 	while (!candle.md80s[0].isTargetPositionReached())
 	{

@@ -112,6 +112,9 @@ uint16_t Register::getSize(uint16_t regId)
 		case type::U32:
 		case type::F32:
 			return 4;
+		case type::STR:
+		case type::UNKNOWN:
+			return 0;
 	}
 	return 0;
 }

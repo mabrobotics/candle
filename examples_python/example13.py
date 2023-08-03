@@ -11,11 +11,9 @@ candle.addMd80(ids[0])
 
 candle.writeMd80Register(ids[0], pyCandle.Md80Reg_E.positionWindow, 0.05)
 candle.writeMd80Register(ids[0], pyCandle.Md80Reg_E.velocityWindow, 1.0)
-
 candle.writeMd80Register(ids[0], pyCandle.Md80Reg_E.profileAcceleration, 10.0)
 candle.writeMd80Register(ids[0], pyCandle.Md80Reg_E.profileDeceleration, 5.0)
 candle.writeMd80Register(ids[0], pyCandle.Md80Reg_E.profileVelocity, 15.0)
-
 candle.writeMd80Register(ids[0], pyCandle.Md80Reg_E.quickStopDeceleration, 200.0)
 
 candle.controlMd80SetEncoderZero(ids[0])               # Reset encoder at current position
