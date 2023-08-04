@@ -99,7 +99,7 @@ std::shared_ptr<Bus> Candle::makeBus(mab::BusType_E busType, std::string device)
 
 const std::string Candle::getVersion()
 {
-	return getVersionString({'d', CANDLE_VREVISION, CANDLE_VMINOR, CANDLE_VMAJOR});
+	return getVersionString({CANDLE_VTAG, CANDLE_VREVISION, CANDLE_VMINOR, CANDLE_VMAJOR});
 }
 
 int Candle::getActualCommunicationFrequency()
@@ -231,9 +231,9 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 	if (inUpdateMode())
 		return false;
 
-	for (auto& d : md80s)
+	for (auto& md : md80s)
 	{
-		if (d.getId() == canId)
+		if (md.getId() == canId)
 		{
 			vout << "MD80 with ID: " << canId << " is already on the update list." << statusOK << std::endl;
 			return true;

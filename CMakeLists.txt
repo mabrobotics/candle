@@ -3,7 +3,9 @@ set(CMAKE_CXX_STANDARD 14)
 
 project(candle_lib)
 
+# change the version and tag here
 set(CANDLE_LIB_VERSION 3.3.1)
+set(VERSION_TAG 'd')
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_BUILD_TYPE Release)
@@ -42,6 +44,7 @@ target_compile_definitions(candle
     PRIVATE CANDLE_VMAJOR=${CMAKE_MATCH_1}
     PRIVATE CANDLE_VMINOR=${CMAKE_MATCH_2}
     PRIVATE CANDLE_VREVISION=${CMAKE_MATCH_3}
+    PRIVATE CANDLE_VTAG=${VERSION_TAG}
 )
 
 if(MAKE_TESTS)
