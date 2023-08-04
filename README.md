@@ -75,4 +75,13 @@ Similar to `example 6`, but based on the UART bus available on single-board comp
 ### Example 12
 Register read-write demo. Please remember that register operations are only valid before candle.begin() is called. 
 
+### Example 13
+Profile velocity demo.
+
+### Example 14
+Profile position demo.
+
+### Example 15
+Raw torque demo.
+
  
