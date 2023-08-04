@@ -25,8 +25,7 @@ int main()
 	candle.controlMd80Enable(ids[0], true);							// Enable the drive
 
 	// Uncomment the line below to change the *.cfg file defaults
-	// candle.md80s[0].setVelocityControllerParams(0.05f, 0.25f, 0.0, 1.0f);
-
+	// candle.md80s[0].setVelocityControllerParams(0.1f, 0.25f, 0.0, 1.0f);
 	// To reload default controller parameters, simply disable the drive (contorlMd80Enable(id, false)),
 	// stop the communications (candle.end()) or power cycle the drive (off-on).
 
@@ -36,7 +35,7 @@ int main()
 	// Begin update loop (it starts in the background)
 	candle.begin();
 
-	float targetVelocity = 20.0f;
+	float targetVelocity = 1.0f;
 	for (int i = 0; i < 2000; i++)
 	{
 		if (i % 200 == 0)

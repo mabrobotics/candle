@@ -15,33 +15,48 @@ namespace mab
  */
 class Md80
 {
+   public:
+	struct State
+	{
+		float position;
+		float velocity;
+		float torque;
+		float outputEncoderPosition;
+		float outputEncoderVelocity;
+		uint8_t temperature;
+		uint16_t quickStatus;
+	};
+
+	struct Targets
+	{
+		float positionTarget;
+		float velocityTarget;
+		float torqueTarget;
+		float maxTorque;
+		float profileVelocity;
+		float profileAcceleration;
+	};
+
    private:
 	uint16_t canId;
-
-	float position = 0.0f;
-	float velocity = 0.0f;
-	float torque = 0.0f;
-	float outputEncoderPosition = 0.0f;
-	float outputEncoderVelocity = 0.0f;
-	uint8_t temperature = 0;
-	uint16_t errorVector = 0;
-
 	Md80Mode_E controlMode = Md80Mode_E::IDLE;
-	float positionTarget = 0.0f;
-	float velocityTarget = 0.0f;
-	float torqueSet = 0.0f;
-	float maxTorque = 1.0f;
-	float maxVelocity = 100.0f;
-	float maxAcceleration = 0.0f;
+
+	State state;
+	Targets targets;
+
 	RegPid_t velocityController = {};
 	RegPid_t positionController = {};
 	RegImpedance_t impedanceController = {};
 
 	bool maxTorqueAdjusted = false;
-	bool maxVelocityAdjusted = false;
-	bool maxAccelerationAdjusted = false;
+	bool profileVelocityAdjusted = false;
+	bool profileAccelerationAdjusted = false;
 	bool regulatorsAdjusted = false;
 	bool velocityRegulatorAdjusted = false;
+
+	bool targetVelocityReached = false;
+	bool targetPositionReached = false;
+
 	StdMd80CommandFrame_t commandFrame;
 	StdMd80ResponseFrame_t responseFrame;
 
@@ -61,83 +76,81 @@ class Md80
 	/**
 	 * @brief Construct a new Md80 object
 	 *
-	 * @param canID FDACN Id of the drive
+	 * @param canID FDCAN Id of the drive
 	 */
 	Md80(uint16_t canID);
 	/**
-	 * @brief Destroy the Md80 objec
-	 */
-	~Md80();
-	/**
-	 * @brief Set the Position PID Regulator parameters.
-	 * @note Regulator output is target velocity in rad/s. The output is then passed as input to Velocity PID regulator.
+	 * @brief Set the Position PID Controller parameters.
+	 * @note Controller output is target velocity in rad/s. The output is then passed as input to Velocity PID controller.
 	 * @param kp proportional gain
 	 * @param ki integral gain
 	 * @param kd derivative gain
-	 * @param iWindup anti-windup - maximal output of the integral (i) part of the regulator
+	 * @param iWindup anti-windup - maximal output of the integral (i) part of the controller
 	 */
 	void setPositionControllerParams(float kp, float ki, float kd, float iWindup);
 	/**
-	 * @brief Set the Velocity PID Regulator parameters.
-	 * @note Regulator output is Torque in Nm. The output is then passed directly to internal current/torque regulator.
+	 * @brief Set the Velocity PID Controller parameters.
+	 * @note Controller output is Torque in Nm. The output is then passed directly to internal current/torque controller.
 	 * @param kp proportional gain
 	 * @param ki integral gain
 	 * @param kd derivative gain
-	 * @param iWindup anti-windup - maximal output of the integral (i) part of the regulator
+	 * @param iWindup anti-windup - maximal output of the integral (i) part of the controller
 	 */
 	void setVelocityControllerParams(float kp, float ki, float kd, float iWindup);
 	/**
-	 * @brief Set the Impedance Regulator parameters.
+	 * @brief Set the Impedance Controller parameters.
 	 * @param kp Displacement gain ( analogic to 'k' parameter of the spring-damper equation)
 	 * @param kd Damping coefficient (analogin to 'b' parameter of the spring-damper equation)
 	 */
 	void setImpedanceControllerParams(float kp, float kd);
 
-	// simple setters
 	/**
-	 * @brief Set the Max Torque object
-	 * @note This can be overriden by current limiter set by 'Candle.configMd80CurrentLimit'. Current/torque
-	 * will be limited to whichever limit has a lower value.
-	 * @note This is only applied with CUSTOM Impedance/Velocity PID controller settings.
-	 * @param maxTorque Torque limit for PID/Impedance regulators
+	 * @brief Set the Max Torque in [Nm]
+	 * @note This settings affects all motion modes, and can also be changed using mdtool and saved
+	 * @param maxTorque Torque limit in [Nm] for all motion modes.
 	 */
 	void setMaxTorque(float maxTorque);
 	/**
-	 * @brief Set the Max Velocity for Position PID and Velocity PID modes.
-	 * @note This is only applied with CUSTOM Position PID and Velocity PID controller settings.
-	 * @note Has no effect in Torque or Impedance mode.
-	 * @param maxVelocity
+	 * @brief Set the Profile Velocity for Position Profile and Velocity Profile modes.
+	 * @note Has no effect in Position PID, Velocity PID, Raw Torque or Impedance modes.
+	 * @param profileVelocity
 	 */
-	void setMaxVelocity(float maxVelocity);
+	void setProfileVelocity(float profileVelocity);
 	/**
-	 * @brief Set the Max Acceleration and Deceleration for Position PID and Velocity PID modes.
-	 * @note This is only applied with CUSTOM Position PID and Velocity PID controller settings.
-	 * @note Has no effect in Torque or Impedance mode.
-	 * @param _maxAcceleration Maximal acceleration in rad/s^2 (radians per second squared) if set to 0 acceleration is unlimited.
+	 * @brief Set the Max Acceleration and Deceleration for Position Profile and Velocity Profile modes.
+	 * @note Has no effect in Position PID, Velocity PID, Raw Torque or Impedance modes.
+	 * @param profileAcceleration profileAccelerationin rad/s^2 (radians per second squared)
 	 */
-	void setMaxAcceleration(float newMaxAcceleration);
+	void setProfileAcceleration(float profileAcceleration);
 	/**
-	 * @brief Set the Target Position for Position PID and Impedance modes.
+	 * @brief Set the Target Position
 	 * @param target target position in radians
 	 */
-	void setTargetPosition(float target) { positionTarget = target; };
+	void setTargetPosition(float target)
+	{
+		targets.positionTarget = target;
+		targetPositionReached = false;
+	};
 	/**
-	 * @brief Set the Target Velocity for Velocity PID and Impedance modes.
+	 * @brief Set the Target Velocity
 	 * @param target target velocity in rad/s (radians per second)
 	 */
-	void setTargetVelocity(float target) { velocityTarget = target; };
+	void setTargetVelocity(float target)
+	{
+		targets.velocityTarget = target;
+		targetVelocityReached = false;
+	};
 	/**
-	 * @brief Set the Torque Command for TORQUE and Impedance (torque_ff) modes.
+	 * @brief Set the Torque target
 	 * @param target target torque in Nm (Newton-meters)
 	 */
-	void setTorque(float target) { torqueSet = target; };
+	void setTargetTorque(float target) { targets.torqueTarget = target; };
 
-	// getters
 	/**
-	 * @brief Get the Error Vector of the md80
-	 * @return uint16_t vector with per-bit coded errors. Refer to documentation for meaning of error codes.
+	 * @brief Get the Quick Status of the md80
+	 * @return uint16_t vector with per-bit coded statuses. Refer to documentation for meaning of each field.
 	 */
-	uint16_t getErrorVector() { return errorVector; };
+	uint16_t getQuickStatus() { return state.quickStatus; };
 
 	/**
 	 * @brief Get the FDCAN Id of the drive
@@ -148,17 +161,17 @@ class Md80
 	 * @brief Get the Position of md80
 	 * @return float angular position in radians
 	 */
-	float getPosition() { return position; };
+	float getPosition() { return state.position; };
 	/**
 	 * @brief Get the Velocity of md80
-	 * @return float angular velocity in rad/s (radians per second)
+	 * @return float angular velocity in rad/s
 	 */
-	float getVelocity() { return velocity; };
+	float getVelocity() { return state.velocity; };
 	/**
 	 * @brief Get the Torque of md80
-	 * @return float torque in Nm (Newton-meters)
+	 * @return float torque in Nm
 	 */
-	float getTorque() { return torque; };
+	float getTorque() { return state.torque; };
 
 	/**
 	 * @brief Get the Position of md80
@@ -167,14 +180,14 @@ class Md80
 	float getOutputEncoderPosition() { return outputEncoderPosition; };
 	/**
 	 * @brief Get the Velocity of md80
-	 * @return float angular velocity in rad/s (radians per second)
+	 * @return float angular velocity in rad/s
 	 */
 	float getOutputEncoderVelocity() { return outputEncoderVelocity; };
 	/**
 	 * @brief Get the exteral thermistor temperature reading (motor thermistor)
 	 * @return uint8_t temperature value in *C
 	 */
-	uint8_t getTemperature() { return temperature; };
+	uint8_t getTemperature() { return state.temperature; };
 
 	/**
 	 * @brief Get the read register struct
@@ -208,12 +221,31 @@ class Md80
 	{
 		txCallback = std::bind(func, p);
 	}
+	/**
+	 * @brief check if actual target position is reached within positionWindow
+	 * @return true if reached, false otherwise
+	 */
+	bool isTargetPositionReached() const
+	{
+		return targetPositionReached;
+	}
+	/**
+	 * @brief check if actual target velocity is reached within velocityWindow
+	 * @return true if reached, false otherwise
+	 */
+	bool isTargetVelocityReached() const
+	{
+		return targetVelocityReached;
+	}
 
 	/**
 	 * @brief For internal use by CANdle only.
 	 * @private
 	 */
-	StdMd80CommandFrame_t __getCommandFrame() { return commandFrame; };
+	StdMd80CommandFrame_t __getCommandFrame()
+	{
+		return commandFrame;
+	};
 	/**
 	 * @brief For internal use by CANdle only. Updates FDCAN frame based on parameters.
 	 * @private
@@ -223,12 +255,12 @@ class Md80
 	 * @brief For internal use by CANdle only. Updates FDCAN frame parameters.
 	 * @private
 	 */
-	void __updateResponseData(StdMd80ResponseFrame_t* _responseFrame);
+	void __updateResponseData(const State& state);
 	/**
-	 * @brief For internal use by CANdle only. Updates regulatorsAdjusted.
+	 * @brief For internal use by CANdle only. Updates FDCAN frame parameters.
 	 * @private
 	 */
-	void __updateRegulatorsAdjusted(bool adjusted);
+	void __updateResponseData(StdMd80ResponseFrame_t* _responseFrame);
 	/**
 	 * @brief For internal use by CANdle only.
 	 * @private

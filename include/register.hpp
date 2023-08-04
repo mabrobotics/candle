@@ -13,10 +13,9 @@ namespace mab
 class Candle;
 
 /* adding a new field:
-1. add a new field in the enum below (must be uniform with the same enum on MD80 side)
-2. add it to the "switch case" in register.cpp(regarding it's size)
-3. add it to the "switch case" in register.cpp(regarding it's type - this is needed for the python binding file)
-4. add it to either RO/RW structs */
+1. add a new field in the Md80Reg_E enum (must be uniform with the same enum on MD80 side)
+2. add it to the "switch case" in register.cpp in getType() this switch is also used for the size
+3. add it to either RO/RW structs */
 
 /* READ ONLY PARAMS */
 typedef struct
@@ -28,11 +27,12 @@ typedef struct
 	uint8_t bridgeType;
 	float resistance;
 	float inductance;
-	uint16_t errorVector;
+	uint16_t quickStatus;
 	float mosfetTemperature;
 	float motorTemperature;
 	float mainEncoderVelocity;
 	float mainEncoderPosition;
+	float motorTorque;
 	float outputEncoderVelocity;
 	float outputEncoderPosition;
 	float calOutputEncoderStdDev;
@@ -48,6 +48,7 @@ typedef struct
 	uint32_t hardwareErrors;
 	uint32_t communicationErrors;
 	uint32_t homingErrors;
+	uint32_t motionErrors;
 	float shuntResistance;
 } regRO_st;
 
@@ -81,22 +82,28 @@ typedef struct
 	ImpedanceControllerGains_t impedancePdGains;
 	PidControllerGains_t velocityPidGains;
 	PidControllerGains_t positionPidGains;
-	uint8_t runSaveCmd;
-	uint8_t runTestOutputEncoderCmd;
-	uint8_t runTestMainEncoderCmd;
-	uint8_t runCalibrateCmd;
-	uint8_t runCalibrateOutpuEncoderCmd;
-	uint8_t runCalibratePiGains;
-	uint8_t runHoming;
 	uint8_t homingMode;
 	float homingMaxTravel;
 	float homingVelocity;
 	float homingTorque;
-	float homingPositionDeviationTrigger;
 	float positionLimitMax;
 	float positionLimitMin;
 	float maxAcceleration;
 	float maxDeceleration;
+	float maxTorque;
+	float maxVelocity;
+	float profileAcceleration;
+	float profileDeceleration;
+	float profileVelocity;
+	float quickStopDeceleration;
+	float positionWindow;
+	float velocityWindow;
+	float targetPosition;
+	float targetVelocity;
+	float targetTorque;
+	uint8_t motionMode;
+	uint16_t state;
+	uint8_t reverseDirection;
 } regRW_st;
 
 typedef struct
@@ -110,7 +117,7 @@ typedef struct
 	regRW_st RW;
 } regWrite_st;
 
-enum Md80Reg_E : uint16_t
+typedef enum
 {
 	canId = 0x001,
 	canBaudrate = 0x002,
@@ -145,24 +152,19 @@ enum Md80Reg_E : uint16_t
 	motorPosPidKp = 0x030,
 	motorPosPidKi = 0x031,
 	motorPosPidKd = 0x032,
-	motorPosPidOutMax = 0x033,
 	motorPosPidWindup = 0x034,
 
 	motorVelPidKp = 0x040,
 	motorVelPidKi = 0x041,
 	motorVelPidKd = 0x042,
-	motorVelPidOutMax = 0x043,
 	motorVelPidWindup = 0x044,
-
-	maxAcceleration = 0x048,
-	maxDeceleration = 0x049,
 
 	motorImpPidKp = 0x050,
 	motorImpPidKd = 0x051,
-	motorImpPidOutMax = 0x052,
 
 	mainEncoderVelocity = 0x062,
 	mainEncoderPosition = 0x063,
+	motorTorque = 0x064,
 
 	homingMode = 0x070,
 	homingMaxTravel = 0x071,
@@ -177,6 +179,13 @@ enum Md80Reg_E : uint16_t
 	runCalibrateOutpuEncoderCmd = 0x084,
 	runCalibratePiGains = 0x085,
 	runHoming = 0x086,
+	runRestoreFactoryConfig = 0x087,
+	runReset = 0x088,
+	runClearWarnings = 0x089,
+	runClearErrors = 0x08A,
+	runBlink = 0x08B,
+	runZero = 0x08C,
+	runCanReinit = 0x08D,
 
 	calOutputEncoderStdDev = 0x100,
 	calOutputEncoderMinE = 0x101,
@@ -187,6 +196,27 @@ enum Md80Reg_E : uint16_t
 
 	positionLimitMax = 0x110,
 	positionLimitMin = 0x111,
+	maxTorque = 0x112,
+	maxVelocity = 0x113,
+	maxAcceleration = 0x114,
+	maxDeceleration = 0x115,
+
+	profileVelocity = 0x120,
+	profileAcceleration = 0x121,
+	profileDeceleration = 0x122,
+	quickStopDeceleration = 0x123,
+	positionWindow = 0x124,
+	velocityWindow = 0x125,
+
+	motionModeCommand = 0x140,
+	motionModeStatus = 0x141,
+	state = 0x142,
+
+	targetPosition = 0x150,
+	targetVelocity = 0x151,
+	targetTorque = 0x152,
+
+	reverseDirection = 0x600,
 
 	shuntResistance = 0x700,
 
@@ -195,7 +225,7 @@ enum Md80Reg_E : uint16_t
 	firmwareVersion = 0x802,
 	hardwareVersion = 0x803,
 	bridgeType = 0x804,
-	errorVector = 0x805,
+	quickStatus = 0x805,
 	mosfetTemperature = 0x806,
 	motorTemperature = 0x807,
 	motorShutdownTemp = 0x808,
@@ -206,8 +236,9 @@ enum Md80Reg_E : uint16_t
 	hardwareErrors = 0x80D,
 	communicationErrors = 0x80E,
 	homingErrors = 0x80F,
-};
+	motionErrors = 0x810,
 
+} Md80Reg_E;
 class Register
 {
    public:
@@ -266,14 +297,14 @@ class Register
 	@param regId register's ID
 	@return register size in bytes
 	*/
-	uint16_t getSize(uint16_t regId);
+	static uint16_t getSize(uint16_t regId);
 
 	/**
 	@brief returns the type of a register field based on it's id
 	@param regId register's ID
 	@return register type (Register::type enum class)
 	*/
-	type getType(uint16_t regId);
+	static type getType(uint16_t regId);
 
    private:
 	Candle* candle;

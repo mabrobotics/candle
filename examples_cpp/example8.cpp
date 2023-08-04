@@ -28,7 +28,7 @@ int main()
 	// Using the methods below:
 	// candle.md80s[0].setPositionControllerParams(20.0f, 0.2f, 0.0f, 15.0f);
 	// candle.md80s[0].setVelocityControllerParams(0.5f, 0.1f, 0.0f, 1.5f);
-	// candle.md80s[0].setMaxVelocity(5.0);
+	// candle.md80s[0].setProfileVelocity(5.0);
 	// candle.md80s[0].setMaxTorque(0.5f);
 
 	// To reload default controller parameters, simply disable the drive (contorlMd80Enable(id, false)),

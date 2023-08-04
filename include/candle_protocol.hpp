@@ -23,14 +23,6 @@ enum BusFrameId_t : uint8_t
 };
 
 #pragma pack(push, 1)  // Ensures there in no padding (dummy) bytes in the structures below
-struct GenericMd80Frame32
-{
-	uint8_t frameId;
-	uint8_t canMsgLen;
-	uint8_t timeoutMs = 1;
-	uint16_t driveCanId;
-	uint8_t canMsg[32];
-};
 struct GenericMd80Frame64
 {
 	uint8_t frameId;
@@ -38,18 +30,6 @@ struct GenericMd80Frame64
 	uint8_t timeoutMs = 2;
 	uint16_t driveCanId;
 	uint8_t canMsg[64];
-};
-struct AddMd80Frame_t
-{
-	uint8_t id;
-	uint16_t driveAdress;
-};
-struct ConfigMd80Frame_t
-{
-	uint8_t id;
-	uint16_t driveAdress;
-	uint8_t control_mode;
-	float maxCurrent;
 };
 #pragma pack(pop)
 }  // namespace mab

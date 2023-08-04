@@ -30,6 +30,9 @@ int main()
 	float t = 0.0f;
 	float dt = 0.04f;
 
+	// candle.writeMd80Register(ids[0], mab::Md80Reg_E::motorImpPidKp, 1.0f);
+	// candle.writeMd80Register(ids[0], mab::Md80Reg_E::motorImpPidKd, 0.07f);
+
 	// Begin update loop (it starts in the background)
 	candle.begin();
 
