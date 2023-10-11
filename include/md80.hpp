@@ -177,12 +177,12 @@ class Md80
 	 * @brief Get the Position of md80
 	 * @return float angular position in radians
 	 */
-	float getOutputEncoderPosition() { return outputEncoderPosition; };
+	float getOutputEncoderPosition() { return state.outputEncoderPosition; };
 	/**
 	 * @brief Get the Velocity of md80
 	 * @return float angular velocity in rad/s
 	 */
-	float getOutputEncoderVelocity() { return outputEncoderVelocity; };
+	float getOutputEncoderVelocity() { return state.outputEncoderVelocity; };
 	/**
 	 * @brief Get the exteral thermistor temperature reading (motor thermistor)
 	 * @return uint8_t temperature value in *C
