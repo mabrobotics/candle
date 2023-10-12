@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 14)
 project(candle_lib)
 
 # change the version and tag here
-set(CANDLE_LIB_VERSION 3.3.1)
+set(CANDLE_LIB_VERSION 3.3.2)
 set(VERSION_TAG 'd')
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -98,5 +98,4 @@ if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
 
     add_executable(example15 examples_cpp/example15.cpp)
     target_link_libraries(example15 candle)
-
 endif()
