@@ -255,7 +255,7 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 
 		if (!md80Register->read(canId, Md80Reg_E::firmwareVersion, firmwareVersion.i))
 		{
-			vout << "Unable to read MD80's firmware version! Probably MD80's firmware is outdated. Please update it using MAB_CAN_Flasher." << statusFAIL << std::endl;
+			vout << "Unable to read MD80's firmware version! Please check the ID, or update the MD80 with MAB_CAN_Flasher." << statusFAIL << std::endl;
 			return false;
 		}
 
