@@ -3,10 +3,10 @@
 #include <semaphore.h>
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <thread>
 #include <type_traits>
-#include <memory>
 #include <vector>
 
 #include "bus.hpp"
@@ -344,8 +344,8 @@ class Candle
 
    private:
 	/* TODO make a proper version class as the reverse initalization is not elegant */
-	const version_ut candleDeviceCompatibleVersion = {'d', 0, 2, 2};
-	const version_ut md80CompatibleVersion = {'d', 0, 3, 2};
+	const version_ut candleDeviceCompatibleVersion = {'r', 0, 2, 2};
+	const version_ut md80CompatibleVersion = {'r', 0, 3, 2};
 
 	static std::vector<Candle*> instances;
 
