@@ -7,8 +7,6 @@ import sys
 candle = pyCandle.Candle(pyCandle.CAN_BAUD_1M,True)
 ids = candle.ping()
 
-# Blink LEDs on each drive found
-
 candle.addMd80(ids[0])
 
 reg = candle.getMd80FromList(ids[0]).getReadReg()
@@ -19,7 +17,6 @@ print("Drive ID: " + str(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.canId
 print("Motor name: " + candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorName, ""))
 print("Impedance mode Kp gain : " + "{:.2f}".format(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorImpPidKp, reg.RW.impedancePdGains.kp)) + " Nm/rad")
 print("Impedance mode Kd gain : " + "{:.2f}".format(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorImpPidKd, reg.RW.impedancePdGains.kd)) + " Nm*s/rad")
-print("Impedance mode max out : " + "{:.2f}".format(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorImpPidOutMax, reg.RW.impedancePdGains.outMax)) + " Nm")
 
 print("")
 # Then change some parameters 
@@ -33,6 +30,5 @@ print("Drive ID: " + str(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.canId
 print("Motor name: " + candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorName, ""))
 print("Impedance mode Kp gain : " + "{:.2f}".format(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorImpPidKp, reg.RW.impedancePdGains.kp)) + " Nm/rad")
 print("Impedance mode Kd gain : " + "{:.2f}".format(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorImpPidKd, reg.RW.impedancePdGains.kd)) + " Nm*s/rad")
-print("Impedance mode max out : " + "{:.2f}".format(candle.readMd80Register(ids[0],pyCandle.Md80Reg_E.motorImpPidOutMax, reg.RW.impedancePdGains.outMax)) + " Nm")
 
 sys.exit("EXIT SUCCESS")

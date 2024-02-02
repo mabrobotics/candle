@@ -18,14 +18,13 @@ for id in ids:
 
 candle.controlMd80SetEncoderZero(ids[0])       #  Reset encoder at current position
 
-candle.controlMd80Mode(ids[0], pyCandle.POSITION_PID)     # Set mode to impedance control
+candle.controlMd80Mode(ids[0], pyCandle.POSITION_PID)     # Set mode to position PID control
 candle.controlMd80Enable(ids[0], True)    # Enable the drive
 
 #  We will run both Position PID and Velocity PID at default settings. If you wish you can play with the parameters
 #  Using the methods below:
 # candle.md80s[0].setPositionControllerParams(20.0, 0.2, 0.0, 15.0)
 # candle.md80s[0].setVelocityControllerParams(0.0, 0.1, 0.0, 1.5)
-# candle.md80s[0].setMaxVelocity(5.0)
 # candle.md80s[0].setMaxTorque(0.5)
 
 #  To reload default controller parameters, simply disable the drive (contorlMd80Enable(id, false)), 

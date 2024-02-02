@@ -19,8 +19,7 @@ candle.configMd80SetCurrentLimit(ids[0], 2.5);
 # Set custom FDCAN parameters of  the drive
 candle.configMd80Can(ids[0], newFDCanId, pyCandle.CAN_BAUD_1M, 250);    
 
-# Save current limit setting and CAN configuration. Note this is commented out by default not to mess your 
-# drives
+# Save current limit setting and CAN configuration. Note this is commented out by default not to mess your drives
 # candle.configMd80Save(newFDCanId);      
 
 sys.exit("EXIT SUCCESS")
