@@ -104,6 +104,7 @@ typedef struct
 	uint8_t motionMode;
 	uint16_t state;
 	uint8_t reverseDirection;
+	uint8_t brakeMode;
 } regRW_st;
 
 typedef struct
@@ -215,6 +216,8 @@ typedef enum
 	targetPosition = 0x150,
 	targetVelocity = 0x151,
 	targetTorque = 0x152,
+
+	brakeMode = 0x160,
 
 	reverseDirection = 0x600,
 
