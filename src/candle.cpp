@@ -19,7 +19,6 @@ namespace mab
 	mystreambuf	 nostreambuf;
 	std::ostream nocout(&nostreambuf);
 #define vout ((this->printVerbose) ? std::cout << "[CANDLE] " : nocout)
-	/* note: this will not work on all terminals */
 	std::string statusOK   = "  \033[1;32m[OK]\033[0m";
 	std::string statusFAIL = "  \033[1;31m[FAILED]\033[0m";
 
@@ -55,8 +54,8 @@ namespace mab
 		}
 
 		if (bus->getType() == mab::BusType_E::USB)
-			vout << "CANdle at " << bus->getDeviceName() << ", ID: 0x" << std::hex << getDeviceId()
-				 << std::dec << " ready (USB)" << std::endl;
+			vout << "CANdle 0x" << std::hex << getDeviceId() << std::dec << " ready (USB)"
+				 << std::endl;
 		else if (bus->getType() == mab::BusType_E::SPI)
 			vout << "CANdle ready (SPI)" << std::endl;
 		else if (bus->getType() == mab::BusType_E::UART)
@@ -78,11 +77,12 @@ namespace mab
 		{
 			case mab::BusType_E::USB:
 			{
-				std::vector<unsigned long> a;
-				for (auto& instance : instances)
-					a.push_back(instance->getDeviceId());
+				std::vector<u32> idsToIgnore;
+				for(Candle* instance : Candle::instances)
+					if(instance->bus->getType() == BusType_E::USB)
+						idsToIgnore.push_back(instance->bus->getId());
 				std::shared_ptr<UsbDevice> usb = std::make_shared<UsbDevice>();
-				if (usb->init(0x0069, 0x1000))
+				if (usb->init(0x0069, 0x1000, idsToIgnore))
 					return usb;
 				throw "Failed to init USB device!";
 			}
