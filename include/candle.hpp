@@ -389,7 +389,7 @@ class Candle
 	/* virtual methods for testing purposes */
 	virtual std::shared_ptr<Bus> createSpi() { return std::make_shared<SpiDevice>(); }
 	virtual std::shared_ptr<Bus> createUart() { return std::make_shared<UartDevice>(); }
-	virtual std::shared_ptr<Bus> createUsb(const std::string idVendor, const std::string idProduct, std::vector<unsigned long> instances) { return std::make_shared<UsbDevice>(idVendor, idProduct, instances); }
+	virtual std::shared_ptr<Bus> createUsb() { return std::make_shared<UsbDevice>(); }
 };
 
 std::string getVersionString(const version_ut& ver);

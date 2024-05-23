@@ -7,6 +7,7 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
+#include <libusb-1.0/libusb.h>
 
 #include <iostream>
 #include <mutex>

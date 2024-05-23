@@ -8,8 +8,13 @@ set(CANDLE_LIB_VERSION 3.4.0)
 set(VERSION_TAG 'r')
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_BUILD_TYPE Release)
-add_compile_options(-Wall -Wextra -Wpedantic)
+set(CMAKE_BUILD_TYPE Debug)
+add_compile_options(-Wall -Wextra -Wpedantic -g3)
+
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
+include(${CMAKE_MODULE_PATH}/Findlibusb.cmake)
+find_package(libusb REQUIRED)
+
 
 if(ARCH STREQUAL "armhf")
     message("[CANDLE] Compiling for armhf")
@@ -36,7 +41,8 @@ endif()
 message(STATUS "\nCANDLE_BUILD_SHARED: ${CANDLE_BUILD_SHARED}\nCANDLE_BUILD_STATIC: ${CANDLE_BUILD_STATIC}")
 
 target_include_directories(candle PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(candle pthread)
+target_include_directories(candle SYSTEM PRIVATE ${LIBUSB_INCLUDE_DIR})
+target_link_libraries(candle pthread ${LIBUSB_LIBRARY})
 set_target_properties(candle PROPERTIES PUBLIC_HEADER candle.hpp)
 
 string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" _ "${CANDLE_LIB_VERSION}")
