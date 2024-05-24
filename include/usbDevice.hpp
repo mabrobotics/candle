@@ -12,10 +12,11 @@ class UsbDevice : public mab::Bus
 	static constexpr int inEndpointAdr	= 0x81;	 ///< CANdle USB input endpoint address.
 	static constexpr int outEndpointAdr = 0x01;	 ///< CANdle USB output endpoint address.
   public:
-	UsbDevice(){};
+	UsbDevice(u16					  vid		  = 0x0000,
+			  u16					  pid		  = 0x0000,
+			  const std::vector<u32>& idsToIgnore = {},
+			  const std::string&	  requestID	  = "");
 	~UsbDevice();
-	u32	 init(u16 vid, u16 pid, const std::vector<u32>& idsToIgnore);
-	bool deinit();
 	bool transmit(char* buffer,
 				  int	len,
 				  bool	waitForResponse = false,
@@ -35,3 +36,5 @@ class UsbDevice : public mab::Bus
 
 	struct libusb_device_handle* devh = nullptr;
 };
+
+u32 searchMultipleDevicesOnUSB(u16 pid, u16 vid);

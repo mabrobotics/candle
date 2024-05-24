@@ -348,6 +348,8 @@ class Candle
 	const version_ut md80CompatibleVersion = {'r', 0, 3, 2};
 
 	static std::vector<Candle*> instances;
+	inline static constexpr u32 candleVid = 0x0069;
+	inline static constexpr u32 candlePid = 0x1000;
 
 	std::thread receiverThread;
 	std::thread transmitterThread;

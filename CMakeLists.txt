@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 project(candle_lib)
 
@@ -9,7 +9,6 @@ set(VERSION_TAG 'r')
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_BUILD_TYPE Debug)
-add_compile_options(-Wall -Wextra -Wpedantic -g3)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 include(${CMAKE_MODULE_PATH}/Findlibusb.cmake)
@@ -44,6 +43,7 @@ target_include_directories(candle PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(candle SYSTEM PRIVATE ${LIBUSB_INCLUDE_DIR})
 target_link_libraries(candle pthread ${LIBUSB_LIBRARY})
 set_target_properties(candle PROPERTIES PUBLIC_HEADER candle.hpp)
+target_compile_options(candle PRIVATE -Wall -Wextra -Wpedantic -g3)
 
 string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" _ "${CANDLE_LIB_VERSION}")
 target_compile_definitions(candle

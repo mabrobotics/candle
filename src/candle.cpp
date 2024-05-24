@@ -78,13 +78,16 @@ namespace mab
 			case mab::BusType_E::USB:
 			{
 				std::vector<u32> idsToIgnore;
-				for(Candle* instance : Candle::instances)
-					if(instance->bus->getType() == BusType_E::USB)
+				for (Candle* instance : Candle::instances)
+					if (instance->bus->getType() == BusType_E::USB)
 						idsToIgnore.push_back(instance->bus->getId());
-				std::shared_ptr<UsbDevice> usb = std::make_shared<UsbDevice>();
-				if (usb->init(0x0069, 0x1000, idsToIgnore))
-					return usb;
-				throw "Failed to init USB device!";
+				if (idsToIgnore.size() == 0 && searchMultipleDevicesOnUSB(candlePid, candleVid) > 0)
+					vout << "Multiple CANdle detected! If ID is unspecified in the constructor, "
+							"the one with the smallest ID will be used by default!"
+						 << std::endl;
+				std::shared_ptr<UsbDevice> usb =
+					std::make_shared<UsbDevice>(candleVid, candlePid, idsToIgnore, device);
+				return usb;
 			}
 			case mab::BusType_E::SPI:
 			{
