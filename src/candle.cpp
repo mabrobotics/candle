@@ -81,7 +81,7 @@ namespace mab
 				for (Candle* instance : Candle::instances)
 					if (instance->bus->getType() == BusType_E::USB)
 						idsToIgnore.push_back(instance->bus->getId());
-				if (idsToIgnore.size() == 0 && searchMultipleDevicesOnUSB(candlePid, candleVid) > 0)
+				if (idsToIgnore.size() == 0 && searchMultipleDevicesOnUSB(candlePid, candleVid) > 1)
 					vout << "Multiple CANdle detected! If ID is unspecified in the constructor, "
 							"the one with the smallest ID will be used by default!"
 						 << std::endl;
