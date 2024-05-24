@@ -20,7 +20,7 @@ UsbDevice::UsbDevice(u16 vid, u16 pid, const std::vector<u32>& idsToIgnore, cons
 	int rc = libusb_init(NULL);
 	if (rc < 0)
 	{
-		cout << "[CANDLE][USB] Failed to init libusb!" << endl;
+		cout << "[USB] Failed to init libusb!" << endl;
 		throw "Failed to init libusb!";
 	}
 	int32_t cnt = libusb_get_device_list(NULL, &devs);
@@ -44,7 +44,7 @@ UsbDevice::UsbDevice(u16 vid, u16 pid, const std::vector<u32>& idsToIgnore, cons
 		{
 			if (ignoreId == hashedRequestedId)
 			{
-				cout << "[CANDLE][USB] Device with requested ID: " << id
+				cout << "[USB] Device with requested ID: " << id
 					 << " is already created! Quitting!" << endl;
 				shouldBreak = true;
 				throw("Device iwth ID " + id + " already created!");
@@ -72,7 +72,7 @@ UsbDevice::UsbDevice(u16 vid, u16 pid, const std::vector<u32>& idsToIgnore, cons
 			rc = libusb_claim_interface(devh, if_num);
 			if (rc < 0)
 			{
-				cout << "[CANDLE][USB] Failed to claim interface!" << endl;
+				cout << "[USB] Failed to claim interface!" << endl;
 				throw "Failed to claim libusb interface!";
 			}
 		}
@@ -81,8 +81,8 @@ UsbDevice::UsbDevice(u16 vid, u16 pid, const std::vector<u32>& idsToIgnore, cons
 	libusb_free_device_list(devs, 1);
 	if (devh == nullptr)
 	{
-		cout << "[CANDLE][USB] CANdle not found on USB bus!" << endl;
-		throw "CANdle not found in USB bus!";
+		cout << "[USB] CANdle not found on USB bus!" << endl;
+		throw "Device not found in USB bus!";
 	}
 }
 UsbDevice::~UsbDevice()
@@ -100,7 +100,7 @@ bool UsbDevice::transmit(
 	s32 ret = libusb_bulk_transfer(devh, outEndpointAdr, (u8*)buffer, len, &sendLenActual, 10);
 	if (ret < 0)
 	{
-		cout << "[CANDLE][USB] Failed to transmit!" << endl;
+		cout << "[USB] Failed to transmit!" << endl;
 		return false;
 	}
 	if (waitForResponse)
@@ -116,7 +116,7 @@ bool UsbDevice::receive(int responseLen, int timeoutMs, bool checkCrc, bool faul
 		devh, inEndpointAdr, (u8*)rxBuffer, responseLen, &bytesReceived, timeoutMs);
 	if (ret < 0)
 	{
-		cout << "[CANDLE][USB] Failed to transmit!" << endl;
+		cout << "[USB] Failed to transmit!" << endl;
 		return false;
 	}
 	return true;
