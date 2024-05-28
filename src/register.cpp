@@ -152,7 +152,7 @@ namespace mab
 			case Md80Reg_E::runBlink:
 			case Md80Reg_E::runZero:
 			case Md80Reg_E::runCanReinit:
-			case Md80Reg_E::brakeMode:
+			// case Md80Reg_E::brakeMode: TODO: remove this after compatibility has been applied
 			case Md80Reg_E::userGpioConfiguration:
 				return type::U8;
 			case Md80Reg_E::motorTorgueBandwidth:

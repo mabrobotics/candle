@@ -153,9 +153,6 @@ namespace mab
 		outputEncoderMode			 = 0x025,
 		outputEncoderCalibrationMode = 0x026,
 
-		userGpioConfiguration = 0x02A,
-		userGpioState		  = 0x02B,
-
 		motorPosPidKp	  = 0x030,
 		motorPosPidKi	  = 0x031,
 		motorPosPidKd	  = 0x032,
@@ -223,7 +220,9 @@ namespace mab
 		targetVelocity = 0x151,
 		targetTorque   = 0x152,
 
-		brakeMode = 0x160,
+
+		userGpioConfiguration = 0x160,
+		userGpioState		  = 0x161,
 
 		reverseDirection = 0x600,
 
