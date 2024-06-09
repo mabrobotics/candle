@@ -10,6 +10,7 @@
 
 #include <cstring>
 #include <iostream>
+#include <array>
 
 #include "bus.hpp"
 

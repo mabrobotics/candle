@@ -150,6 +150,7 @@ Register::type Register::getType(uint16_t regId)
 		case Md80Reg_E::runBlink:
 		case Md80Reg_E::runZero:
 		case Md80Reg_E::runCanReinit:
+		case Md80Reg_E::brakeMode:
 			return type::U8;
 		case Md80Reg_E::motorTorgueBandwidth:
 		case Md80Reg_E::canWatchdog:
