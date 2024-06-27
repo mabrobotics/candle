@@ -50,6 +50,7 @@ typedef struct
 	uint32_t homingErrors;
 	uint32_t motionErrors;
 	float shuntResistance;
+	uint16_t userGPIOstate;
 } regRO_st;
 
 /* READ WRITE PARAMS */
@@ -104,7 +105,7 @@ typedef struct
 	uint8_t motionMode;
 	uint16_t state;
 	uint8_t reverseDirection;
-	uint8_t brakeMode;
+	uint8_t userGpioConfiguration;
 } regRW_st;
 
 typedef struct
