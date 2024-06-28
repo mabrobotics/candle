@@ -690,8 +690,7 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 		return false;
 	}
 
-	if (!md80Register->read(canId, Md80Reg_E::outputEncoderCalibrationMode, regR.RW.outputEncoderCalibrationMode,
-							Md80Reg_E::brakeMode, regR.RW.brakeMode))
+	if (!md80Register->read(canId, Md80Reg_E::outputEncoderCalibrationMode, regR.RW.outputEncoderCalibrationMode))
 	{
 		vout << "Extended diagnostic failed at ID: " << canId << " while reading outputEncoderCalibrationMode register" << std::endl;
 		return false;
