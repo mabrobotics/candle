@@ -172,7 +172,6 @@ typedef enum
 	homingMaxTravel = 0x071,
 	homingVelocity = 0x072,
 	homingTorque = 0x073,
-	homingPositionDeviationTrigger = 0x074,
 
 	runSaveCmd = 0x080,
 	runTestMainEncoderCmd = 0x081,
