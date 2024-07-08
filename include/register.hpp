@@ -47,7 +47,6 @@ typedef struct
 	uint32_t bridgeErrors;
 	uint32_t hardwareErrors;
 	uint32_t communicationErrors;
-	uint32_t homingErrors;
 	uint32_t motionErrors;
 	float shuntResistance;
 	uint16_t userGpioState;
@@ -83,10 +82,6 @@ typedef struct
 	ImpedanceControllerGains_t impedancePdGains;
 	PidControllerGains_t velocityPidGains;
 	PidControllerGains_t positionPidGains;
-	uint8_t homingMode;
-	float homingMaxTravel;
-	float homingVelocity;
-	float homingTorque;
 	float positionLimitMax;
 	float positionLimitMin;
 	float maxAcceleration;
@@ -168,18 +163,12 @@ typedef enum
 	mainEncoderPosition = 0x063,
 	motorTorque = 0x064,
 
-	homingMode = 0x070,
-	homingMaxTravel = 0x071,
-	homingVelocity = 0x072,
-	homingTorque = 0x073,
-
 	runSaveCmd = 0x080,
 	runTestMainEncoderCmd = 0x081,
 	runTestOutputEncoderCmd = 0x082,
 	runCalibrateCmd = 0x083,
 	runCalibrateOutpuEncoderCmd = 0x084,
 	runCalibratePiGains = 0x085,
-	runHoming = 0x086,
 	runRestoreFactoryConfig = 0x087,
 	runReset = 0x088,
 	runClearWarnings = 0x089,
@@ -240,7 +229,6 @@ typedef enum
 	bridgeErrors = 0x80C,
 	hardwareErrors = 0x80D,
 	communicationErrors = 0x80E,
-	homingErrors = 0x80F,
 	motionErrors = 0x810,
 
 } Md80Reg_E;

@@ -126,7 +126,6 @@ uint16_t Register::getSize(uint16_t regId)
 			case Md80Reg_E::reverseDirection:
 			case Md80Reg_E::motionModeStatus:
 			case Md80Reg_E::motionModeCommand:
-			case Md80Reg_E::homingMode:
 			case Md80Reg_E::motorThermistorType:
 			case Md80Reg_E::motorCalibrationMode:
 			case Md80Reg_E::outputEncoderCalibrationMode:
@@ -142,7 +141,6 @@ uint16_t Register::getSize(uint16_t regId)
 			case Md80Reg_E::runTestOutputEncoderCmd:
 			case Md80Reg_E::runTestMainEncoderCmd:
 			case Md80Reg_E::runSaveCmd:
-			case Md80Reg_E::runHoming:
 			case Md80Reg_E::runRestoreFactoryConfig:
 			case Md80Reg_E::runReset:
 			case Md80Reg_E::runClearWarnings:
@@ -170,7 +168,6 @@ uint16_t Register::getSize(uint16_t regId)
 			case Md80Reg_E::bridgeErrors:
 			case Md80Reg_E::hardwareErrors:
 			case Md80Reg_E::communicationErrors:
-			case Md80Reg_E::homingErrors:
 			case Md80Reg_E::motionErrors:
 			case Md80Reg_E::firmwareVersion:
 			case Md80Reg_E::buildDate:
@@ -187,9 +184,6 @@ uint16_t Register::getSize(uint16_t regId)
 			case Md80Reg_E::profileAcceleration:
 			case Md80Reg_E::profileDeceleration:
 			case Md80Reg_E::profileVelocity:
-			case Md80Reg_E::homingMaxTravel:
-			case Md80Reg_E::homingVelocity:
-			case Md80Reg_E::homingTorque:
 			case Md80Reg_E::positionLimitMax:
 			case Md80Reg_E::positionLimitMin:
 			case Md80Reg_E::shuntResistance:

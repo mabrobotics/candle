@@ -270,11 +270,6 @@ class Candle
 	*/
 	bool setupMd80TestMainEncoder(uint16_t canId);
 	/**
-	@brief Triggers a homing routine.
-	@return true if the homing routine started succesfully, false otherwise.
-	*/
-	bool setupMd80PerformHoming(uint16_t canId);
-	/**
 	@brief Triggers a controller reset.
 	@return true if the reset routine started succesfully, false otherwise.
 	*/

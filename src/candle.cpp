@@ -594,11 +594,6 @@ bool Candle::setupMd80TestMainEncoder(uint16_t canId)
 	return executeCommand(canId, Md80Reg_E::runTestMainEncoderCmd, "Main encoder test failed at ID: ", "Main encoder test in progress at ID: ");
 }
 
-bool Candle::setupMd80PerformHoming(uint16_t canId)
-{
-	return executeCommand(canId, Md80Reg_E::runHoming, "Homing test failed at ID: ", "Homing test in progress at ID: ");
-}
-
 bool Candle::setupMd80PerformReset(uint16_t canId)
 {
 	return executeCommand(canId, Md80Reg_E::runReset, "Reset failed at ID: ", "Reset in progress at ID: ");
@@ -703,16 +698,6 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 	if (!md80Register->read(canId, Md80Reg_E::shuntResistance, regR.RO.shuntResistance))
 	{
 		vout << "Extended diagnostic failed at ID: " << canId << " while reading shuntResistance register" << std::endl;
-		return false;
-	}
-
-	if (!md80Register->read(canId, Md80Reg_E::homingMode, regR.RW.homingMode,
-							Md80Reg_E::homingMaxTravel, regR.RW.homingMaxTravel,
-							Md80Reg_E::homingTorque, regR.RW.homingTorque,
-							Md80Reg_E::homingVelocity, regR.RW.homingVelocity,
-							Md80Reg_E::homingErrors, regR.RO.homingErrors))
-	{
-		vout << "Extended diagnostic failed at ID: " << canId << " while reading homing registers" << std::endl;
 		return false;
 	}
 
