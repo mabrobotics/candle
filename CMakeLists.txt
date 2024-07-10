@@ -5,7 +5,7 @@ project(candle_lib)
 
 # change the version and tag here
 set(CANDLE_LIB_VERSION 3.5.0)
-set(VERSION_TAG 'd')
+set(VERSION_TAG '')
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_BUILD_TYPE Release)
