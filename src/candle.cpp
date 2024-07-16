@@ -581,7 +581,7 @@ bool Candle::setupMd80Calibration(uint16_t canId)
 
 bool Candle::setupMd80CalibrationOutput(uint16_t canId)
 {
-	return executeCommand(canId, Md80Reg_E::runCalibrateOutpuEncoderCmd, "Starting output encoder calibration failed at ID: ", "Starting output encoder calibration at ID: ");
+	return executeCommand(canId, Md80Reg_E::runCalibrateOutputEncoderCmd, "Starting output encoder calibration failed at ID: ", "Starting output encoder calibration at ID: ");
 }
 
 bool Candle::setupMd80TestOutputEncoder(uint16_t canId)

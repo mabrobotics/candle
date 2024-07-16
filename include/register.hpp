@@ -167,7 +167,7 @@ typedef enum
 	runTestMainEncoderCmd = 0x081,
 	runTestOutputEncoderCmd = 0x082,
 	runCalibrateCmd = 0x083,
-	runCalibrateOutpuEncoderCmd = 0x084,
+	runCalibrateOutputEncoderCmd = 0x084,
 	runCalibratePiGains = 0x085,
 	runRestoreFactoryConfig = 0x087,
 	runReset = 0x088,

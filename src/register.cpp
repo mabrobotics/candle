@@ -136,7 +136,7 @@ uint16_t Register::getSize(uint16_t regId)
 			case Md80Reg_E::canTermination:
 			case Md80Reg_E::motorShutdownTemp:
 			case Md80Reg_E::runCalibrateCmd:
-			case Md80Reg_E::runCalibrateOutpuEncoderCmd:
+			case Md80Reg_E::runCalibrateOutputEncoderCmd:
 			case Md80Reg_E::runCalibratePiGains:
 			case Md80Reg_E::runTestOutputEncoderCmd:
 			case Md80Reg_E::runTestMainEncoderCmd:
