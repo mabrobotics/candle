@@ -129,7 +129,7 @@ typedef enum
 	motorKt_c = 0x015,
 	motorIMax = 0x016,
 	motorGearRatio = 0x017,
-	motorTorgueBandwidth = 0x018,
+	motorTorqueBandwidth = 0x018,
 	motorFriction = 0x019,
 	motorStiction = 0x01A,
 	motorResistance = 0x01B,

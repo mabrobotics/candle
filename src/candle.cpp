@@ -427,7 +427,7 @@ bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersio
 
 bool Candle::configMd80TorqueBandwidth(uint16_t canId, uint16_t torqueBandwidth)
 {
-	if (inUpdateMode() || !md80Register->write(canId, Md80Reg_E::motorTorgueBandwidth, torqueBandwidth,
+	if (inUpdateMode() || !md80Register->write(canId, Md80Reg_E::motorTorqueBandwidth, torqueBandwidth,
 											   Md80Reg_E::runCalibratePiGains, true))
 	{
 		vout << "Bandwidth change failed at ID: " << canId << statusFAIL << std::endl;
@@ -632,7 +632,7 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 							Md80Reg_E::motorGearRatio, regR.RW.gearRatio,
 							Md80Reg_E::bridgeType, regR.RO.bridgeType,
 							Md80Reg_E::canWatchdog, regR.RW.canWatchdog,
-							Md80Reg_E::motorTorgueBandwidth, regR.RW.torqueBandwidth,
+							Md80Reg_E::motorTorqueBandwidth, regR.RW.torqueBandwidth,
 							Md80Reg_E::canBaudrate, regR.RW.canBaudrate,
 							Md80Reg_E::quickStatus, regR.RO.quickStatus,
 							Md80Reg_E::mosfetTemperature, regR.RO.mosfetTemperature,

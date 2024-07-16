@@ -151,7 +151,7 @@ uint16_t Register::getSize(uint16_t regId)
 			// case Md80Reg_E::brakeMode: TODO: remove this after compatibility has been applied
 			case Md80Reg_E::userGpioConfiguration:
 				return type::U8;
-			case Md80Reg_E::motorTorgueBandwidth:
+			case Md80Reg_E::motorTorqueBandwidth:
 			case Md80Reg_E::canWatchdog:
 			case Md80Reg_E::quickStatus:
 			case Md80Reg_E::motorKV:
