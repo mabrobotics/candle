@@ -206,7 +206,7 @@ uint16_t Register::getSize(uint16_t regId)
 			case Md80Reg_E::motorVelPidKd:
 			case Md80Reg_E::motorVelPidWindup:
 			case Md80Reg_E::motorFriction:
-			case Md80Reg_E::motorStiction:
+			case Md80Reg_E::motorStriction:
 			case Md80Reg_E::outputEncoderDir:
 			case Md80Reg_E::outputEncoderVelocity:
 			case Md80Reg_E::outputEncoderPosition:
