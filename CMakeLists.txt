@@ -4,7 +4,8 @@ set(CMAKE_CXX_STANDARD 14)
 project(candle_lib)
 
 # change the version and tag here
-set(CANDLE_LIB_VERSION 3.4.1)
+set(CANDLE_LIB_VERSION 3.5.0)
+
 set(VERSION_TAG 'r')
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)

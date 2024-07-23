@@ -47,9 +47,9 @@ typedef struct
 	uint32_t bridgeErrors;
 	uint32_t hardwareErrors;
 	uint32_t communicationErrors;
-	uint32_t homingErrors;
 	uint32_t motionErrors;
 	float shuntResistance;
+	uint16_t userGpioState;
 } regRO_st;
 
 /* READ WRITE PARAMS */
@@ -82,10 +82,6 @@ typedef struct
 	ImpedanceControllerGains_t impedancePdGains;
 	PidControllerGains_t velocityPidGains;
 	PidControllerGains_t positionPidGains;
-	uint8_t homingMode;
-	float homingMaxTravel;
-	float homingVelocity;
-	float homingTorque;
 	float positionLimitMax;
 	float positionLimitMin;
 	float maxAcceleration;
@@ -104,7 +100,7 @@ typedef struct
 	uint8_t motionMode;
 	uint16_t state;
 	uint8_t reverseDirection;
-	uint8_t brakeMode;
+	uint8_t userGpioConfiguration;
 } regRW_st;
 
 typedef struct
@@ -133,9 +129,9 @@ typedef enum
 	motorKt_c = 0x015,
 	motorIMax = 0x016,
 	motorGearRatio = 0x017,
-	motorTorgueBandwidth = 0x018,
+	motorTorqueBandwidth = 0x018,
 	motorFriction = 0x019,
-	motorStiction = 0x01A,
+	motorStriction = 0x01A,
 	motorResistance = 0x01B,
 	motorInductance = 0x01C,
 	motorKV = 0x01D,
@@ -167,19 +163,12 @@ typedef enum
 	mainEncoderPosition = 0x063,
 	motorTorque = 0x064,
 
-	homingMode = 0x070,
-	homingMaxTravel = 0x071,
-	homingVelocity = 0x072,
-	homingTorque = 0x073,
-	homingPositionDeviationTrigger = 0x074,
-
 	runSaveCmd = 0x080,
 	runTestMainEncoderCmd = 0x081,
 	runTestOutputEncoderCmd = 0x082,
 	runCalibrateCmd = 0x083,
-	runCalibrateOutpuEncoderCmd = 0x084,
+	runCalibrateOutputEncoderCmd = 0x084,
 	runCalibratePiGains = 0x085,
-	runHoming = 0x086,
 	runRestoreFactoryConfig = 0x087,
 	runReset = 0x088,
 	runClearWarnings = 0x089,
@@ -217,7 +206,9 @@ typedef enum
 	targetVelocity = 0x151,
 	targetTorque = 0x152,
 
-	brakeMode = 0x160,
+
+	userGpioConfiguration = 0x160,
+	userGpioState		  = 0x161,
 
 	reverseDirection = 0x600,
 
@@ -238,7 +229,6 @@ typedef enum
 	bridgeErrors = 0x80C,
 	hardwareErrors = 0x80D,
 	communicationErrors = 0x80E,
-	homingErrors = 0x80F,
 	motionErrors = 0x810,
 
 } Md80Reg_E;

@@ -427,7 +427,7 @@ bool Candle::configCandleBaudrate(CANdleBaudrate_E canBaudrate, bool printVersio
 
 bool Candle::configMd80TorqueBandwidth(uint16_t canId, uint16_t torqueBandwidth)
 {
-	if (inUpdateMode() || !md80Register->write(canId, Md80Reg_E::motorTorgueBandwidth, torqueBandwidth,
+	if (inUpdateMode() || !md80Register->write(canId, Md80Reg_E::motorTorqueBandwidth, torqueBandwidth,
 											   Md80Reg_E::runCalibratePiGains, true))
 	{
 		vout << "Bandwidth change failed at ID: " << canId << statusFAIL << std::endl;
@@ -581,7 +581,7 @@ bool Candle::setupMd80Calibration(uint16_t canId)
 
 bool Candle::setupMd80CalibrationOutput(uint16_t canId)
 {
-	return executeCommand(canId, Md80Reg_E::runCalibrateOutpuEncoderCmd, "Starting output encoder calibration failed at ID: ", "Starting output encoder calibration at ID: ");
+	return executeCommand(canId, Md80Reg_E::runCalibrateOutputEncoderCmd, "Starting output encoder calibration failed at ID: ", "Starting output encoder calibration at ID: ");
 }
 
 bool Candle::setupMd80TestOutputEncoder(uint16_t canId)
@@ -592,11 +592,6 @@ bool Candle::setupMd80TestOutputEncoder(uint16_t canId)
 bool Candle::setupMd80TestMainEncoder(uint16_t canId)
 {
 	return executeCommand(canId, Md80Reg_E::runTestMainEncoderCmd, "Main encoder test failed at ID: ", "Main encoder test in progress at ID: ");
-}
-
-bool Candle::setupMd80PerformHoming(uint16_t canId)
-{
-	return executeCommand(canId, Md80Reg_E::runHoming, "Homing test failed at ID: ", "Homing test in progress at ID: ");
 }
 
 bool Candle::setupMd80PerformReset(uint16_t canId)
@@ -637,7 +632,7 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 							Md80Reg_E::motorGearRatio, regR.RW.gearRatio,
 							Md80Reg_E::bridgeType, regR.RO.bridgeType,
 							Md80Reg_E::canWatchdog, regR.RW.canWatchdog,
-							Md80Reg_E::motorTorgueBandwidth, regR.RW.torqueBandwidth,
+							Md80Reg_E::motorTorqueBandwidth, regR.RW.torqueBandwidth,
 							Md80Reg_E::canBaudrate, regR.RW.canBaudrate,
 							Md80Reg_E::quickStatus, regR.RO.quickStatus,
 							Md80Reg_E::mosfetTemperature, regR.RO.mosfetTemperature,
@@ -649,7 +644,7 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 	}
 
 	if (!md80Register->read(canId,
-							Md80Reg_E::motorStiction, regR.RW.stiction,
+							Md80Reg_E::motorStriction, regR.RW.stiction,
 							Md80Reg_E::motorFriction, regR.RW.friction,
 							Md80Reg_E::outputEncoder, regR.RW.outputEncoder,
 							Md80Reg_E::outputEncoderDir, regR.RW.outputEncoderDir,
@@ -690,8 +685,7 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 		return false;
 	}
 
-	if (!md80Register->read(canId, Md80Reg_E::outputEncoderCalibrationMode, regR.RW.outputEncoderCalibrationMode,
-							Md80Reg_E::brakeMode, regR.RW.brakeMode))
+	if (!md80Register->read(canId, Md80Reg_E::outputEncoderCalibrationMode, regR.RW.outputEncoderCalibrationMode))
 	{
 		vout << "Extended diagnostic failed at ID: " << canId << " while reading outputEncoderCalibrationMode register" << std::endl;
 		return false;
@@ -704,16 +698,6 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 	if (!md80Register->read(canId, Md80Reg_E::shuntResistance, regR.RO.shuntResistance))
 	{
 		vout << "Extended diagnostic failed at ID: " << canId << " while reading shuntResistance register" << std::endl;
-		return false;
-	}
-
-	if (!md80Register->read(canId, Md80Reg_E::homingMode, regR.RW.homingMode,
-							Md80Reg_E::homingMaxTravel, regR.RW.homingMaxTravel,
-							Md80Reg_E::homingTorque, regR.RW.homingTorque,
-							Md80Reg_E::homingVelocity, regR.RW.homingVelocity,
-							Md80Reg_E::homingErrors, regR.RO.homingErrors))
-	{
-		vout << "Extended diagnostic failed at ID: " << canId << " while reading homing registers" << std::endl;
 		return false;
 	}
 
