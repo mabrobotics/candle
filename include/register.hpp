@@ -131,7 +131,7 @@ typedef enum
 	motorGearRatio = 0x017,
 	motorTorqueBandwidth = 0x018,
 	motorFriction = 0x019,
-	motorStriction = 0x01A,
+	motorStiction = 0x01A,
 	motorResistance = 0x01B,
 	motorInductance = 0x01C,
 	motorKV = 0x01D,
