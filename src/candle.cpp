@@ -644,7 +644,7 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 	}
 
 	if (!md80Register->read(canId,
-							Md80Reg_E::motorStriction, regR.RW.stiction,
+							Md80Reg_E::motorStiction, regR.RW.stiction,
 							Md80Reg_E::motorFriction, regR.RW.friction,
 							Md80Reg_E::outputEncoder, regR.RW.outputEncoder,
 							Md80Reg_E::outputEncoderDir, regR.RW.outputEncoderDir,
