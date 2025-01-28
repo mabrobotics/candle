@@ -637,7 +637,8 @@ bool Candle::setupMd80DiagnosticExtended(uint16_t canId)
 							Md80Reg_E::quickStatus, regR.RO.quickStatus,
 							Md80Reg_E::mosfetTemperature, regR.RO.mosfetTemperature,
 							Md80Reg_E::motorKV, regR.RW.motorKV,
-							Md80Reg_E::hardwareVersion, regR.RO.hardwareVersion))
+							Md80Reg_E::hardwareVersion, regR.RO.hardwareVersion,
+							Md80Reg_E::userGpioConfiguration, regR.RW.userGpioConfiguration))
 	{
 		vout << "Extended diagnostic failed at ID: " << canId << std::endl;
 		return false;
