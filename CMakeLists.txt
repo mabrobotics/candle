@@ -37,7 +37,7 @@ endif()
 message(STATUS "\nCANDLE_BUILD_SHARED: ${CANDLE_BUILD_SHARED}\nCANDLE_BUILD_STATIC: ${CANDLE_BUILD_STATIC}")
 
 target_include_directories(candle PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(candle pthread)
+target_link_libraries(candle pthread -static-libgcc -static-libstdc++)
 set_target_properties(candle PROPERTIES PUBLIC_HEADER candle.hpp)
 
 string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" _ "${CANDLE_LIB_VERSION}")
