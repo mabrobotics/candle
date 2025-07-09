@@ -114,7 +114,7 @@ typedef struct
 	regRW_st RW;
 } regWrite_st;
 
-typedef enum
+typedef enum : uint16_t
 {
 	canId = 0x001,
 	canBaudrate = 0x002,
@@ -231,6 +231,8 @@ typedef enum
 	communicationErrors = 0x80E,
 	motionErrors = 0x810,
 
+    reserved1 = 0xEF00,
+    reserved2 = 0xEF01,
 } Md80Reg_E;
 class Register
 {
