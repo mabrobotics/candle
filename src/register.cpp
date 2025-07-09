@@ -6,118 +6,120 @@
 namespace mab
 {
 
-bool Register::prepare(uint16_t canId, mab::Md80FrameId_E frameType)
-{
-	(void)frameType;
-	/* clear the RX buffer and send register request */
-	memset(regRxBuffer, 0, sizeof(regRxBuffer));
-	bool status = candle->sendGenericFDCanFrame(canId, regTxPtr - regTxBuffer, regTxBuffer, regRxBuffer, 10);
-	regTxPtr = nullptr;
-	regRxPtr = nullptr;
-	return status;
-}
-
-bool Register::interpret(uint16_t canId)
-{
-	(void)canId;
-	return true;
-}
-
-uint32_t Register::pack(uint16_t regId, char* value, char* buffer)
-{
-	uint32_t len = getSize(regId);
-	/* in case no place is left in the buffer */
-	if ((len + 2) > (sizeof(regTxBuffer) - (buffer - regTxBuffer)))
+	bool Register::prepare(uint16_t canId, mab::Md80FrameId_E frameType)
 	{
-		throw "Error while packaging data. Make sure its size is not above 62 bytes. Remember to add 2 bytes per field (field ID).";
-		return 0;
-	}
-	/* place register ID at the beginning */
-	*(uint16_t*)buffer = regId;
-	/* move the pointer forward by 2 bytes */
-	buffer += sizeof(regId);
-	/* in case we're just preparing a read frame */
-	if (value == nullptr)
-		memset(buffer, 0, len);
-	else
-		memcpy(buffer, value, len);
-
-	return (len + sizeof(regId));
-}
-
-uint32_t Register::unPack(uint16_t regId, char* value, char* buffer)
-{
-	/* place register ID at the beginning */
-	*(uint16_t*)buffer = regId;
-	/* move the pointer forward by 2 bytes */
-	buffer += sizeof(regId);
-
-	uint32_t len = getSize(regId);
-
-	return copy(value, buffer, len, sizeof(regTxBuffer) - (buffer - &regTxBuffer[2]));
-}
-
-uint32_t Register::copy(char* dest, char* source, uint32_t size, uint32_t freeSpace)
-{
-	/* return two so that we move by the reg ID and find a zero reg ID which terminates reception/transmission */
-	if (freeSpace < size)
-		return 0;
-
-	memcpy(dest, source, size);
-	return size + 2;
-}
-
-bool Register::prepareFrame(mab::Md80FrameId_E frameId, Md80Reg_E regId, char* value)
-{
-	/* if new frame */
-	if (regTxPtr == nullptr)
-	{ /* clear the buffer */
-		memset(regTxBuffer, 0, sizeof(regTxBuffer));
-		regTxBuffer[0] = frameId;
-		regTxBuffer[1] = 0;
-		regTxPtr = &regTxBuffer[2];
-	}
-	/* let pack know to fill data space with zeros */
-	if (frameId == mab::Md80FrameId_E::FRAME_READ_REGISTER)
-		value = nullptr;
-	/* add value's data to tx buffer */
-	uint32_t offset = pack(regId, value, regTxPtr);
-
-	if (offset == 0)
-	{
-		throw "Error while packaging data. Make sure its size is not above 62 bytes. Remember to add 2 bytes per field (field ID).";
-		return false;
+		(void)frameType;
+		/* clear the RX buffer and send register request */
+		memset(regRxBuffer, 0, sizeof(regRxBuffer));
+		bool status = candle->sendGenericFDCanFrame(
+			canId, regTxPtr - regTxBuffer, regTxBuffer, regRxBuffer, 10);
+		regTxPtr = nullptr;
+		regRxPtr = nullptr;
+		return status;
 	}
 
-	regTxPtr += offset;
-	return true;
-}
-
-uint16_t Register::getSize(uint16_t regId)
-{
-	if (regId == Md80Reg_E::commitHash)
-		return 8;
-	if (regId == Md80Reg_E::motorName)
-		return 24;
-
-	switch (getType(regId))
+	bool Register::interpret(uint16_t canId)
 	{
-		case type::I8:
-		case type::U8:
-			return 1;
-		case type::I16:
-		case type::U16:
-			return 2;
-		case type::I32:
-		case type::U32:
-		case type::F32:
-			return 4;
-		case type::STR:
-		case type::UNKNOWN:
+		(void)canId;
+		return true;
+	}
+
+	uint32_t Register::pack(uint16_t regId, char* value, char* buffer)
+	{
+		uint32_t len = getSize(regId);
+		/* in case no place is left in the buffer */
+		if ((len + 2) > (sizeof(regTxBuffer) - (buffer - regTxBuffer)))
+		{
+			throw "Error while packaging data. Make sure its size is not above 62 bytes. Remember to add 2 bytes per field (field ID).";
 			return 0;
+		}
+		/* place register ID at the beginning */
+		*(uint16_t*)buffer = regId;
+		/* move the pointer forward by 2 bytes */
+		buffer += sizeof(regId);
+		/* in case we're just preparing a read frame */
+		if (value == nullptr)
+			memset(buffer, 0, len);
+		else
+			memcpy(buffer, value, len);
+
+		return (len + sizeof(regId));
 	}
-	return 0;
-}
+
+	uint32_t Register::unPack(uint16_t regId, char* value, char* buffer)
+	{
+		/* place register ID at the beginning */
+		*(uint16_t*)buffer = regId;
+		/* move the pointer forward by 2 bytes */
+		buffer += sizeof(regId);
+
+		uint32_t len = getSize(regId);
+
+		return copy(value, buffer, len, sizeof(regTxBuffer) - (buffer - &regTxBuffer[2]));
+	}
+
+	uint32_t Register::copy(char* dest, char* source, uint32_t size, uint32_t freeSpace)
+	{
+		/* return two so that we move by the reg ID and find a zero reg ID which terminates
+		 * reception/transmission */
+		if (freeSpace < size)
+			return 0;
+
+		memcpy(dest, source, size);
+		return size + 2;
+	}
+
+	bool Register::prepareFrame(mab::Md80FrameId_E frameId, Md80Reg_E regId, char* value)
+	{
+		/* if new frame */
+		if (regTxPtr == nullptr)
+		{ /* clear the buffer */
+			memset(regTxBuffer, 0, sizeof(regTxBuffer));
+			regTxBuffer[0] = frameId;
+			regTxBuffer[1] = 0;
+			regTxPtr	   = &regTxBuffer[2];
+		}
+		/* let pack know to fill data space with zeros */
+		if (frameId == mab::Md80FrameId_E::FRAME_READ_REGISTER)
+			value = nullptr;
+		/* add value's data to tx buffer */
+		uint32_t offset = pack(regId, value, regTxPtr);
+
+		if (offset == 0)
+		{
+			throw "Error while packaging data. Make sure its size is not above 62 bytes. Remember to add 2 bytes per field (field ID).";
+			return false;
+		}
+
+		regTxPtr += offset;
+		return true;
+	}
+
+	uint16_t Register::getSize(uint16_t regId)
+	{
+		if (regId == Md80Reg_E::commitHash)
+			return 8;
+		if (regId == Md80Reg_E::motorName)
+			return 24;
+
+		switch (getType(regId))
+		{
+			case type::I8:
+			case type::U8:
+				return 1;
+			case type::I16:
+			case type::U16:
+				return 2;
+			case type::I32:
+			case type::U32:
+			case type::F32:
+				return 4;
+			case type::STR:
+			case type::UNKNOWN:
+				return 0;
+		}
+		return 0;
+	}
 
 	Register::type Register::getType(uint16_t regId)
 	{
@@ -171,6 +173,7 @@ uint16_t Register::getSize(uint16_t regId)
 			case Md80Reg_E::motionErrors:
 			case Md80Reg_E::firmwareVersion:
 			case Md80Reg_E::buildDate:
+			case Md80Reg_E::reserved1:
 				return type::U32;
 			case Md80Reg_E::targetPosition:
 			case Md80Reg_E::targetVelocity:
@@ -222,6 +225,7 @@ uint16_t Register::getSize(uint16_t regId)
 			case Md80Reg_E::motorKt_b:
 			case Md80Reg_E::motorKt_c:
 			case Md80Reg_E::motorIMax:
+			case Md80Reg_E::reserved2:
 				return type::F32;
 			case Md80Reg_E::commitHash:
 			case Md80Reg_E::motorName:
