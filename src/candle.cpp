@@ -260,13 +260,9 @@ bool Candle::addMd80(uint16_t canId, bool printFailure)
 		}
 
 		if (firmwareVersion.i < md80CompatibleVersion.i)
-		{
 			vout << "MD80's firmware with ID: " + std::to_string(canId) + " is outdated. Please update it using MAB_CAN_Flasher." << statusFAIL << std::endl;
-		}
 		else if (firmwareVersion.s.major > md80CompatibleVersion.s.major || firmwareVersion.s.minor > md80CompatibleVersion.s.minor)
-		{
-			vout << "MD80's firmware with ID: " + std::to_string(canId) + " is a future version. Please update your CANdle library." << statusFAIL << std::endl;
-		}
+			vout << "MD80's firmware with ID: " + std::to_string(canId) + " is a future version. Some features may not work as expected!" << statusFAIL << std::endl;
 		vout << "Added MD80 with ID: " + std::to_string(canId) << statusOK << std::endl;
 		md80s.push_back(Md80(canId));
 		mab::Md80& newDrive = md80s.back();
