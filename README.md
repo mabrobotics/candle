@@ -1,3 +1,8 @@
+# Legacy warning
+This is most likely the final release of CANdle library, it is now considered Legacy. We will still provide
+technical support for this library and mdtool, guaranteed at least until 2026. 
+Further development of the CANdle Ecosystem is going to happen through [CANdle-SDK](https://github.com/mabrobotics/CANdle-SDK)
+
 # CANdle library 
 CANdle C++ library is the heart of the MD80 x CANdle ecosystem on the master controller side. 
 It takes care of all actions connected to communication and provides API for higher-level software. For a detailed manual please see [MD80 x CANdle Manual](https://www.mabrobotics.pl/servos/manual).
