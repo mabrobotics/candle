@@ -123,7 +123,7 @@ int main() {
     float auxEncoderPosition = 0.0f;
     float subtractSine = lutRepresentation[(i + lutStartIndex) % lutRepresentation.size()];
     candle.readMd80Register(100, Md80Reg_E::outputEncoderPosition, auxEncoderPosition);
-    float error = auxEncoderPosition - (targetPosition - initialAuxEncoderPosition);
+    float error = auxEncoderPosition - (targetPosition + initialAuxEncoderPosition);
     std::cout << "Target position: " << targetPosition << ", aux encoder position: " << auxEncoderPosition 
               << ", LUT value: " << subtractSine << ", Error: " << error << std::endl;
   }

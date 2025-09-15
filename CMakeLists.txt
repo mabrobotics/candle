@@ -100,6 +100,6 @@ if(NOT DEFINED CANDLE_OMIT_EXAMPLES)
     add_executable(example15 examples_cpp/example15.cpp)
     target_link_libraries(example15 candle)
 
-    add_executable(ascento_issue examples_cpp/ascento_issue.cpp)
-    target_link_libraries(ascento_issue candle)
+    add_executable(zeroing_issue examples_cpp/zeroing_issue.cpp)
+    target_link_libraries(zeroing_issue candle)
 endif()
